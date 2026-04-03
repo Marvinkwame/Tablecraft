@@ -20,12 +20,16 @@ import type {
   SortingReturn,
   GlobalFilterReturn,
   ColumnFiltersReturn,
+  RowSelectionReturn,
+  ColumnVisibilityReturn,
   EmptyStateReturn,
 } from '../types'
 import { usePaginationState } from './usePaginationState'
 import { useSortState } from './useSortState'
 import { useFilterState } from './useFilterState'
 import { useColumnFilterState } from './useColumnFilterState'
+import { useRowSelectionState } from './useRowSelectionState'
+import { useColumnVisibilityState } from './useColumnVisibilityState'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
 
@@ -46,6 +50,8 @@ export function useTable<TData extends RowData>(
     onSortingChange: externalOnSortingChange,
     onGlobalFilterChange: externalOnGlobalFilterChange,
     onColumnFiltersChange: externalOnColumnFiltersChange,
+    rowSelection: rowSelectionOpts = false,
+    columnVisibility: columnVisibilityOpts = false,
     fuzzy = false,
     persist = false,
     persistKey,
@@ -116,6 +122,18 @@ export function useTable<TData extends RowData>(
   const filterState = useFilterState(initialGlobalFilter)
   const columnFilterState = useColumnFilterState(initialColumnFilters)
 
+  // ─── Row selection ───────────────────────────────────────
+  const rowSelectionEnabled = !!rowSelectionOpts
+  const rowSelectionConfig =
+    typeof rowSelectionOpts === 'object' ? rowSelectionOpts : {}
+  const rowSelectionState = useRowSelectionState(rowSelectionConfig)
+
+  // ─── Column visibility ──────────────────────────────────
+  const columnVisibilityEnabled = !!columnVisibilityOpts
+  const columnVisibilityConfig =
+    typeof columnVisibilityOpts === 'object' ? columnVisibilityOpts : {}
+  const columnVisibilityState = useColumnVisibilityState(columnVisibilityConfig)
+
   // ─── Fuzzy filter ────────────────────────────────────────
   const fuzzyFilterFn = useMemo<FilterFn<TData> | undefined>(() => {
     if (!fuzzy) return undefined
@@ -155,6 +173,8 @@ export function useTable<TData extends RowData>(
       sorting: sortState.state,
       globalFilter: filterState.state,
       columnFilters: columnFilterState.state,
+      ...(rowSelectionEnabled && { rowSelection: rowSelectionState.state }),
+      ...(columnVisibilityEnabled && { columnVisibility: columnVisibilityState.state }),
     },
 
     // Pagination
@@ -174,6 +194,17 @@ export function useTable<TData extends RowData>(
     getFilteredRowModel:
       globalFilterEnabled || columnFiltersEnabled ? getFilteredRowModel() : undefined,
     globalFilterFn: fuzzyFilterFn ?? 'includesString',
+
+    // Row selection
+    ...(rowSelectionEnabled && {
+      onRowSelectionChange: rowSelectionState.onRowSelectionChange,
+      enableMultiRowSelection: rowSelectionState.enableMultiRowSelection,
+    }),
+
+    // Column visibility
+    ...(columnVisibilityEnabled && {
+      onColumnVisibilityChange: columnVisibilityState.onColumnVisibilityChange,
+    }),
 
     getCoreRowModel: getCoreRowModel(),
   })
@@ -263,6 +294,38 @@ export function useTable<TData extends RowData>(
     [columnFilterState.state, columnFilterState.setFilter, columnFilterState.clearFilter, columnFilterState.clearAll]
   )
 
+  // ─── Build row selection return ──────────────────────────
+  const allRowIds = useMemo(
+    () => table.getRowModel().rows.map((r) => r.id),
+    [table.getRowModel().rows]
+  )
+
+  const rowSelection: RowSelectionReturn = useMemo(
+    () => ({
+      state: rowSelectionState.state,
+      toggleRow: rowSelectionState.toggleRow,
+      toggleAll: () => rowSelectionState.toggleAll(allRowIds),
+      clearSelection: rowSelectionState.clearSelection,
+      selectedRowIds: rowSelectionState.selectedRowIds,
+      selectedCount: rowSelectionState.selectedCount,
+      isSelected: rowSelectionState.isSelected,
+    }),
+    [rowSelectionState, allRowIds]
+  )
+
+  // ─── Build column visibility return ─────────────────────
+  const columnVisibility: ColumnVisibilityReturn = useMemo(
+    () => ({
+      state: columnVisibilityState.state,
+      toggleColumn: columnVisibilityState.toggleColumn,
+      showColumn: columnVisibilityState.showColumn,
+      hideColumn: columnVisibilityState.hideColumn,
+      showAll: columnVisibilityState.showAll,
+      hiddenColumns: columnVisibilityState.hiddenColumns,
+    }),
+    [columnVisibilityState]
+  )
+
   // ─── Build empty state return ────────────────────────────
   const emptyState: EmptyStateReturn = useMemo(
     () => ({
@@ -279,6 +342,8 @@ export function useTable<TData extends RowData>(
     sorting,
     globalFilter,
     columnFilters: columnFiltersReturn,
+    rowSelection,
+    columnVisibility,
     emptyState,
   }
 }
