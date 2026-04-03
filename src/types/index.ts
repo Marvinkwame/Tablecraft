@@ -4,8 +4,10 @@ import type {
   OnChangeFn,
   PaginationState,
   RowData,
+  RowSelectionState,
   SortingState,
   Table,
+  VisibilityState,
 } from '@tanstack/react-table'
 
 // ─── Pagination ───────────────────────────────────────────────
@@ -54,6 +56,38 @@ export interface ColumnFiltersReturn {
   setFilter: (columnId: string, value: unknown) => void
   clearFilter: (columnId: string) => void
   clearAll: () => void
+}
+
+// ─── Row Selection ──────────────────────────────────────
+
+export interface RowSelectionOptions {
+  defaultSelection?: RowSelectionState
+  enableMultiRowSelection?: boolean
+}
+
+export interface RowSelectionReturn {
+  state: RowSelectionState
+  toggleRow: (rowId: string) => void
+  toggleAll: () => void
+  clearSelection: () => void
+  selectedRowIds: string[]
+  selectedCount: number
+  isSelected: (rowId: string) => boolean
+}
+
+// ─── Column Visibility ──────────────────────────────────
+
+export interface ColumnVisibilityOptions {
+  defaultVisibility?: VisibilityState
+}
+
+export interface ColumnVisibilityReturn {
+  state: VisibilityState
+  toggleColumn: (columnId: string) => void
+  showColumn: (columnId: string) => void
+  hideColumn: (columnId: string) => void
+  showAll: () => void
+  hiddenColumns: string[]
 }
 
 // ─── Empty State ─────────────────────────────────────────────
@@ -121,6 +155,12 @@ export interface UseTableOptions<TData extends RowData> {
   columnFilters?: boolean
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>
 
+  // Row selection (opt-in)
+  rowSelection?: RowSelectionOptions | boolean
+
+  // Column visibility (opt-in)
+  columnVisibility?: ColumnVisibilityOptions | boolean
+
   // v1.x — Fuzzy search
   fuzzy?: boolean
 
@@ -141,6 +181,8 @@ export interface UseTableReturn<TData extends RowData> {
   sorting: SortingReturn
   globalFilter: GlobalFilterReturn
   columnFilters: ColumnFiltersReturn
+  rowSelection: RowSelectionReturn
+  columnVisibility: ColumnVisibilityReturn
   emptyState: EmptyStateReturn
 }
 
