@@ -56,6 +56,26 @@ export interface ColumnFiltersReturn {
   clearAll: () => void
 }
 
+// ─── Empty State ─────────────────────────────────────────────
+
+export interface EmptyStateReturn {
+  /** True when data has 0 rows total */
+  isEmpty: boolean
+  /** True when data exists but filters return 0 rows */
+  isFilteredEmpty: boolean
+}
+
+// ─── Persist ─────────────────────────────────────────────────
+
+export type PersistStorage = 'localStorage' | 'sessionStorage'
+
+export interface PersistOptions {
+  sorting?: boolean
+  columnFilters?: boolean
+  globalFilter?: boolean
+  pagination?: boolean
+}
+
 // ─── useTable Options ─────────────────────────────────────────
 
 export interface UseTableOptions<TData extends RowData> {
@@ -78,6 +98,14 @@ export interface UseTableOptions<TData extends RowData> {
   onGlobalFilterChange?: (value: string) => void
   columnFilters?: boolean
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>
+
+  // v1.x — Fuzzy search
+  fuzzy?: boolean
+
+  // v1.x — State persistence
+  persist?: PersistStorage | false
+  persistKey?: string
+  persistOptions?: PersistOptions
 }
 
 // ─── useTable Return ──────────────────────────────────────────
@@ -88,6 +116,7 @@ export interface UseTableReturn<TData extends RowData> {
   sorting: SortingReturn
   globalFilter: GlobalFilterReturn
   columnFilters: ColumnFiltersReturn
+  emptyState: EmptyStateReturn
 }
 
 // ─── useServerTable Options ───────────────────────────────────
