@@ -76,6 +76,28 @@ export interface PersistOptions {
   pagination?: boolean
 }
 
+// ─── URL Sync ───────────────────────────────────────────────
+
+export interface URLKeyMap {
+  /** URL param key for page number (default: 'page') */
+  page?: string
+  /** URL param key for page size (default: 'pageSize') */
+  pageSize?: string
+  /** URL param key for sorting (default: 'sort') */
+  sort?: string
+  /** URL param key for global filter (default: 'filter') */
+  filter?: string
+  /** Prefix for column filter params (default: 'filter_') */
+  columnFilterPrefix?: string
+}
+
+export interface URLSyncOptions {
+  /** Custom URL parameter key mapping */
+  keys?: URLKeyMap
+  /** History mode: 'replace' (default, no back-button pollution) or 'push' */
+  mode?: 'replace' | 'push'
+}
+
 // ─── useTable Options ─────────────────────────────────────────
 
 export interface UseTableOptions<TData extends RowData> {
@@ -106,6 +128,9 @@ export interface UseTableOptions<TData extends RowData> {
   persist?: PersistStorage | false
   persistKey?: string
   persistOptions?: PersistOptions
+
+  // v2 — URL state sync
+  syncUrl?: boolean | URLSyncOptions
 }
 
 // ─── useTable Return ──────────────────────────────────────────
