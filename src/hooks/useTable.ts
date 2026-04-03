@@ -27,6 +27,7 @@ import { useSortState } from './useSortState'
 import { useFilterState } from './useFilterState'
 import { useColumnFilterState } from './useColumnFilterState'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
+import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
 
 export function useTable<TData extends RowData>(
   options: UseTableOptions<TData>
@@ -49,6 +50,7 @@ export function useTable<TData extends RowData>(
     persist = false,
     persistKey,
     persistOptions,
+    syncUrl = false,
   } = options
 
   // ─── Persistence: load initial state ─────────────────────
@@ -58,6 +60,17 @@ export function useTable<TData extends RowData>(
       : {}
   )
   const persisted = persistedRef.current
+
+  // ─── URL sync: load initial state (priority: URL > persist) ──
+  const urlSyncEnabled = !!syncUrl
+  const urlConfig = typeof syncUrl === 'object' ? syncUrl : {}
+  const urlKeys = resolveURLKeys(urlConfig.keys)
+  const urlMode = urlConfig.mode ?? 'replace'
+
+  const urlStateRef = useRef(
+    urlSyncEnabled ? parseURLState(urlKeys) : {}
+  )
+  const urlState = urlStateRef.current
 
   // ─── Resolve pagination options ──────────────────────────
   const paginationConfig =
@@ -73,6 +86,12 @@ export function useTable<TData extends RowData>(
     paginationConfig.pageSize = paginationConfig.pageSize ?? persisted.pagination.pageSize
   }
 
+  // URL overrides persist
+  if (urlState.pagination) {
+    paginationConfig.pageIndex = urlState.pagination.pageIndex
+    paginationConfig.pageSize = urlState.pagination.pageSize
+  }
+
   // ─── Resolve sorting options ─────────────────────────────
   const sortingConfig =
     typeof sortingOpts === 'object' ? sortingOpts : {}
@@ -82,11 +101,20 @@ export function useTable<TData extends RowData>(
     sortingConfig.defaultSort = persisted.sorting
   }
 
+  // URL overrides persist
+  if (urlState.sorting) {
+    sortingConfig.defaultSort = urlState.sorting
+  }
+
+  // ─── Resolve initial filter values ───────────────────────
+  const initialGlobalFilter = urlState.globalFilter ?? persisted.globalFilter ?? ''
+  const initialColumnFilters = urlState.columnFilters ?? persisted.columnFilters ?? []
+
   // ─── Internal state ──────────────────────────────────────
   const paginationState = usePaginationState(paginationConfig)
   const sortState = useSortState(sortingConfig)
-  const filterState = useFilterState(persisted.globalFilter ?? '')
-  const columnFilterState = useColumnFilterState()
+  const filterState = useFilterState(initialGlobalFilter)
+  const columnFilterState = useColumnFilterState(initialColumnFilters)
 
   // ─── Fuzzy filter ────────────────────────────────────────
   const fuzzyFilterFn = useMemo<FilterFn<TData> | undefined>(() => {
@@ -164,6 +192,24 @@ export function useTable<TData extends RowData>(
     persist,
     persistKey,
     persistOptions,
+    sortState.state,
+    columnFilterState.state,
+    filterState.state,
+    paginationState.state,
+  ])
+
+  // ─── URL sync: write state on change ─────────────────────
+  useEffect(() => {
+    if (!urlSyncEnabled) return
+
+    writeURLState({
+      sorting: sortState.state,
+      columnFilters: columnFilterState.state,
+      globalFilter: filterState.state,
+      pagination: paginationState.state,
+    }, urlKeys, urlMode)
+  }, [
+    urlSyncEnabled,
     sortState.state,
     columnFilterState.state,
     filterState.state,
