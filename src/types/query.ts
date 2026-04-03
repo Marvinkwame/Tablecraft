@@ -9,6 +9,7 @@ import type {
   SortingOptions,
   PersistStorage,
   PersistOptions,
+  URLSyncOptions,
   UseTableReturn,
 } from './index'
 
@@ -47,6 +48,9 @@ export interface UseQueryTableOptions<TData extends RowData> {
   persist?: PersistStorage | false
   persistKey?: string
   persistOptions?: PersistOptions
+
+  // URL state sync
+  syncUrl?: boolean | URLSyncOptions
 
   // TanStack Query options (common ones surfaced for autocomplete)
   staleTime?: number

@@ -13,6 +13,7 @@ export { inferColumns } from './helpers/inferColumns'
 
 // Utilities
 export { loadPersistedState, savePersistedState, clearPersistedState } from './utils/persist'
+export { parseURLState, writeURLState, resolveURLKeys } from './utils/url'
 
 // Types
 export type {
