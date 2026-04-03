@@ -32,9 +32,13 @@
   "peerDependenciesMeta": {
     "match-sorter": {
       "optional": true
+    },
+    "@tanstack/react-query": {
+      "optional": true
     }
   },
   "devDependencies": {
+    "@tanstack/react-query": "^5.96.1",
     "@tanstack/react-table": "^8.17.0",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^14.3.0",

@@ -5,6 +5,7 @@ export { usePaginationState } from './hooks/usePaginationState'
 export { useSortState } from './hooks/useSortState'
 export { useFilterState } from './hooks/useFilterState'
 export { useColumnFilterState } from './hooks/useColumnFilterState'
+export { useQueryTable } from './hooks/useQueryTable'
 
 // Helpers
 export { createColumns } from './helpers/createColumns'
@@ -30,3 +31,11 @@ export type {
 } from './types'
 
 export type { InferColumnsOptions } from './helpers/inferColumns'
+
+export type {
+  UseQueryTableOptions,
+  UseQueryTableReturn,
+  QueryTableFnContext,
+  QueryTableResult,
+  QueryState,
+} from './types/query'

@@ -1,0 +1,315 @@
+'use client'
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+declare const require: (id: string) => any
+
+import { useMemo, useEffect, useRef } from 'react'
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+} from '@tanstack/react-table'
+import type { FilterFn, RowData } from '@tanstack/react-table'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
+
+import type {
+  PaginationReturn,
+  SortingReturn,
+  GlobalFilterReturn,
+  ColumnFiltersReturn,
+  EmptyStateReturn,
+} from '../types'
+import type {
+  UseQueryTableOptions,
+  UseQueryTableReturn,
+} from '../types/query'
+import { usePaginationState } from './usePaginationState'
+import { useSortState } from './useSortState'
+import { useFilterState } from './useFilterState'
+import { useColumnFilterState } from './useColumnFilterState'
+import { loadPersistedState, savePersistedState } from '../utils/persist'
+
+// ─── Hook ──────────────────────────────────────────────────
+
+export function useQueryTable<TData extends RowData>(
+  options: UseQueryTableOptions<TData>
+): UseQueryTableReturn<TData> {
+  const {
+    // Query options
+    queryKey,
+    queryFn,
+    staleTime,
+    gcTime,
+    enabled,
+    refetchOnWindowFocus,
+    refetchOnMount,
+    refetchOnReconnect,
+    refetchInterval,
+    retry,
+    queryOptions,
+
+    // Table options
+    columns,
+    pagination: paginationOpts = true,
+    sorting: sortingOpts = true,
+    globalFilter: globalFilterEnabled = true,
+    columnFilters: columnFiltersEnabled = true,
+    fuzzy = false,
+    persist = false,
+    persistKey,
+    persistOptions,
+  } = options
+
+  // ─── Persistence: load initial state ─────────────────────
+  const persistedRef = useRef(
+    persist && persistKey
+      ? loadPersistedState(persist, persistKey, persistOptions)
+      : {}
+  )
+  const persisted = persistedRef.current
+
+  // ─── Resolve pagination options ──────────────────────────
+  const paginationConfig =
+    typeof paginationOpts === 'object'
+      ? paginationOpts
+      : paginationOpts
+        ? {}
+        : { pageSize: 9999 }
+
+  if (persisted.pagination) {
+    paginationConfig.pageIndex = paginationConfig.pageIndex ?? persisted.pagination.pageIndex
+    paginationConfig.pageSize = paginationConfig.pageSize ?? persisted.pagination.pageSize
+  }
+
+  // ─── Resolve sorting options ─────────────────────────────
+  const sortingConfig =
+    typeof sortingOpts === 'object' ? sortingOpts : {}
+
+  if (persisted.sorting && !sortingConfig.defaultSort) {
+    sortingConfig.defaultSort = persisted.sorting
+  }
+
+  // ─── Internal state ──────────────────────────────────────
+  const paginationState = usePaginationState(paginationConfig)
+  const sortState = useSortState(sortingConfig)
+  const filterState = useFilterState(persisted.globalFilter ?? '')
+  const columnFilterState = useColumnFilterState()
+
+  // ─── Reset page on sort/filter change ────────────────────
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    paginationState.setPageIndex(0)
+  }, [sortState.state, filterState.state, columnFilterState.state])
+
+  // ─── Compose query key ───────────────────────────────────
+  const composedQueryKey = useMemo(
+    () => [
+      ...queryKey,
+      {
+        pagination: paginationState.state,
+        sorting: sortState.state,
+        columnFilters: columnFilterState.state,
+        globalFilter: filterState.state,
+      },
+    ],
+    [queryKey, paginationState.state, sortState.state, columnFilterState.state, filterState.state]
+  )
+
+  // ─── Run query ───────────────────────────────────────────
+  const queryOpts: Record<string, unknown> = {
+    queryKey: composedQueryKey,
+    queryFn: () =>
+      queryFn({
+        pagination: paginationState.state,
+        sorting: sortState.state,
+        columnFilters: columnFilterState.state,
+        globalFilter: filterState.state,
+      }),
+    placeholderData: keepPreviousData,
+  }
+
+  // Only pass defined options to avoid overriding QueryClient defaults
+  if (staleTime !== undefined) queryOpts.staleTime = staleTime
+  if (gcTime !== undefined) queryOpts.gcTime = gcTime
+  if (enabled !== undefined) queryOpts.enabled = enabled
+  if (refetchOnWindowFocus !== undefined) queryOpts.refetchOnWindowFocus = refetchOnWindowFocus
+  if (refetchOnMount !== undefined) queryOpts.refetchOnMount = refetchOnMount
+  if (refetchOnReconnect !== undefined) queryOpts.refetchOnReconnect = refetchOnReconnect
+  if (refetchInterval !== undefined) queryOpts.refetchInterval = refetchInterval
+  if (retry !== undefined) queryOpts.retry = retry
+  if (queryOptions) Object.assign(queryOpts, queryOptions)
+
+  const query = useQuery(queryOpts as any) as {
+    data: { data: TData[]; rowCount: number } | undefined
+    isLoading: boolean
+    isError: boolean
+    isFetching: boolean
+    isPlaceholderData: boolean
+    error: Error | null
+    refetch: () => Promise<unknown>
+    status: 'pending' | 'error' | 'success'
+    fetchStatus: 'fetching' | 'paused' | 'idle'
+  }
+
+  // ─── Extract data from query result ──────────────────────
+  const data = query.data?.data ?? ([] as TData[])
+  const rowCount = query.data?.rowCount ?? 0
+
+  // ─── Fuzzy filter ────────────────────────────────────────
+  const fuzzyFilterFn = useMemo<FilterFn<TData> | undefined>(() => {
+    if (!fuzzy) return undefined
+    try {
+      const matchSorterLib = require('match-sorter')
+      const matchSorter = matchSorterLib.matchSorter
+      const rankings = matchSorterLib.rankings
+
+      const fn: FilterFn<TData> = (row, columnId, filterValue) => {
+        if (!filterValue || String(filterValue).trim() === '') return true
+        const cellValue = row.getValue(columnId)
+        const items = [{ value: cellValue }]
+        const result = matchSorter(items, String(filterValue), {
+          keys: ['value'],
+          threshold: rankings.MATCHES,
+        })
+        return result.length > 0
+      }
+      fn.autoRemove = (val: unknown) => !val
+      return fn
+    } catch {
+      return undefined
+    }
+  }, [fuzzy])
+
+  // ─── Build table ─────────────────────────────────────────
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      pagination: paginationState.state,
+      sorting: sortState.state,
+      globalFilter: filterState.state,
+      columnFilters: columnFilterState.state,
+    },
+
+    // Server-side: manual pagination and sorting
+    onPaginationChange: paginationState.onPaginationChange,
+    manualPagination: true,
+    rowCount,
+
+    // Server-side sorting
+    onSortingChange: sortState.onSortingChange,
+    manualSorting: true,
+
+    // Client-side filtering (for local filter UI state — actual filtering done server-side)
+    onGlobalFilterChange: filterState.onGlobalFilterChange,
+    onColumnFiltersChange: columnFilterState.onColumnFiltersChange,
+    getFilteredRowModel:
+      globalFilterEnabled || columnFiltersEnabled ? getFilteredRowModel() : undefined,
+    globalFilterFn: fuzzyFilterFn ?? 'includesString',
+
+    getCoreRowModel: getCoreRowModel(),
+  })
+
+  // ─── Persistence: save state on change ───────────────────
+  useEffect(() => {
+    if (!persist || !persistKey) return
+
+    savePersistedState(persist, persistKey, {
+      sorting: sortState.state,
+      columnFilters: columnFilterState.state,
+      globalFilter: filterState.state,
+      pagination: paginationState.state,
+    }, persistOptions)
+  }, [
+    persist,
+    persistKey,
+    persistOptions,
+    sortState.state,
+    columnFilterState.state,
+    filterState.state,
+    paginationState.state,
+  ])
+
+  // ─── Build pagination return ─────────────────────────────
+  const pagination: PaginationReturn = useMemo(
+    () => ({
+      pageIndex: paginationState.state.pageIndex,
+      pageSize: paginationState.state.pageSize,
+      pageCount: table.getPageCount(),
+      canPreviousPage: table.getCanPreviousPage(),
+      canNextPage: table.getCanNextPage(),
+      previousPage: () => table.previousPage(),
+      nextPage: () => table.nextPage(),
+      setPageIndex: paginationState.setPageIndex,
+      setPageSize: paginationState.setPageSize,
+    }),
+    [paginationState.state, table, paginationState.setPageIndex, paginationState.setPageSize, rowCount]
+  )
+
+  // ─── Build sorting return ────────────────────────────────
+  const sorting: SortingReturn = useMemo(
+    () => ({
+      sortingState: sortState.state,
+      setSorting: sortState.onSortingChange,
+      clearSorting: sortState.clearSorting,
+    }),
+    [sortState.state, sortState.onSortingChange, sortState.clearSorting]
+  )
+
+  // ─── Build global filter return ──────────────────────────
+  const globalFilter: GlobalFilterReturn = useMemo(
+    () => ({
+      value: filterState.state,
+      setValue: filterState.onGlobalFilterChange,
+      clear: filterState.clear,
+    }),
+    [filterState.state, filterState.onGlobalFilterChange, filterState.clear]
+  )
+
+  // ─── Build column filters return ─────────────────────────
+  const columnFiltersReturn: ColumnFiltersReturn = useMemo(
+    () => ({
+      state: columnFilterState.state,
+      setFilter: columnFilterState.setFilter,
+      clearFilter: columnFilterState.clearFilter,
+      clearAll: columnFilterState.clearAll,
+    }),
+    [columnFilterState.state, columnFilterState.setFilter, columnFilterState.clearFilter, columnFilterState.clearAll]
+  )
+
+  // ─── Build empty state return ────────────────────────────
+  const emptyState: EmptyStateReturn = useMemo(
+    () => ({
+      isEmpty: !query.isLoading && data.length === 0 && filterState.state === '' && columnFilterState.state.length === 0,
+      isFilteredEmpty:
+        !query.isLoading &&
+        data.length === 0 &&
+        (filterState.state !== '' || columnFilterState.state.length > 0),
+    }),
+    [query.isLoading, data.length, filterState.state, columnFilterState.state.length]
+  )
+
+  return {
+    table,
+    pagination,
+    sorting,
+    globalFilter,
+    columnFilters: columnFiltersReturn,
+    emptyState,
+    query: {
+      data: query.data,
+      isLoading: query.isLoading,
+      isError: query.isError,
+      isFetching: query.isFetching,
+      isPlaceholderData: query.isPlaceholderData,
+      error: query.error ?? null,
+      refetch: query.refetch,
+      status: query.status,
+      fetchStatus: query.fetchStatus,
+    },
+  }
+}
