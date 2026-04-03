@@ -8,6 +8,10 @@ export { useColumnFilterState } from './hooks/useColumnFilterState'
 
 // Helpers
 export { createColumns } from './helpers/createColumns'
+export { inferColumns } from './helpers/inferColumns'
+
+// Utilities
+export { loadPersistedState, savePersistedState, clearPersistedState } from './utils/persist'
 
 // Types
 export type {
@@ -20,4 +24,9 @@ export type {
   SortingReturn,
   GlobalFilterReturn,
   ColumnFiltersReturn,
+  EmptyStateReturn,
+  PersistStorage,
+  PersistOptions,
 } from './types'
+
+export type { InferColumnsOptions } from './helpers/inferColumns'
