@@ -7,5 +7,5 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   treeshake: true,
-  external: ['react', '@tanstack/react-table'],
+  external: ['react', '@tanstack/react-table', 'match-sorter'],
 })
