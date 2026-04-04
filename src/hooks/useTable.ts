@@ -30,12 +30,35 @@ import { useFilterState } from './useFilterState'
 import { useColumnFilterState } from './useColumnFilterState'
 import { useRowSelectionState } from './useRowSelectionState'
 import { useColumnVisibilityState } from './useColumnVisibilityState'
+import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
 
 export function useTable<TData extends RowData>(
   options: UseTableOptions<TData>
 ): UseTableReturn<TData> {
+  // ─── Merge provider defaults with per-call options ──────
+  const providerDefaults = useTableKitDefaults()
+
+  const merged = {
+    fuzzy: providerDefaults.fuzzy,
+    rowSelection: providerDefaults.rowSelection,
+    columnVisibility: providerDefaults.columnVisibility,
+    globalFilter: providerDefaults.globalFilter,
+    columnFilters: providerDefaults.columnFilters,
+    persist: providerDefaults.persist,
+    persistOptions: providerDefaults.persistOptions,
+    syncUrl: providerDefaults.syncUrl,
+    ...options,
+  } as UseTableOptions<TData>
+
+  // Resolve provider pageSize shortcut
+  if (providerDefaults.pageSize && !('pagination' in options)) {
+    merged.pagination = { pageSize: providerDefaults.pageSize }
+  } else if (providerDefaults.pageSize && options.pagination === true) {
+    merged.pagination = { pageSize: providerDefaults.pageSize }
+  }
+
   const {
     data,
     columns,
@@ -57,7 +80,7 @@ export function useTable<TData extends RowData>(
     persistKey,
     persistOptions,
     syncUrl = false,
-  } = options
+  } = merged
 
   // ─── Persistence: load initial state ─────────────────────
   const persistedRef = useRef(

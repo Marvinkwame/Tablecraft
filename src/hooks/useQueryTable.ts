@@ -31,6 +31,7 @@ import { useFilterState } from './useFilterState'
 import { useColumnFilterState } from './useColumnFilterState'
 import { useRowSelectionState } from './useRowSelectionState'
 import { useColumnVisibilityState } from './useColumnVisibilityState'
+import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
 
@@ -39,6 +40,27 @@ import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
 export function useQueryTable<TData extends RowData>(
   options: UseQueryTableOptions<TData>
 ): UseQueryTableReturn<TData> {
+  // ─── Merge provider defaults with per-call options ──────
+  const providerDefaults = useTableKitDefaults()
+
+  const merged = {
+    fuzzy: providerDefaults.fuzzy,
+    rowSelection: providerDefaults.rowSelection,
+    columnVisibility: providerDefaults.columnVisibility,
+    globalFilter: providerDefaults.globalFilter,
+    columnFilters: providerDefaults.columnFilters,
+    persist: providerDefaults.persist,
+    persistOptions: providerDefaults.persistOptions,
+    syncUrl: providerDefaults.syncUrl,
+    ...options,
+  } as UseQueryTableOptions<TData>
+
+  if (providerDefaults.pageSize && !('pagination' in options)) {
+    merged.pagination = { pageSize: providerDefaults.pageSize }
+  } else if (providerDefaults.pageSize && options.pagination === true) {
+    merged.pagination = { pageSize: providerDefaults.pageSize }
+  }
+
   const {
     // Query options
     queryKey,
@@ -66,7 +88,7 @@ export function useQueryTable<TData extends RowData>(
     persistKey,
     persistOptions,
     syncUrl = false,
-  } = options
+  } = merged
 
   // ─── Persistence: load initial state ─────────────────────
   const persistedRef = useRef(
