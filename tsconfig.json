@@ -19,6 +19,6 @@
       "tablecraft": ["./src/index.ts"]
     }
   },
-  "include": ["src/**/*", "tests/**/*"],
+  "include": ["src/**/*", "tests/**/*", "testing/**/*", "devtools/**/*"],
   "exclude": ["node_modules", "dist"]
 }

@@ -24,11 +24,17 @@
       "types": "./dist/testing/index.d.ts",
       "import": "./dist/testing/index.mjs",
       "require": "./dist/testing/index.js"
+    },
+    "./devtools": {
+      "types": "./dist/devtools/index.d.ts",
+      "import": "./dist/devtools/index.mjs",
+      "require": "./dist/devtools/index.js"
     }
   },
   "files": [
     "dist",
-    "testing"
+    "testing",
+    "devtools"
   ],
   "sideEffects": false,
   "peerDependencies": {
