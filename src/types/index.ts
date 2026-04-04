@@ -132,6 +132,29 @@ export interface URLSyncOptions {
   mode?: 'replace' | 'push'
 }
 
+// ─── TableKitProvider Defaults ───────────────────────────────
+
+export interface TableKitDefaults {
+  /** Default page size for all tables */
+  pageSize?: number
+  /** Enable fuzzy search by default */
+  fuzzy?: boolean
+  /** Enable row selection by default */
+  rowSelection?: RowSelectionOptions | boolean
+  /** Enable column visibility by default */
+  columnVisibility?: ColumnVisibilityOptions | boolean
+  /** Enable global filter by default */
+  globalFilter?: boolean
+  /** Enable column filters by default */
+  columnFilters?: boolean
+  /** Default persistence strategy */
+  persist?: PersistStorage | false
+  /** Default persist options */
+  persistOptions?: PersistOptions
+  /** Default URL sync */
+  syncUrl?: boolean | URLSyncOptions
+}
+
 // ─── useTable Options ─────────────────────────────────────────
 
 export interface UseTableOptions<TData extends RowData> {
