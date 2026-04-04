@@ -9,6 +9,10 @@ export { useRowSelectionState } from './hooks/useRowSelectionState'
 export { useColumnVisibilityState } from './hooks/useColumnVisibilityState'
 export { useQueryTable } from './hooks/useQueryTable'
 
+// Context
+export { TableKitProvider, useTableKitDefaults } from './context/TableKitContext'
+export type { TableKitProviderProps } from './context/TableKitContext'
+
 // Helpers
 export { createColumns } from './helpers/createColumns'
 export { inferColumns } from './helpers/inferColumns'
@@ -33,6 +37,7 @@ export type {
   ColumnVisibilityOptions,
   ColumnVisibilityReturn,
   EmptyStateReturn,
+  TableKitDefaults,
   PersistStorage,
   PersistOptions,
 } from './types'
