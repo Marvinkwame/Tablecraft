@@ -7,6 +7,7 @@ import type {
 import type {
   PaginationOptions,
   SortingOptions,
+  RowExpansionOptions,
   RowSelectionOptions,
   ColumnVisibilityOptions,
   PersistStorage,
@@ -48,6 +49,7 @@ export interface UseQueryTableOptions<TData extends RowData> {
   columnFilters?: boolean
   rowSelection?: RowSelectionOptions | boolean
   columnVisibility?: ColumnVisibilityOptions | boolean
+  rowExpansion?: RowExpansionOptions | boolean
   fuzzy?: boolean
   persist?: PersistStorage | false
   persistKey?: string
