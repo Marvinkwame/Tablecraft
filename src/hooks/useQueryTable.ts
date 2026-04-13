@@ -8,6 +8,7 @@ import {
   useReactTable,
   getCoreRowModel,
   getFilteredRowModel,
+  getExpandedRowModel,
 } from '@tanstack/react-table'
 import type { FilterFn, RowData } from '@tanstack/react-table'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
@@ -19,6 +20,7 @@ import type {
   ColumnFiltersReturn,
   RowSelectionReturn,
   ColumnVisibilityReturn,
+  RowExpansionReturn,
   EmptyStateReturn,
 } from '../types'
 import type {
@@ -31,6 +33,7 @@ import { useFilterState } from './useFilterState'
 import { useColumnFilterState } from './useColumnFilterState'
 import { useRowSelectionState } from './useRowSelectionState'
 import { useColumnVisibilityState } from './useColumnVisibilityState'
+import { useRowExpansionState } from './useRowExpansionState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
@@ -47,6 +50,7 @@ export function useQueryTable<TData extends RowData>(
     fuzzy: providerDefaults.fuzzy,
     rowSelection: providerDefaults.rowSelection,
     columnVisibility: providerDefaults.columnVisibility,
+    rowExpansion: providerDefaults.rowExpansion,
     globalFilter: providerDefaults.globalFilter,
     columnFilters: providerDefaults.columnFilters,
     persist: providerDefaults.persist,
@@ -83,6 +87,7 @@ export function useQueryTable<TData extends RowData>(
     columnFilters: columnFiltersEnabled = true,
     rowSelection: rowSelectionOpts = false,
     columnVisibility: columnVisibilityOpts = false,
+    rowExpansion: rowExpansionOpts = false,
     fuzzy = false,
     persist = false,
     persistKey,
@@ -160,6 +165,12 @@ export function useQueryTable<TData extends RowData>(
   const columnVisibilityConfig =
     typeof columnVisibilityOpts === 'object' ? columnVisibilityOpts : {}
   const columnVisibilityState = useColumnVisibilityState(columnVisibilityConfig)
+
+  // ─── Row expansion ──────────────────────────────────────
+  const rowExpansionEnabled = !!rowExpansionOpts
+  const rowExpansionConfig =
+    typeof rowExpansionOpts === 'object' ? rowExpansionOpts : {}
+  const rowExpansionState = useRowExpansionState(rowExpansionConfig)
 
   // ─── Reset page on sort/filter change ────────────────────
   const isFirstRender = useRef(true)
@@ -261,6 +272,7 @@ export function useQueryTable<TData extends RowData>(
       columnFilters: columnFilterState.state,
       ...(rowSelectionEnabled && { rowSelection: rowSelectionState.state }),
       ...(columnVisibilityEnabled && { columnVisibility: columnVisibilityState.state }),
+      ...(rowExpansionEnabled && { expanded: rowExpansionState.state }),
     },
 
     // Server-side: manual pagination and sorting
@@ -288,6 +300,16 @@ export function useQueryTable<TData extends RowData>(
     // Column visibility
     ...(columnVisibilityEnabled && {
       onColumnVisibilityChange: columnVisibilityState.onColumnVisibilityChange,
+    }),
+
+    // Row expansion
+    ...(rowExpansionEnabled && {
+      onExpandedChange: rowExpansionState.onExpandedChange,
+      getExpandedRowModel: getExpandedRowModel(),
+      paginateExpandedRows: rowExpansionConfig.paginateExpandedRows,
+    }),
+    ...(rowExpansionEnabled && rowExpansionConfig.getSubRows && {
+      getSubRows: rowExpansionConfig.getSubRows,
     }),
 
     getCoreRowModel: getCoreRowModel(),
@@ -410,6 +432,20 @@ export function useQueryTable<TData extends RowData>(
     [columnVisibilityState]
   )
 
+  // ─── Build row expansion return ──────────────────────────
+  const rowExpansion: RowExpansionReturn = useMemo(
+    () => ({
+      state: rowExpansionState.state,
+      toggleRow: rowExpansionState.toggleRow,
+      expandRow: rowExpansionState.expandRow,
+      collapseRow: rowExpansionState.collapseRow,
+      clearExpansion: rowExpansionState.clearExpansion,
+      expandedRowIds: rowExpansionState.expandedRowIds,
+      isExpanded: rowExpansionState.isExpanded,
+    }),
+    [rowExpansionState]
+  )
+
   // ─── Build empty state return ────────────────────────────
   const emptyState: EmptyStateReturn = useMemo(
     () => ({
@@ -430,6 +466,7 @@ export function useQueryTable<TData extends RowData>(
     columnFilters: columnFiltersReturn,
     rowSelection,
     columnVisibility,
+    rowExpansion,
     emptyState,
     query: {
       data: query.data,
