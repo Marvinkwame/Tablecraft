@@ -1,6 +1,7 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ExpandedState,
   OnChangeFn,
   PaginationState,
   RowData,
@@ -90,6 +91,26 @@ export interface ColumnVisibilityReturn {
   hiddenColumns: string[]
 }
 
+// ─── Row Expansion ──────────────────────────────────────
+
+export interface RowExpansionOptions {
+  defaultExpanded?: ExpandedState
+  allowMultiple?: boolean
+  paginateExpandedRows?: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getSubRows?: (row: any, index: number) => any[] | undefined
+}
+
+export interface RowExpansionReturn {
+  state: ExpandedState
+  toggleRow: (rowId: string) => void
+  expandRow: (rowId: string) => void
+  collapseRow: (rowId: string) => void
+  clearExpansion: () => void
+  expandedRowIds: string[]
+  isExpanded: (rowId: string) => boolean
+}
+
 // ─── Empty State ─────────────────────────────────────────────
 
 export interface EmptyStateReturn {
@@ -153,6 +174,8 @@ export interface TableKitDefaults {
   persistOptions?: PersistOptions
   /** Default URL sync */
   syncUrl?: boolean | URLSyncOptions
+  /** Enable row expansion by default */
+  rowExpansion?: RowExpansionOptions | boolean
 }
 
 // ─── useTable Options ─────────────────────────────────────────
@@ -184,6 +207,9 @@ export interface UseTableOptions<TData extends RowData> {
   // Column visibility (opt-in)
   columnVisibility?: ColumnVisibilityOptions | boolean
 
+  // Row expansion (opt-in)
+  rowExpansion?: RowExpansionOptions | boolean
+
   // v1.x — Fuzzy search
   fuzzy?: boolean
 
@@ -206,6 +232,7 @@ export interface UseTableReturn<TData extends RowData> {
   columnFilters: ColumnFiltersReturn
   rowSelection: RowSelectionReturn
   columnVisibility: ColumnVisibilityReturn
+  rowExpansion: RowExpansionReturn
   emptyState: EmptyStateReturn
 }
 
