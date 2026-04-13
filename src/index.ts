@@ -7,6 +7,7 @@ export { useFilterState } from './hooks/useFilterState'
 export { useColumnFilterState } from './hooks/useColumnFilterState'
 export { useRowSelectionState } from './hooks/useRowSelectionState'
 export { useColumnVisibilityState } from './hooks/useColumnVisibilityState'
+export { useRowExpansionState } from './hooks/useRowExpansionState'
 export { useQueryTable } from './hooks/useQueryTable'
 
 // Context
@@ -36,6 +37,8 @@ export type {
   RowSelectionReturn,
   ColumnVisibilityOptions,
   ColumnVisibilityReturn,
+  RowExpansionOptions,
+  RowExpansionReturn,
   EmptyStateReturn,
   TableKitDefaults,
   PersistStorage,
@@ -45,6 +48,7 @@ export type {
 export type { InferColumnsOptions } from './helpers/inferColumns'
 export type { UseRowSelectionOptions } from './hooks/useRowSelectionState'
 export type { UseColumnVisibilityOptions } from './hooks/useColumnVisibilityState'
+export type { UseRowExpansionOptions } from './hooks/useRowExpansionState'
 
 export type {
   UseQueryTableOptions,
