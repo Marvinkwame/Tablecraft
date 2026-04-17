@@ -2,6 +2,7 @@ import type {
   ColumnDef,
   ColumnFiltersState,
   ExpandedState,
+  GroupingState,
   OnChangeFn,
   PaginationState,
   RowData,
@@ -111,6 +112,23 @@ export interface RowExpansionReturn {
   isExpanded: (rowId: string) => boolean
 }
 
+// ─── Grouping ────────────────────────────────────────────────
+
+export interface GroupingOptions {
+  defaultGrouping?: GroupingState
+  manualGrouping?: boolean
+  groupedColumnMode?: false | 'reorder' | 'remove'
+}
+
+export interface GroupingReturn {
+  state: GroupingState
+  toggleGrouping: (columnId: string) => void
+  setGrouping: (cols: GroupingState) => void
+  clearGrouping: () => void
+  isGrouped: (columnId: string) => boolean
+  groupedColumns: string[]
+}
+
 // ─── Empty State ─────────────────────────────────────────────
 
 export interface EmptyStateReturn {
@@ -176,6 +194,8 @@ export interface TableKitDefaults {
   syncUrl?: boolean | URLSyncOptions
   /** Enable row expansion by default */
   rowExpansion?: RowExpansionOptions | boolean
+  /** Enable row grouping by default */
+  grouping?: GroupingOptions | boolean
 }
 
 // ─── useTable Options ─────────────────────────────────────────
@@ -210,6 +230,9 @@ export interface UseTableOptions<TData extends RowData> {
   // Row expansion (opt-in)
   rowExpansion?: RowExpansionOptions | boolean
 
+  // Grouping (opt-in)
+  grouping?: GroupingOptions | boolean
+
   // v1.x — Fuzzy search
   fuzzy?: boolean
 
@@ -233,6 +256,7 @@ export interface UseTableReturn<TData extends RowData> {
   rowSelection: RowSelectionReturn
   columnVisibility: ColumnVisibilityReturn
   rowExpansion: RowExpansionReturn
+  grouping: GroupingReturn
   emptyState: EmptyStateReturn
 }
 
