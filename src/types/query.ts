@@ -1,6 +1,7 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
+  GroupingState,
   RowData,
   SortingState,
 } from '@tanstack/react-table'
@@ -10,6 +11,7 @@ import type {
   RowExpansionOptions,
   RowSelectionOptions,
   ColumnVisibilityOptions,
+  GroupingOptions,
   PersistStorage,
   PersistOptions,
   URLSyncOptions,
@@ -24,6 +26,7 @@ export interface QueryTableFnContext {
   sorting: SortingState
   columnFilters: ColumnFiltersState
   globalFilter: string
+  grouping: GroupingState
 }
 
 /** Expected return shape from the queryFn */
@@ -50,6 +53,7 @@ export interface UseQueryTableOptions<TData extends RowData> {
   rowSelection?: RowSelectionOptions | boolean
   columnVisibility?: ColumnVisibilityOptions | boolean
   rowExpansion?: RowExpansionOptions | boolean
+  grouping?: GroupingOptions | boolean
   fuzzy?: boolean
   persist?: PersistStorage | false
   persistKey?: string
