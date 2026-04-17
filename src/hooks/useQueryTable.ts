@@ -9,6 +9,7 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getExpandedRowModel,
+  getGroupedRowModel,
 } from '@tanstack/react-table'
 import type { FilterFn, RowData } from '@tanstack/react-table'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
@@ -21,6 +22,7 @@ import type {
   RowSelectionReturn,
   ColumnVisibilityReturn,
   RowExpansionReturn,
+  GroupingReturn,
   EmptyStateReturn,
 } from '../types'
 import type {
@@ -34,6 +36,7 @@ import { useColumnFilterState } from './useColumnFilterState'
 import { useRowSelectionState } from './useRowSelectionState'
 import { useColumnVisibilityState } from './useColumnVisibilityState'
 import { useRowExpansionState } from './useRowExpansionState'
+import { useGroupingState } from './useGroupingState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
@@ -51,6 +54,7 @@ export function useQueryTable<TData extends RowData>(
     rowSelection: providerDefaults.rowSelection,
     columnVisibility: providerDefaults.columnVisibility,
     rowExpansion: providerDefaults.rowExpansion,
+    grouping: providerDefaults.grouping,
     globalFilter: providerDefaults.globalFilter,
     columnFilters: providerDefaults.columnFilters,
     persist: providerDefaults.persist,
@@ -88,6 +92,7 @@ export function useQueryTable<TData extends RowData>(
     rowSelection: rowSelectionOpts = false,
     columnVisibility: columnVisibilityOpts = false,
     rowExpansion: rowExpansionOpts = false,
+    grouping: groupingOpts = false,
     fuzzy = false,
     persist = false,
     persistKey,
@@ -172,6 +177,12 @@ export function useQueryTable<TData extends RowData>(
     typeof rowExpansionOpts === 'object' ? rowExpansionOpts : {}
   const rowExpansionState = useRowExpansionState(rowExpansionConfig)
 
+  // ─── Grouping ────────────────────────────────────────────
+  const groupingEnabled = !!groupingOpts
+  const groupingConfig =
+    typeof groupingOpts === 'object' ? groupingOpts : {}
+  const groupingState = useGroupingState(groupingConfig)
+
   // ─── Reset page on sort/filter change ────────────────────
   const isFirstRender = useRef(true)
   useEffect(() => {
@@ -205,6 +216,7 @@ export function useQueryTable<TData extends RowData>(
         sorting: sortState.state,
         columnFilters: columnFilterState.state,
         globalFilter: filterState.state,
+        grouping: groupingState.state,
       }),
     placeholderData: keepPreviousData,
   }
@@ -273,6 +285,7 @@ export function useQueryTable<TData extends RowData>(
       ...(rowSelectionEnabled && { rowSelection: rowSelectionState.state }),
       ...(columnVisibilityEnabled && { columnVisibility: columnVisibilityState.state }),
       ...(rowExpansionEnabled && { expanded: rowExpansionState.state }),
+      ...(groupingEnabled && { grouping: groupingState.state }),
     },
 
     // Server-side: manual pagination and sorting
@@ -310,6 +323,14 @@ export function useQueryTable<TData extends RowData>(
     }),
     ...(rowExpansionEnabled && rowExpansionConfig.getSubRows && {
       getSubRows: rowExpansionConfig.getSubRows,
+    }),
+
+    // Grouping
+    ...(groupingEnabled && {
+      onGroupingChange: groupingState.onGroupingChange,
+      getGroupedRowModel: getGroupedRowModel(),
+      manualGrouping: groupingConfig.manualGrouping,
+      groupedColumnMode: groupingConfig.groupedColumnMode,
     }),
 
     getCoreRowModel: getCoreRowModel(),
@@ -432,6 +453,19 @@ export function useQueryTable<TData extends RowData>(
     [columnVisibilityState]
   )
 
+  // ─── Build grouping return ───────────────────────────────
+  const grouping: GroupingReturn = useMemo(
+    () => ({
+      state: groupingState.state,
+      toggleGrouping: groupingState.toggleGrouping,
+      setGrouping: groupingState.setGrouping,
+      clearGrouping: groupingState.clearGrouping,
+      isGrouped: groupingState.isGrouped,
+      groupedColumns: groupingState.groupedColumns,
+    }),
+    [groupingState]
+  )
+
   // ─── Build row expansion return ──────────────────────────
   const rowExpansion: RowExpansionReturn = useMemo(
     () => ({
@@ -467,6 +501,7 @@ export function useQueryTable<TData extends RowData>(
     rowSelection,
     columnVisibility,
     rowExpansion,
+    grouping,
     emptyState,
     query: {
       data: query.data,
