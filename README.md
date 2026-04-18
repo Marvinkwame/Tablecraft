@@ -90,7 +90,7 @@ Sorting, pagination, global search, full TypeScript generics — wired up in one
 | TypeScript-first | Yes | Yes | Yes | **Yes** |
 | State persistence | No | Enterprise $$ | No | **Free** |
 | Inline editing | No | Enterprise $$ | No | **Free** |
-| Bundle size | ~15 KB | ~300 KB | ~50 KB | **~6 KB** |
+| Bundle size | ~15 KB | ~300 KB | ~50 KB | **~21 KB** (tablecraft + TanStack) |
 | License | MIT | MIT* | MIT | **MIT** |
 
 ---
@@ -603,7 +603,7 @@ Yes. shadcn's data table is built on TanStack Table. Replace the boilerplate wit
 Yes. All hooks include `"use client"` directives. `createColumns` and `inferColumns` are pure functions that work anywhere.
 
 **What's the bundle size?**
-~6 KB (ESM, before gzip). The only required peer dependencies are `react` and `@tanstack/react-table`.
+~21 KB ESM before gzip — ~6 KB for tablecraft itself plus ~15 KB for `@tanstack/react-table`, which you'd need anyway. Compare that to AG Grid (~300 KB) or Material React Table (~50 KB).
 
 **Does it support React 19?**
 Yes. Tested against React 18 and 19.
