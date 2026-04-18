@@ -11,6 +11,7 @@ export { useRowExpansionState } from './hooks/useRowExpansionState'
 export { useGroupingState } from './hooks/useGroupingState'
 export { useTableA11y } from './hooks/useTableA11y'
 export type { UseTableA11yOptions } from './hooks/useTableA11y'
+export { useEditableRows } from './hooks/useEditableRows'
 export { useQueryTable } from './hooks/useQueryTable'
 
 // Context
@@ -45,6 +46,8 @@ export type {
   GroupingOptions,
   GroupingReturn,
   TableA11yReturn,
+  EditableOptions,
+  EditableReturn,
   EmptyStateReturn,
   TableKitDefaults,
   PersistStorage,
