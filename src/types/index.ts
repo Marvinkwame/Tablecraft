@@ -1,3 +1,4 @@
+import type React from 'react'
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -110,6 +111,33 @@ export interface RowExpansionReturn {
   clearExpansion: () => void
   expandedRowIds: string[]
   isExpanded: (rowId: string) => boolean
+}
+
+// ─── A11y ────────────────────────────────────────────────────
+
+export interface TableA11yReturn {
+  getTableProps: () => {
+    role: 'grid'
+    'aria-rowcount': number
+    'aria-colcount': number
+  }
+  getHeaderProps: (headerId: string) => {
+    role: 'columnheader'
+    'aria-sort': 'ascending' | 'descending' | 'none'
+  }
+  getRowProps: (rowId: string) => {
+    role: 'row'
+    'aria-rowindex': number
+    'aria-selected'?: boolean
+    'aria-expanded'?: boolean
+    tabIndex: 0 | -1
+    onKeyDown: (e: React.KeyboardEvent) => void
+  }
+  getCellProps: (columnIndex: number) => {
+    role: 'gridcell'
+    'aria-colindex': number
+  }
+  focusedRowIndex: number | null
 }
 
 // ─── Grouping ────────────────────────────────────────────────
