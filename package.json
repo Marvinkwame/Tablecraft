@@ -1,6 +1,6 @@
 {
   "name": "tablecraft",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Batteries-included TanStack Table wrapper for React — TypeScript-first, headless, zero UI lock-in",
   "keywords": [
     "react",
@@ -34,7 +34,8 @@
   "files": [
     "dist",
     "testing",
-    "devtools"
+    "devtools",
+    "CHANGELOG.md"
   ],
   "sideEffects": false,
   "peerDependencies": {
@@ -72,6 +73,14 @@
     "test:coverage": "vitest run --coverage",
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build && npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Marvinkwame/Tablecraft.git"
+  },
+  "homepage": "https://github.com/Marvinkwame/Tablecraft#readme",
+  "bugs": {
+    "url": "https://github.com/Marvinkwame/Tablecraft/issues"
   },
   "license": "MIT"
 }
