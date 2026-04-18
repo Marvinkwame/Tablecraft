@@ -140,6 +140,31 @@ export interface TableA11yReturn {
   focusedRowIndex: number | null
 }
 
+// ─── Editable Rows ───────────────────────────────────────────
+
+export interface EditableOptions<TData> {
+  onSave?: (
+    rowId: string,
+    draft: TData
+  ) =>
+    | void
+    | Partial<Record<keyof TData, string>>
+    | Promise<void | Partial<Record<keyof TData, string>>>
+}
+
+export interface EditableReturn<TData> {
+  editingRowId: string | null
+  draftData: Partial<TData>
+  isDirty: boolean
+  dirtyFields: (keyof TData)[]
+  errors: Partial<Record<keyof TData, string>>
+  isEditing: (rowId: string) => boolean
+  startEditing: (rowId: string) => void
+  setField: <K extends keyof TData>(field: K, value: TData[K]) => void
+  saveEditing: () => Promise<void>
+  cancelEditing: () => void
+}
+
 // ─── Grouping ────────────────────────────────────────────────
 
 export interface GroupingOptions {
