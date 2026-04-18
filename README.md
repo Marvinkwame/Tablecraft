@@ -5,13 +5,13 @@
 **Go from ~100 lines of TanStack Table boilerplate to ~10 lines.** No CSS. No component library. Full escape hatch to the raw table instance.
 
 ```
-npm i tablecraft @tanstack/react-table
+npm i @marvinackerman/tablecraft @tanstack/react-table
 ```
 
 ## Quick Start
 
 ```tsx
-import { useTable, createColumns } from 'tablecraft'
+import { useTable, createColumns } from '@marvinackerman/tablecraft'
 import { flexRender } from '@tanstack/react-table'
 
 type User = { id: number; name: string; email: string; role: string }
@@ -223,7 +223,7 @@ const {
 Type-safe column definitions without `useMemo` or manual type annotations.
 
 ```tsx
-import { createColumns } from 'tablecraft'
+import { createColumns } from '@marvinackerman/tablecraft'
 
 const columns = createColumns<User>([
   { accessorKey: 'name', header: 'Name', enableSorting: true },
@@ -243,7 +243,7 @@ const columns = createColumns<User>([
 Automatically infers column definitions from your data shape.
 
 ```tsx
-import { inferColumns } from 'tablecraft'
+import { inferColumns } from '@marvinackerman/tablecraft'
 
 const columns = inferColumns(users, {
   exclude: ['id'],
@@ -258,7 +258,7 @@ const columns = inferColumns(users, {
 Forces `manualPagination` and `manualSorting` to `true`. Use when your backend owns sorting, filtering, and pagination.
 
 ```tsx
-import { useServerTable } from 'tablecraft'
+import { useServerTable } from '@marvinackerman/tablecraft'
 
 const { table, pagination, sorting } = useServerTable({
   data: serverData,       // current page from your API
@@ -283,7 +283,7 @@ const { table, pagination, sorting } = useServerTable({
 Combines `useServerTable` with TanStack Query. Automatically re-fetches when sort, page, or filter state changes.
 
 ```tsx
-import { useQueryTable } from 'tablecraft'
+import { useQueryTable } from '@marvinackerman/tablecraft'
 
 const { table, pagination, sorting, query } = useQueryTable({
   queryKey: ['users'],
@@ -312,7 +312,7 @@ npm i @tanstack/react-query
 Standalone opt-in hook. Returns prop-getter objects to spread onto your table elements, implementing the [WAI-ARIA Grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/).
 
 ```tsx
-import { useTableA11y } from 'tablecraft'
+import { useTableA11y } from '@marvinackerman/tablecraft'
 
 const { table } = useTable({ data, columns })
 const a11y = useTableA11y(table, {
@@ -354,7 +354,7 @@ a11y.focusedRowIndex  // number | null
 Standalone opt-in hook for single-row inline editing. No form library required — works with Zod, Yup, or plain validation.
 
 ```tsx
-import { useEditableRows } from 'tablecraft'
+import { useEditableRows } from '@marvinackerman/tablecraft'
 
 const { table } = useTable({ data, columns })
 const editable = useEditableRows(table, {
@@ -425,7 +425,7 @@ const editable = useEditableRows(table, {
 Set defaults for all tables in your app. Per-call options always override provider defaults.
 
 ```tsx
-import { TableKitProvider } from 'tablecraft'
+import { TableKitProvider } from '@marvinackerman/tablecraft'
 
 function App() {
   return (
@@ -467,7 +467,7 @@ const { table } = useTable({
 Utilities for manual control:
 
 ```tsx
-import { savePersistedState, loadPersistedState, clearPersistedState } from 'tablecraft'
+import { savePersistedState, loadPersistedState, clearPersistedState } from '@marvinackerman/tablecraft'
 
 savePersistedState('my-key', state, 'localStorage')
 loadPersistedState('my-key', 'localStorage')
@@ -509,7 +509,7 @@ import {
   useColumnVisibilityState,
   useRowExpansionState,
   useGroupingState,
-} from 'tablecraft'
+} from '@marvinackerman/tablecraft'
 
 const sorting = useSortState({ defaultSort: [{ id: 'createdAt', desc: true }] })
 const pagination = usePaginationState({ pageSize: 25 })
