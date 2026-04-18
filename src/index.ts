@@ -9,6 +9,8 @@ export { useRowSelectionState } from './hooks/useRowSelectionState'
 export { useColumnVisibilityState } from './hooks/useColumnVisibilityState'
 export { useRowExpansionState } from './hooks/useRowExpansionState'
 export { useGroupingState } from './hooks/useGroupingState'
+export { useTableA11y } from './hooks/useTableA11y'
+export type { UseTableA11yOptions } from './hooks/useTableA11y'
 export { useQueryTable } from './hooks/useQueryTable'
 
 // Context
@@ -42,6 +44,7 @@ export type {
   RowExpansionReturn,
   GroupingOptions,
   GroupingReturn,
+  TableA11yReturn,
   EmptyStateReturn,
   TableKitDefaults,
   PersistStorage,
@@ -53,6 +56,14 @@ export type { UseRowSelectionOptions } from './hooks/useRowSelectionState'
 export type { UseColumnVisibilityOptions } from './hooks/useColumnVisibilityState'
 export type { UseRowExpansionOptions } from './hooks/useRowExpansionState'
 export type { UseGroupingOptions } from './hooks/useGroupingState'
+
+// A11y utilities
+export {
+  getAriaSortValue,
+  getAriaRowCount,
+  getAriaColCount,
+  getAriaRowIndex,
+} from './a11y/ariaAttributes'
 
 export type {
   UseQueryTableOptions,
