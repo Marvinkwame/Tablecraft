@@ -14,6 +14,7 @@ export function useEditableRows<TData extends RowData>(
   const [draftData, setDraftData] = useState<Partial<TData>>({})
   const [originalSnapshot, setOriginalSnapshot] = useState<Partial<TData>>({})
   const [errors, setErrors] = useState<Partial<Record<keyof TData, string>>>({})
+  const [isSaving, setIsSaving] = useState(false)
 
   // ─── startEditing ─────────────────────────────────────────
   const startEditing = useCallback((rowId: string) => {
@@ -35,6 +36,7 @@ export function useEditableRows<TData extends RowData>(
     setDraftData({})
     setOriginalSnapshot({})
     setErrors({})
+    setIsSaving(false)
   }, [])
 
   // ─── saveEditing ──────────────────────────────────────────
@@ -46,12 +48,17 @@ export function useEditableRows<TData extends RowData>(
       return
     }
 
-    const result = await onSave(editingRowId, draftData as TData)
-
-    if (result && typeof result === 'object' && Object.keys(result).length > 0) {
-      setErrors(result as Partial<Record<keyof TData, string>>)
-    } else {
-      cancelEditing()
+    setIsSaving(true)
+    try {
+      const result = await onSave(editingRowId, draftData as TData)
+      if (result && typeof result === 'object' && Object.keys(result).length > 0) {
+        setErrors(result as Partial<Record<keyof TData, string>>)
+      } else {
+        cancelEditing()
+        return
+      }
+    } finally {
+      setIsSaving(false)
     }
   }, [editingRowId, draftData, onSave, cancelEditing])
 
@@ -79,6 +86,7 @@ export function useEditableRows<TData extends RowData>(
     isDirty,
     dirtyFields,
     errors,
+    isSaving,
     isEditing,
     startEditing,
     setField,
