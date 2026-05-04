@@ -381,6 +381,7 @@ const editable = useEditableRows(table, {
 | `isDirty` | `boolean` | Whether any field has changed |
 | `dirtyFields` | `(keyof TData)[]` | Which fields changed |
 | `errors` | `Partial<Record<keyof TData, string>>` | Field-level validation errors |
+| `isSaving` | `boolean` | True while `onSave` promise is in flight |
 | `isEditing` | `(rowId: string) => boolean` | Check if a row is in edit mode |
 | `startEditing` | `(rowId: string) => void` | Enter edit mode (snapshots original) |
 | `setField` | `(field, value) => void` | Update a draft field |
