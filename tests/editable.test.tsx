@@ -201,3 +201,35 @@ describe('useEditableRows — saveEditing', () => {
     expect(result.current.editable.errors).toEqual({ role: 'Invalid role' })
   })
 })
+
+// ─── isSaving ─────────────────────────────────────────────
+
+describe('useEditableRows — isSaving', () => {
+  it('is false by default', () => {
+    const { result } = renderEditableHook()
+    expect(result.current.editable.isSaving).toBe(false)
+  })
+
+  it('is false after saveEditing resolves', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    const { result } = renderEditableHook(onSave)
+    const row = result.current.table.getRowModel().rows[0]
+
+    act(() => result.current.editable.startEditing(row.id))
+    await act(async () => { await result.current.editable.saveEditing() })
+
+    expect(result.current.editable.isSaving).toBe(false)
+  })
+
+  it('is false after saveEditing resolves with errors', async () => {
+    const onSave = vi.fn().mockResolvedValue({ name: 'Required' })
+    const { result } = renderEditableHook(onSave)
+    const row = result.current.table.getRowModel().rows[0]
+
+    act(() => result.current.editable.startEditing(row.id))
+    await act(async () => { await result.current.editable.saveEditing() })
+
+    expect(result.current.editable.isSaving).toBe(false)
+    expect(result.current.editable.errors).toEqual({ name: 'Required' })
+  })
+})
