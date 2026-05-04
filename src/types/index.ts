@@ -158,6 +158,7 @@ export interface EditableReturn<TData> {
   isDirty: boolean
   dirtyFields: (keyof TData)[]
   errors: Partial<Record<keyof TData, string>>
+  isSaving: boolean
   isEditing: (rowId: string) => boolean
   startEditing: (rowId: string) => void
   setField: <K extends keyof TData>(field: K, value: TData[K]) => void
