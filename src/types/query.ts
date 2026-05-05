@@ -4,6 +4,7 @@ import type {
   GroupingState,
   RowData,
   SortingState,
+  Table,
 } from '@tanstack/react-table'
 import type {
   PaginationOptions,
@@ -16,6 +17,13 @@ import type {
   PersistOptions,
   URLSyncOptions,
   UseTableReturn,
+  SortingReturn,
+  GlobalFilterReturn,
+  ColumnFiltersReturn,
+  RowSelectionReturn,
+  ColumnVisibilityReturn,
+  GroupingReturn,
+  EmptyStateReturn,
 } from './index'
 
 // ─── Query Function Types ─────────────────────────────────
@@ -95,4 +103,73 @@ export interface UseQueryTableReturn<TData extends RowData>
   extends UseTableReturn<TData> {
   /** Raw useQuery result for loading/error UI */
   query: QueryState<TData>
+}
+
+// ─── Infinite Query Function Types ───────────────────────
+
+/** Context passed to the useInfiniteTable queryFn */
+export interface InfiniteTableFnContext {
+  pageParam: unknown           // cursor, offset, or page number — consumer controls type
+  sorting: SortingState
+  columnFilters: ColumnFiltersState
+  globalFilter: string
+  grouping: GroupingState
+}
+
+/** Expected return shape from the useInfiniteTable queryFn.
+ *  nextCursor === undefined signals no more pages (sets hasNextPage: false). */
+export interface InfiniteTableResult<TData> {
+  data: TData[]
+  nextCursor?: unknown
+}
+
+// ─── useInfiniteTable Options ─────────────────────────────
+
+export interface UseInfiniteTableOptions<TData extends RowData> {
+  // Required
+  queryKey: unknown[]
+  queryFn: (context: InfiniteTableFnContext) => Promise<InfiniteTableResult<TData>>
+  columns: ColumnDef<TData, any>[]
+
+  // Infinite-specific
+  initialPageParam?: unknown          // default: 0
+
+  // Table feature toggles (same opt-in pattern as UseQueryTableOptions)
+  sorting?: SortingOptions | boolean
+  globalFilter?: boolean
+  columnFilters?: boolean
+  rowSelection?: RowSelectionOptions | boolean
+  columnVisibility?: ColumnVisibilityOptions | boolean
+  grouping?: GroupingOptions | boolean
+
+  // TanStack Query passthrough
+  staleTime?: number
+  gcTime?: number
+  enabled?: boolean
+}
+
+// ─── useInfiniteTable Return ──────────────────────────────
+
+export interface UseInfiniteTableReturn<TData extends RowData> {
+  table: Table<TData>
+
+  // State accessors
+  sorting: SortingReturn
+  globalFilter: GlobalFilterReturn
+  columnFilters: ColumnFiltersReturn
+  rowSelection: RowSelectionReturn
+  columnVisibility: ColumnVisibilityReturn
+  grouping: GroupingReturn
+  emptyState: EmptyStateReturn
+
+  // Infinite-specific
+  loadMore: () => void
+  hasNextPage: boolean
+  isFetchingNextPage: boolean
+
+  // Query status (flattened — no sub-object, simpler than useQueryTable)
+  isLoading: boolean
+  isError: boolean
+  error: Error | null
+  refetch: () => void
 }
