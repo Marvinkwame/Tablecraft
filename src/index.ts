@@ -13,6 +13,7 @@ export { useTableA11y } from './hooks/useTableA11y'
 export type { UseTableA11yOptions } from './hooks/useTableA11y'
 export { useEditableRows } from './hooks/useEditableRows'
 export { useQueryTable } from './hooks/useQueryTable'
+export { useInfiniteTable } from './hooks/useInfiniteTable'
 
 // Context
 export { TableKitProvider, useTableKitDefaults } from './context/TableKitContext'
@@ -74,4 +75,8 @@ export type {
   QueryTableFnContext,
   QueryTableResult,
   QueryState,
+  UseInfiniteTableOptions,
+  UseInfiniteTableReturn,
+  InfiniteTableFnContext,
+  InfiniteTableResult,
 } from './types/query'
