@@ -287,9 +287,14 @@ import { useQueryTable } from '@marvinackerman/tablecraft'
 
 const { table, pagination, sorting, query } = useQueryTable({
   queryKey: ['users'],
-  queryFn: async ({ pageIndex, pageSize, sorting, globalFilter }) => {
-    const res = await api.getUsers({ page: pageIndex, pageSize, sort: sorting, search: globalFilter })
-    return { rows: res.data, rowCount: res.total }
+  queryFn: async ({ pagination, sorting, globalFilter, columnFilters }) => {
+    const res = await api.getUsers({
+      page: pagination.pageIndex,
+      pageSize: pagination.pageSize,
+      sort: sorting,
+      search: globalFilter,
+    })
+    return { data: res.data, rowCount: res.total }
   },
   columns,
   pagination: { pageSize: 20 },
@@ -298,9 +303,97 @@ const { table, pagination, sorting, query } = useQueryTable({
 })
 ```
 
-`query` is the full TanStack Query result (`data`, `isLoading`, `error`, `isFetching`, etc.).
+`query` is the raw TanStack Query result (`isLoading`, `isError`, `isFetching`, `error`, `refetch`, etc.).
 
 Requires `@tanstack/react-query` to be installed:
+```
+npm i @tanstack/react-query
+```
+
+---
+
+### `useInfiniteTable` — Infinite Scroll / Load More
+
+Cursor-based infinite scroll powered by TanStack Query's `useInfiniteQuery`. Pages are accumulated in a flat list — no pagination controls needed. When sort or filter state changes, accumulated pages automatically reset to page 1 via query key composition.
+
+```tsx
+import { useInfiniteTable } from '@marvinackerman/tablecraft'
+
+const { table, loadMore, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteTable({
+  queryKey: ['users'],
+  queryFn: async ({ pageParam, sorting, globalFilter }) => {
+    const res = await api.getUsers({
+      cursor: pageParam,   // pass whatever cursor type your API uses
+      sort: sorting,
+      search: globalFilter,
+    })
+    return {
+      data: res.data,
+      nextCursor: res.nextCursor,   // undefined / null = no more pages
+    }
+  },
+  columns,
+  sorting: true,
+  globalFilter: true,
+})
+
+// In your JSX:
+<button onClick={loadMore} disabled={!hasNextPage || isFetchingNextPage}>
+  {isFetchingNextPage ? 'Loading…' : 'Load more'}
+</button>
+```
+
+All rows across every loaded page are available in `table.getRowModel().rows` as a single flat list — no page tracking on your end.
+
+**`queryFn` context:**
+
+| Property | Type | Description |
+|---|---|---|
+| `pageParam` | `unknown` | Cursor/offset passed to your API. Type is controlled by your `nextCursor` return value |
+| `sorting` | `SortingState` | Current sort |
+| `columnFilters` | `ColumnFiltersState` | Current column filter values |
+| `globalFilter` | `string` | Current global search string |
+| `grouping` | `GroupingState` | Current grouping columns |
+
+**Return:**
+
+| Property | Type | Description |
+|---|---|---|
+| `table` | `Table<TData>` | Full TanStack Table instance with all accumulated rows |
+| `loadMore` | `() => void` | Fetch the next page |
+| `hasNextPage` | `boolean` | `true` when `nextCursor` was returned from the last page |
+| `isFetchingNextPage` | `boolean` | `true` while a `loadMore` call is in-flight |
+| `isLoading` | `boolean` | `true` on the very first fetch |
+| `isError` | `boolean` | `true` if the query threw |
+| `error` | `Error \| null` | The thrown error, if any |
+| `refetch` | `() => void` | Re-run the query from the beginning |
+| `sorting` | `SortingReturn` | Same shape as `useTable` |
+| `globalFilter` | `GlobalFilterReturn` | Same shape as `useTable` |
+| `columnFilters` | `ColumnFiltersReturn` | Same shape as `useTable` |
+| `rowSelection` | `RowSelectionReturn` | Opt-in — pass `rowSelection: true` |
+| `columnVisibility` | `ColumnVisibilityReturn` | Opt-in — pass `columnVisibility: true` |
+| `grouping` | `GroupingReturn` | Opt-in — pass `grouping: true` |
+| `emptyState` | `EmptyStateReturn` | Same shape as `useTable` |
+
+**Options:**
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `queryKey` | `unknown[]` | required | TanStack Query cache key |
+| `queryFn` | `(ctx) => Promise<{ data, nextCursor? }>` | required | Fetcher — return `nextCursor: undefined` to signal last page |
+| `columns` | `ColumnDef[]` | required | Column definitions |
+| `initialPageParam` | `unknown` | `0` | First value passed as `pageParam` |
+| `sorting` | `boolean \| SortingOptions` | `true` | Enable sorting |
+| `globalFilter` | `boolean` | `true` | Enable global search |
+| `columnFilters` | `boolean` | `true` | Enable column filters |
+| `rowSelection` | `boolean \| RowSelectionOptions` | `false` | Enable row selection |
+| `columnVisibility` | `boolean \| ColumnVisibilityOptions` | `false` | Enable column visibility |
+| `grouping` | `boolean \| GroupingOptions` | `false` | Enable row grouping |
+| `staleTime` | `number` | — | TanStack Query `staleTime` |
+| `gcTime` | `number` | — | TanStack Query `gcTime` |
+| `enabled` | `boolean` | — | TanStack Query `enabled` |
+
+Requires `@tanstack/react-query`:
 ```
 npm i @tanstack/react-query
 ```
@@ -531,7 +624,7 @@ Each hook returns state + setters compatible with TanStack Table's `state` and `
 A floating debug panel showing current table state — sorting, pagination, filters, selection, expansion, grouping. Zero-config, dev-only.
 
 ```tsx
-import { TablecraftDevtools } from 'tablecraft/devtools'
+import { TablecraftDevtools } from '@marvinackerman/tablecraft/devtools'
 
 function MyTable() {
   const { table } = useTable({ data, columns })
@@ -554,7 +647,7 @@ function MyTable() {
 Helpers for testing tables in Vitest / Jest without boilerplate.
 
 ```tsx
-import { renderTable } from 'tablecraft/testing'
+import { renderTable } from '@marvinackerman/tablecraft/testing'
 
 const { table, pagination, sorting } = renderTable({
   data: users,
@@ -623,8 +716,9 @@ Yes. Tested against React 18 and 19.
 
 ## Roadmap
 
-- **v2**  — Row expansion, grouping + aggregation, ARIA + keyboard navigation, inline editing, TanStack Query integration, URL state sync, state persistence, devtools, testing utilities
-- **v3** — `useInfiniteTable`, column pinning, multi-row editing, Zod column schemas, CLI scaffold
+- **v2**  — Row expansion, grouping + aggregation, ARIA + keyboard navigation, inline editing, TanStack Query integration (`useQueryTable`), URL state sync, state persistence, devtools, testing utilities
+- **v2.1** — Infinite scroll (`useInfiniteTable`)
+- **v3** — Column pinning, multi-row editing, Zod column schemas, CLI scaffold
 
 ---
 
