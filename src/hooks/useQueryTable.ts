@@ -23,6 +23,7 @@ import type {
   ColumnVisibilityReturn,
   RowExpansionReturn,
   GroupingReturn,
+  ColumnPinningReturn,
   EmptyStateReturn,
 } from '../types'
 import type {
@@ -37,6 +38,7 @@ import { useRowSelectionState } from './useRowSelectionState'
 import { useColumnVisibilityState } from './useColumnVisibilityState'
 import { useRowExpansionState } from './useRowExpansionState'
 import { useGroupingState } from './useGroupingState'
+import { useColumnPinningState } from './useColumnPinningState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
@@ -55,6 +57,7 @@ export function useQueryTable<TData extends RowData>(
     columnVisibility: providerDefaults.columnVisibility,
     rowExpansion: providerDefaults.rowExpansion,
     grouping: providerDefaults.grouping,
+    columnPinning: providerDefaults.columnPinning,
     globalFilter: providerDefaults.globalFilter,
     columnFilters: providerDefaults.columnFilters,
     persist: providerDefaults.persist,
@@ -93,6 +96,7 @@ export function useQueryTable<TData extends RowData>(
     columnVisibility: columnVisibilityOpts = false,
     rowExpansion: rowExpansionOpts = false,
     grouping: groupingOpts = false,
+    columnPinning: columnPinningOpts = false,
     fuzzy = false,
     persist = false,
     persistKey,
@@ -182,6 +186,12 @@ export function useQueryTable<TData extends RowData>(
   const groupingConfig =
     typeof groupingOpts === 'object' ? groupingOpts : {}
   const groupingState = useGroupingState(groupingConfig)
+
+  // ─── Column pinning ──────────────────────────────────────
+  const columnPinningEnabled = !!columnPinningOpts
+  const columnPinningConfig =
+    typeof columnPinningOpts === 'object' ? columnPinningOpts : {}
+  const columnPinningState = useColumnPinningState(columnPinningConfig)
 
   // ─── Reset page on sort/filter change ────────────────────
   const isFirstRender = useRef(true)
@@ -286,6 +296,7 @@ export function useQueryTable<TData extends RowData>(
       ...(columnVisibilityEnabled && { columnVisibility: columnVisibilityState.state }),
       ...(rowExpansionEnabled && { expanded: rowExpansionState.state }),
       ...(groupingEnabled && { grouping: groupingState.state }),
+      ...(columnPinningEnabled && { columnPinning: columnPinningState.state }),
     },
 
     // Server-side: manual pagination and sorting
@@ -331,6 +342,11 @@ export function useQueryTable<TData extends RowData>(
       getGroupedRowModel: getGroupedRowModel(),
       manualGrouping: groupingConfig.manualGrouping,
       groupedColumnMode: groupingConfig.groupedColumnMode,
+    }),
+
+    // Column pinning
+    ...(columnPinningEnabled && {
+      onColumnPinningChange: columnPinningState.setState,
     }),
 
     getCoreRowModel: getCoreRowModel(),
@@ -480,6 +496,21 @@ export function useQueryTable<TData extends RowData>(
     [rowExpansionState]
   )
 
+  // ─── Build column pinning return ─────────────────────────
+  const columnPinning: ColumnPinningReturn = useMemo(
+    () => ({
+      state: columnPinningState.state,
+      pinLeft: columnPinningState.pinLeft,
+      pinRight: columnPinningState.pinRight,
+      unpin: columnPinningState.unpin,
+      clearPinning: columnPinningState.clearPinning,
+      isPinned: columnPinningState.isPinned,
+      leftColumns: columnPinningState.leftColumns,
+      rightColumns: columnPinningState.rightColumns,
+    }),
+    [columnPinningState]
+  )
+
   // ─── Build empty state return ────────────────────────────
   const emptyState: EmptyStateReturn = useMemo(
     () => ({
@@ -500,8 +531,9 @@ export function useQueryTable<TData extends RowData>(
     columnFilters: columnFiltersReturn,
     rowSelection,
     columnVisibility,
-    rowExpansion,
     grouping,
+    rowExpansion,
+    columnPinning,
     emptyState,
     query: {
       data: query.data,
