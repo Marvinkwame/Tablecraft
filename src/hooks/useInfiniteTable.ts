@@ -17,6 +17,7 @@ import type {
   RowSelectionReturn,
   ColumnVisibilityReturn,
   GroupingReturn,
+  ColumnPinningReturn,
   EmptyStateReturn,
 } from '../types'
 import type {
@@ -30,6 +31,7 @@ import { useColumnFilterState } from './useColumnFilterState'
 import { useRowSelectionState } from './useRowSelectionState'
 import { useColumnVisibilityState } from './useColumnVisibilityState'
 import { useGroupingState } from './useGroupingState'
+import { useColumnPinningState } from './useColumnPinningState'
 
 // ─── Hook ──────────────────────────────────────────────────
 
@@ -50,6 +52,7 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     rowSelection: rowSelectionOpts = false,
     columnVisibility: columnVisibilityOpts = false,
     grouping: groupingOpts = false,
+    columnPinning: columnPinningOpts = false,
   } = options
 
   // ─── Resolve feature configs ─────────────────────────────
@@ -60,6 +63,9 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
   const columnVisibilityConfig = typeof columnVisibilityOpts === 'object' ? columnVisibilityOpts : {}
   const groupingEnabled = !!groupingOpts
   const groupingConfig = typeof groupingOpts === 'object' ? groupingOpts : {}
+  // ─── Column pinning ──────────────────────────────────────
+  const columnPinningEnabled = !!columnPinningOpts
+  const columnPinningConfig = typeof columnPinningOpts === 'object' ? columnPinningOpts : {}
 
   // ─── Internal state hooks ────────────────────────────────
   const sortState = useSortState(sortingConfig)
@@ -68,6 +74,7 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
   const rowSelectionState = useRowSelectionState(rowSelectionConfig)
   const columnVisibilityState = useColumnVisibilityState(columnVisibilityConfig)
   const groupingState = useGroupingState(groupingConfig)
+  const columnPinningState = useColumnPinningState(columnPinningConfig)
 
   // ─── Compose query key ───────────────────────────────────
   // State in the key resets to initialPageParam automatically
@@ -135,6 +142,7 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
       ...(rowSelectionEnabled && { rowSelection: rowSelectionState.state }),
       ...(columnVisibilityEnabled && { columnVisibility: columnVisibilityState.state }),
       ...(groupingEnabled && { grouping: groupingState.state }),
+      ...(columnPinningEnabled && { columnPinning: columnPinningState.state }),
     },
     onSortingChange: sortState.onSortingChange,
     onGlobalFilterChange: filterState.onGlobalFilterChange,
@@ -155,6 +163,10 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
       getGroupedRowModel: getGroupedRowModel(),
       manualGrouping: groupingConfig.manualGrouping,
       groupedColumnMode: groupingConfig.groupedColumnMode,
+    }),
+    // Column pinning
+    ...(columnPinningEnabled && {
+      onColumnPinningChange: columnPinningState.setState,
     }),
     getCoreRowModel: getCoreRowModel(),
   })
@@ -237,6 +249,21 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     [groupingState]
   )
 
+  // ─── Build column pinning return ─────────────────────────
+  const columnPinning: ColumnPinningReturn = useMemo(
+    () => ({
+      state: columnPinningState.state,
+      pinLeft: columnPinningState.pinLeft,
+      pinRight: columnPinningState.pinRight,
+      unpin: columnPinningState.unpin,
+      clearPinning: columnPinningState.clearPinning,
+      isPinned: columnPinningState.isPinned,
+      leftColumns: columnPinningState.leftColumns,
+      rightColumns: columnPinningState.rightColumns,
+    }),
+    [columnPinningState]
+  )
+
   const emptyState: EmptyStateReturn = useMemo(
     () => ({
       isEmpty:
@@ -265,6 +292,7 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     rowSelection,
     columnVisibility,
     grouping,
+    columnPinning,
     emptyState,
     loadMore: () => { queryResult.fetchNextPage() },
     hasNextPage: queryResult.hasNextPage,
