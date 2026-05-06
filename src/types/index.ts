@@ -2,6 +2,7 @@ import type React from 'react'
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ColumnPinningState,
   ExpandedState,
   GroupingState,
   OnChangeFn,
@@ -183,6 +184,23 @@ export interface GroupingReturn {
   groupedColumns: string[]
 }
 
+// ─── Column Pinning ──────────────────────────────────────
+
+export interface ColumnPinningOptions {
+  defaultPinning?: ColumnPinningState   // { left?: string[], right?: string[] }
+}
+
+export interface ColumnPinningReturn {
+  state: ColumnPinningState
+  pinLeft: (columnId: string) => void
+  pinRight: (columnId: string) => void
+  unpin: (columnId: string) => void
+  clearPinning: () => void
+  isPinned: (columnId: string) => 'left' | 'right' | false
+  leftColumns: string[]
+  rightColumns: string[]
+}
+
 // ─── Empty State ─────────────────────────────────────────────
 
 export interface EmptyStateReturn {
@@ -250,6 +268,8 @@ export interface TableKitDefaults {
   rowExpansion?: RowExpansionOptions | boolean
   /** Enable row grouping by default */
   grouping?: GroupingOptions | boolean
+  /** Enable column pinning by default */
+  columnPinning?: ColumnPinningOptions | boolean
 }
 
 // ─── useTable Options ─────────────────────────────────────────
@@ -287,6 +307,9 @@ export interface UseTableOptions<TData extends RowData> {
   // Grouping (opt-in)
   grouping?: GroupingOptions | boolean
 
+  // Column pinning (opt-in)
+  columnPinning?: ColumnPinningOptions | boolean
+
   // v1.x — Fuzzy search
   fuzzy?: boolean
 
@@ -311,6 +334,7 @@ export interface UseTableReturn<TData extends RowData> {
   columnVisibility: ColumnVisibilityReturn
   rowExpansion: RowExpansionReturn
   grouping: GroupingReturn
+  columnPinning: ColumnPinningReturn
   emptyState: EmptyStateReturn
 }
 

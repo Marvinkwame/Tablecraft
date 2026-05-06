@@ -12,6 +12,8 @@ import type {
   RowExpansionOptions,
   RowSelectionOptions,
   ColumnVisibilityOptions,
+  ColumnPinningOptions,
+  ColumnPinningReturn,
   GroupingOptions,
   PersistStorage,
   PersistOptions,
@@ -62,6 +64,7 @@ export interface UseQueryTableOptions<TData extends RowData> {
   columnVisibility?: ColumnVisibilityOptions | boolean
   rowExpansion?: RowExpansionOptions | boolean
   grouping?: GroupingOptions | boolean
+  columnPinning?: ColumnPinningOptions | boolean
   fuzzy?: boolean
   persist?: PersistStorage | false
   persistKey?: string
@@ -141,6 +144,7 @@ export interface UseInfiniteTableOptions<TData extends RowData, TCursor = unknow
   rowSelection?: RowSelectionOptions | boolean
   columnVisibility?: ColumnVisibilityOptions | boolean
   grouping?: GroupingOptions | boolean
+  columnPinning?: ColumnPinningOptions | boolean
 
   // TanStack Query passthrough
   staleTime?: number
@@ -160,6 +164,7 @@ export interface UseInfiniteTableReturn<TData extends RowData> {
   rowSelection: RowSelectionReturn
   columnVisibility: ColumnVisibilityReturn
   grouping: GroupingReturn
+  columnPinning: ColumnPinningReturn
   emptyState: EmptyStateReturn
 
   // Infinite-specific
