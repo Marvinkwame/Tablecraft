@@ -14,6 +14,8 @@ export type { UseTableA11yOptions } from './hooks/useTableA11y'
 export { useEditableRows } from './hooks/useEditableRows'
 export { useQueryTable } from './hooks/useQueryTable'
 export { useInfiniteTable } from './hooks/useInfiniteTable'
+export { useInfiniteScroll } from './hooks/useInfiniteScroll'
+export type { UseInfiniteScrollOptions } from './hooks/useInfiniteScroll'
 
 // Context
 export { TableKitProvider, useTableKitDefaults } from './context/TableKitContext'
