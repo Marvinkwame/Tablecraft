@@ -33,8 +33,8 @@ import { useGroupingState } from './useGroupingState'
 
 // ─── Hook ──────────────────────────────────────────────────
 
-export function useInfiniteTable<TData extends RowData>(
-  options: UseInfiniteTableOptions<TData>
+export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
+  options: UseInfiniteTableOptions<TData, TCursor>
 ): UseInfiniteTableReturn<TData> {
   const {
     queryKey,
@@ -88,7 +88,7 @@ export function useInfiniteTable<TData extends RowData>(
   // ─── Build query options ──────────────────────────────────
   const infiniteQueryOpts: Record<string, unknown> = {
     queryKey: composedQueryKey,
-    queryFn: ({ pageParam }: { pageParam: unknown }) =>
+    queryFn: ({ pageParam }: { pageParam: TCursor }) =>
       queryFn({
         pageParam,
         sorting: sortState.state,
@@ -97,7 +97,7 @@ export function useInfiniteTable<TData extends RowData>(
         grouping: groupingState.state,
       }),
     initialPageParam,
-    getNextPageParam: (lastPage: InfiniteTableResult<TData>) =>
+    getNextPageParam: (lastPage: InfiniteTableResult<TData, TCursor>) =>
       lastPage.nextCursor ?? undefined,
     placeholderData: keepPreviousData,
   }
@@ -107,7 +107,7 @@ export function useInfiniteTable<TData extends RowData>(
   if (enabled !== undefined) infiniteQueryOpts.enabled = enabled
 
   const queryResult = useInfiniteQuery(infiniteQueryOpts as any) as {
-    data: { pages: InfiniteTableResult<TData>[] } | undefined
+    data: { pages: InfiniteTableResult<TData, TCursor>[] } | undefined
     isLoading: boolean
     isError: boolean
     isFetchingNextPage: boolean

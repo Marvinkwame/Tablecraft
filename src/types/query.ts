@@ -108,8 +108,8 @@ export interface UseQueryTableReturn<TData extends RowData>
 // ─── Infinite Query Function Types ───────────────────────
 
 /** Context passed to the useInfiniteTable queryFn */
-export interface InfiniteTableFnContext {
-  pageParam: unknown           // cursor, offset, or page number — consumer controls type
+export interface InfiniteTableFnContext<TCursor = unknown> {
+  pageParam: TCursor           // cursor, offset, or page number — consumer controls type
   sorting: SortingState
   columnFilters: ColumnFiltersState
   globalFilter: string
@@ -118,21 +118,21 @@ export interface InfiniteTableFnContext {
 
 /** Expected return shape from the useInfiniteTable queryFn.
  *  nextCursor === undefined signals no more pages (sets hasNextPage: false). */
-export interface InfiniteTableResult<TData> {
+export interface InfiniteTableResult<TData, TCursor = unknown> {
   data: TData[]
-  nextCursor?: unknown
+  nextCursor?: TCursor
 }
 
 // ─── useInfiniteTable Options ─────────────────────────────
 
-export interface UseInfiniteTableOptions<TData extends RowData> {
+export interface UseInfiniteTableOptions<TData extends RowData, TCursor = unknown> {
   // Required
   queryKey: unknown[]
-  queryFn: (context: InfiniteTableFnContext) => Promise<InfiniteTableResult<TData>>
+  queryFn: (context: InfiniteTableFnContext<TCursor>) => Promise<InfiniteTableResult<TData, TCursor>>
   columns: ColumnDef<TData, any>[]
 
   // Infinite-specific
-  initialPageParam?: unknown          // default: 0
+  initialPageParam?: TCursor          // infers TCursor automatically
 
   // Table feature toggles (same opt-in pattern as UseQueryTableOptions)
   sorting?: SortingOptions | boolean
