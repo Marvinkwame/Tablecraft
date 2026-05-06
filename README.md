@@ -644,6 +644,7 @@ import {
   useColumnVisibilityState,
   useRowExpansionState,
   useGroupingState,
+  useColumnPinningState,
 } from '@marvinackerman/tablecraft'
 
 const sorting = useSortState({ defaultSort: [{ id: 'createdAt', desc: true }] })
@@ -657,6 +658,90 @@ const grouping = useGroupingState({ defaultGrouping: ['department'] })
 ```
 
 Each hook returns state + setters compatible with TanStack Table's `state` and `on*Change` props.
+
+---
+
+### Column Pinning
+
+Pin columns to the left or right edge. TanStack Table provides the pixel offsets — your CSS does the sticking.
+
+```tsx
+const { table, columnPinning } = useTable({
+  data,
+  columns,
+  columnPinning: true,
+  // or: columnPinning: { defaultPinning: { left: ['id'] } }
+})
+
+// Actions
+columnPinning.pinLeft('name')
+columnPinning.pinRight('email')
+columnPinning.unpin('name')
+columnPinning.clearPinning()
+columnPinning.isPinned('name')   // → 'left' | 'right' | false
+columnPinning.leftColumns        // → ['id']
+columnPinning.rightColumns       // → ['email']
+
+// Render with sticky CSS
+{table.getHeaderGroups().map(headerGroup => (
+  <tr key={headerGroup.id}>
+    {(['left', 'center', 'right'] as const).flatMap(position =>
+      (position === 'left'
+        ? table.getLeftLeafHeaders()
+        : position === 'right'
+        ? table.getRightLeafHeaders()
+        : table.getCenterLeafHeaders()
+      ).map(header => (
+        <th
+          key={header.id}
+          style={{
+            position: header.column.getIsPinned() ? 'sticky' : 'relative',
+            left:  header.column.getIsPinned() === 'left'
+              ? `${header.column.getStart('left')}px`
+              : undefined,
+            right: header.column.getIsPinned() === 'right'
+              ? `${header.column.getAfter('right')}px`
+              : undefined,
+            zIndex: header.column.getIsPinned() ? 1 : 0,
+            background: 'white',
+          }}
+        >
+          {flexRender(header.column.columnDef.header, header.getContext())}
+        </th>
+      ))
+    )}
+  </tr>
+))}
+```
+
+> `position: sticky` is all CSS. Tablecraft provides the state and pixel offsets (`getStart`, `getAfter`). Your styles do the rest — no UI lock-in.
+
+Also works in `useQueryTable` and `useInfiniteTable` with the same `columnPinning` option.
+
+**Options**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `columnPinning` | `boolean \| ColumnPinningOptions` | `false` | Opt-in column pinning. Pass `true` to enable with defaults, or an object to configure. |
+
+**`ColumnPinningOptions` properties:**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `defaultPinning` | `{ left?: string[], right?: string[] }` | `{}` | Columns pinned on mount |
+
+**`columnPinning` return**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `state` | `ColumnPinningState` | Raw TanStack state |
+| `pinLeft(id)` | `fn` | Pin column to left edge |
+| `pinRight(id)` | `fn` | Pin column to right edge |
+| `unpin(id)` | `fn` | Remove pin from column |
+| `clearPinning()` | `fn` | Unpin all columns |
+| `isPinned(id)` | `fn → 'left' \| 'right' \| false` | Query pin status |
+| `leftColumns` | `string[]` | Currently left-pinned column IDs |
+| `rightColumns` | `string[]` | Currently right-pinned column IDs |
 
 ---
 

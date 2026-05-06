@@ -7,6 +7,7 @@ export { useFilterState } from './hooks/useFilterState'
 export { useColumnFilterState } from './hooks/useColumnFilterState'
 export { useRowSelectionState } from './hooks/useRowSelectionState'
 export { useColumnVisibilityState } from './hooks/useColumnVisibilityState'
+export { useColumnPinningState } from './hooks/useColumnPinningState'
 export { useRowExpansionState } from './hooks/useRowExpansionState'
 export { useGroupingState } from './hooks/useGroupingState'
 export { useTableA11y } from './hooks/useTableA11y'
@@ -62,6 +63,8 @@ export type { UseRowSelectionOptions } from './hooks/useRowSelectionState'
 export type { UseColumnVisibilityOptions } from './hooks/useColumnVisibilityState'
 export type { UseRowExpansionOptions } from './hooks/useRowExpansionState'
 export type { UseGroupingOptions } from './hooks/useGroupingState'
+export type { UseColumnPinningOptions } from './hooks/useColumnPinningState'
+export type { ColumnPinningOptions, ColumnPinningReturn } from './types'
 
 // A11y utilities
 export {
