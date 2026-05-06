@@ -321,15 +321,16 @@ import { useInfiniteTable } from '@marvinackerman/tablecraft'
 
 const { table, loadMore, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteTable({
   queryKey: ['users'],
+  initialPageParam: null as string | null,  // TCursor inferred as string | null
   queryFn: async ({ pageParam, sorting, globalFilter }) => {
     const res = await api.getUsers({
-      cursor: pageParam,   // pass whatever cursor type your API uses
+      cursor: pageParam,   // pageParam: string | null — fully typed ✓
       sort: sorting,
       search: globalFilter,
     })
     return {
       data: res.data,
-      nextCursor: res.nextCursor,   // undefined / null = no more pages
+      nextCursor: res.nextCursor,   // string | null | undefined — typed ✓
     }
   },
   columns,
@@ -397,6 +398,46 @@ Requires `@tanstack/react-query`:
 ```
 npm i @tanstack/react-query
 ```
+
+---
+
+### `useInfiniteScroll` — Automatic Scroll Wiring
+
+Pairs with `useInfiniteTable` to trigger `loadMore` automatically when a sentinel element enters the viewport. Handles observer cleanup, reconnect, and stale-ref prevention internally.
+
+```tsx
+import { useInfiniteScroll } from '@marvinackerman/tablecraft'
+
+const { table, loadMore, hasNextPage, isFetchingNextPage } = useInfiniteTable({ ... })
+
+const sentinelRef = useInfiniteScroll(loadMore, {
+  enabled: hasNextPage && !isFetchingNextPage,  // never double-fires
+})
+
+return (
+  <>
+    <table>
+      <tbody>
+        {table.getRowModel().rows.map((row) => (
+          <tr key={row.id}>...</tr>
+        ))}
+      </tbody>
+    </table>
+
+    {/* Place sentinel below the last row — fires loadMore as it scrolls into view */}
+    <div ref={sentinelRef} />
+
+    {isFetchingNextPage && <p>Loading more…</p>}
+  </>
+)
+```
+
+**Options:**
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | `boolean` | `true` | Pass `hasNextPage && !isFetchingNextPage` to prevent double-firing |
+| `rootMargin` | `string` | `'0px'` | Load ahead of scroll position — e.g. `'200px'` triggers before the sentinel is fully visible |
 
 ---
 
