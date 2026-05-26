@@ -555,6 +555,108 @@ const editable = useEditableRows(table, {
 
 ---
 
+### `useMultiRowEditing`
+
+Edit, validate, and save multiple rows simultaneously. Per-row save and bulk save both supported.
+
+```tsx
+import { useTable, useMultiRowEditing } from '@marvinackerman/tablecraft'
+
+const { table } = useTable({ data, columns })
+
+const {
+  editingRowIds,
+  startEditing,
+  setField,
+  getDraft,
+  getErrors,
+  saveRow,
+  cancelRow,
+  saveAll,
+  cancelAll,
+  isEditing,
+  isDirty,
+  hasUnsavedChanges,
+  isSavingAll,
+} = useMultiRowEditing(table, {
+  // Called by saveRow() and saveAll() (when onSaveAll is not provided)
+  onSave: async (rowId, draft) => {
+    const errors = await api.updateUser(draft)
+    if (errors) return errors          // { name: 'Too long' } keeps row in edit mode
+    // return void / undefined → row exits edit mode
+  },
+
+  // Optional: called by saveAll() for a real batch API call
+  onSaveAll: async (rows) => {
+    const result = await api.bulkUpdate(rows)
+    // Return Record<rowId, errors> — rows with errors stay in edit mode
+    return result.errors
+  },
+})
+
+// In your row render:
+{rows.map(row => (
+  <tr key={row.id}>
+    {isEditing(row.id) ? (
+      <>
+        <td>
+          <input
+            value={getDraft(row.id).name ?? ''}
+            onChange={e => setField(row.id, 'name', e.target.value)}
+          />
+          {getErrors(row.id).name && <span>{getErrors(row.id).name}</span>}
+        </td>
+        <td>
+          <button onClick={() => saveRow(row.id)}>Save</button>
+          <button onClick={() => cancelRow(row.id)}>Cancel</button>
+        </td>
+      </>
+    ) : (
+      <>
+        <td>{row.original.name}</td>
+        <td><button onClick={() => startEditing(row.id)}>Edit</button></td>
+      </>
+    )}
+  </tr>
+))}
+
+{hasUnsavedChanges && (
+  <button onClick={saveAll} disabled={isSavingAll}>
+    {isSavingAll ? 'Saving…' : 'Save All'}
+  </button>
+)}
+```
+
+#### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `onSave` | `(rowId, draft) => void \| errors \| Promise<...>` | — | Per-row save callback. Return a non-empty errors object to stay in edit mode. |
+| `onSaveAll` | `(rows) => void \| Record<rowId, errors> \| Promise<...>` | — | Batch save callback. If omitted, `saveAll()` calls `onSave` for each dirty row in parallel. |
+
+#### Return
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `editingRowIds` | `string[]` | Rows currently in edit mode |
+| `savingRows` | `string[]` | Rows mid per-row save |
+| `isSavingAll` | `boolean` | `true` during `saveAll()` |
+| `hasUnsavedChanges` | `boolean` | `true` if any row has unsaved changes |
+| `startEditing(id)` | `fn` | Enter edit mode for a row (no-op if already editing) |
+| `setField(id, field, value)` | `fn` | Update a draft field |
+| `saveRow(id)` | `async fn` | Save one row via `onSave` |
+| `cancelRow(id)` | `fn` | Discard draft and exit edit mode for one row |
+| `saveAll()` | `async fn` | Save all dirty rows |
+| `cancelAll()` | `fn` | Discard all drafts and exit edit mode |
+| `isEditing(id)` | `fn → boolean` | Is this row in edit mode? |
+| `isDirty(id)` | `fn → boolean` | Does this row have unsaved changes? |
+| `dirtyFields(id)` | `fn → (keyof TData)[]` | Which fields have changed? |
+| `getDraft(id)` | `fn → Partial<TData>` | Current draft for a row |
+| `getErrors(id)` | `fn → Partial<Record<keyof TData, string>>` | Current field errors for a row |
+| `isSavingRow(id)` | `fn → boolean` | Is this row currently being saved? |
+
+---
+
 ### `TableKitProvider` — Global Defaults
 
 Set defaults for all tables in your app. Per-call options always override provider defaults.
