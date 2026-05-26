@@ -13,6 +13,7 @@ export { useGroupingState } from './hooks/useGroupingState'
 export { useTableA11y } from './hooks/useTableA11y'
 export type { UseTableA11yOptions } from './hooks/useTableA11y'
 export { useEditableRows } from './hooks/useEditableRows'
+export { useMultiRowEditing } from './hooks/useMultiRowEditing'
 export { useQueryTable } from './hooks/useQueryTable'
 export { useInfiniteTable } from './hooks/useInfiniteTable'
 export { useInfiniteScroll } from './hooks/useInfiniteScroll'
@@ -52,6 +53,8 @@ export type {
   TableA11yReturn,
   EditableOptions,
   EditableReturn,
+  MultiRowEditingOptions,
+  MultiRowEditingReturn,
   EmptyStateReturn,
   TableKitDefaults,
   PersistStorage,
