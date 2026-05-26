@@ -167,6 +167,51 @@ export interface EditableReturn<TData> {
   cancelEditing: () => void
 }
 
+// ─── Multi-Row Editing ────────────────────────────────────
+
+export interface MultiRowEditingOptions<TData> {
+  onSave?: (
+    rowId: string,
+    draft: TData
+  ) =>
+    | void
+    | Partial<Record<keyof TData, string>>
+    | Promise<void | Partial<Record<keyof TData, string>>>
+
+  onSaveAll?: (
+    rows: { rowId: string; draft: TData }[]
+  ) =>
+    | void
+    | Record<string, Partial<Record<keyof TData, string>>>
+    | Promise<void | Record<string, Partial<Record<keyof TData, string>>>>
+}
+
+export interface MultiRowEditingReturn<TData> {
+  // State
+  editingRowIds: string[]
+  savingRows: string[]
+  isSavingAll: boolean
+  hasUnsavedChanges: boolean
+
+  // Per-row actions
+  startEditing: (rowId: string) => void
+  setField: <K extends keyof TData>(rowId: string, field: K, value: TData[K]) => void
+  saveRow: (rowId: string) => Promise<void>
+  cancelRow: (rowId: string) => void
+
+  // Per-row queries
+  isEditing:   (rowId: string) => boolean
+  isDirty:     (rowId: string) => boolean
+  dirtyFields: (rowId: string) => (keyof TData)[]
+  getDraft:    (rowId: string) => Partial<TData>
+  getErrors:   (rowId: string) => Partial<Record<keyof TData, string>>
+  isSavingRow: (rowId: string) => boolean
+
+  // Bulk actions
+  saveAll:   () => Promise<void>
+  cancelAll: () => void
+}
+
 // ─── Grouping ────────────────────────────────────────────────
 
 export interface GroupingOptions {
