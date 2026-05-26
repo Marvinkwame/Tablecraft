@@ -4,6 +4,23 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [2.4.0] — 2026-05-26
+
+### Added
+
+- **`useMultiRowEditing`** — standalone hook for editing, validating, and saving multiple rows simultaneously. Manages per-row draft state, dirty tracking, and field-level errors. Supports per-row save (`saveRow` via `onSave`) and bulk save (`saveAll` via `onSaveAll` for a single batch API call, or parallel `onSave` calls when `onSaveAll` is omitted). Rows with validation errors stay in edit mode; clean rows exit automatically.
+
+---
+
+## [2.3.0] — 2026-05-06
+
+### Added
+
+- **Column pinning** (`columnPinning` option on `useTable`, `useQueryTable`, `useInfiniteTable`) — pin columns to the left or right edge. TanStack Table provides pixel offsets (`getStart`, `getAfter`); your CSS handles `position: sticky`. Actions: `pinLeft`, `pinRight`, `unpin`, `clearPinning`, `isPinned`, `leftColumns`, `rightColumns`.
+- **`useColumnPinningState`** — standalone column pinning hook for custom table implementations.
+
+---
+
 ## [2.0.0] — 2026-04-18
 
 ### Added
