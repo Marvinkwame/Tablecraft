@@ -7,6 +7,7 @@ import type {
   GroupingState,
   OnChangeFn,
   PaginationState,
+  Row,
   RowData,
   RowSelectionState,
   SortingState,
@@ -391,4 +392,25 @@ export interface UseServerTableOptions<TData extends RowData>
   onPaginationChange?: OnChangeFn<PaginationState>
   onSortingChange?: OnChangeFn<SortingState>
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>
+}
+
+// ─── Virtual Rows ─────────────────────────────────────────────
+
+export interface VirtualRowsOptions {
+  rowHeight: number  // required — height of every row in pixels (fixed)
+  overscan?: number  // extra rows rendered beyond the visible area, default: 5
+}
+
+export interface VirtualRow<TData> {
+  row:   Row<TData>  // full TanStack Row object
+  index: number      // position in the full rows array
+  start: number      // px offset from top — use as `top` in absolute positioning
+  size:  number      // row height in px (always === rowHeight in fixed mode)
+}
+
+export interface VirtualRowsReturn<TData> {
+  virtualRows:   VirtualRow<TData>[]
+  totalHeight:   number
+  containerRef:  React.RefObject<HTMLDivElement>
+  scrollToIndex: (index: number) => void
 }
