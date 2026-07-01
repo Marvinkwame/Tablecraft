@@ -1,6 +1,6 @@
 {
   "name": "@marvinackerman/tablecraft",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Batteries-included TanStack Table wrapper for React — TypeScript-first, headless, zero UI lock-in",
   "keywords": [
     "react",
@@ -40,7 +40,8 @@
   "sideEffects": false,
   "peerDependencies": {
     "@tanstack/react-table": ">=8",
-    "react": ">=18"
+    "react": ">=18",
+    "@tanstack/react-virtual": ">=3"
   },
   "peerDependenciesMeta": {
     "match-sorter": {
@@ -51,11 +52,15 @@
     },
     "@testing-library/react": {
       "optional": true
+    },
+    "@tanstack/react-virtual": {
+      "optional": true
     }
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.96.1",
     "@tanstack/react-table": "^8.17.0",
+    "@tanstack/react-virtual": "^3.13.0",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^14.3.0",
     "jsdom": "^24.0.0",
