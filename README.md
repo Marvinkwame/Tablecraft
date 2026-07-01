@@ -657,6 +657,78 @@ const {
 
 ---
 
+### `useVirtualRows`
+
+Render only the rows visible in the viewport — for large datasets where rendering all rows at once causes lag. Requires `@tanstack/react-virtual`:
+
+```bash
+npm install @tanstack/react-virtual
+```
+
+```tsx
+import { useTable, useVirtualRows } from '@marvinackerman/tablecraft'
+import { flexRender } from '@tanstack/react-table'
+
+const { table } = useTable({ data, columns })
+
+const { virtualRows, totalHeight, containerRef, scrollToIndex } = useVirtualRows(table, {
+  rowHeight: 48,
+})
+
+// Virtualized tables use div-based rendering — position: absolute requires it.
+// Use role="row" and role="cell" for screen reader compatibility.
+<div ref={containerRef} style={{ height: 600, overflow: 'auto' }}>
+  <div style={{ height: totalHeight, position: 'relative' }}>
+    {virtualRows.map(({ row, start, size }) => (
+      <div
+        key={row.id}
+        role="row"
+        style={{ position: 'absolute', top: start, height: size, width: '100%' }}
+      >
+        {row.getVisibleCells().map(cell => (
+          <div key={cell.id} role="cell">
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </div>
+        ))}
+      </div>
+    ))}
+  </div>
+</div>
+
+// Works with useTable, useQueryTable, and useInfiniteTable equally.
+// To scroll programmatically:
+scrollToIndex(42)
+```
+
+> **Note:** Standard `<table>/<tbody>/<tr>` markup is incompatible with virtualization because browsers do not support `position: absolute` inside `<tbody>`. Use `<div role="table">`, `<div role="row">`, and `<div role="cell">` — semantically equivalent for screen readers.
+
+#### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `rowHeight` | `number` | — (required) | Fixed height of every row in pixels |
+| `overscan` | `number` | `5` | Extra rows rendered above and below the visible area to prevent scroll flicker on fast scrolling |
+
+#### Return
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `virtualRows` | `VirtualRow<TData>[]` | Only the rows currently visible in the viewport |
+| `totalHeight` | `number` | Total scroll height in px — set as the `height` of the inner wrapper div |
+| `containerRef` | `RefObject<HTMLDivElement>` | Attach to the outer scroll container div |
+| `scrollToIndex` | `(index: number) => void` | Programmatically scroll to any row by its position in the full rows array |
+
+Each `VirtualRow<TData>`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `row` | `Row<TData>` | Full TanStack Row — `row.original`, `row.id`, `row.getVisibleCells()`, etc. |
+| `index` | `number` | Position in the full rows array |
+| `start` | `number` | Pixel offset from top — use as `top` in absolute positioning |
+| `size` | `number` | Row height in px (always equals `rowHeight` in fixed mode) |
+
+---
+
 ### `TableKitProvider` — Global Defaults
 
 Set defaults for all tables in your app. Per-call options always override provider defaults.
@@ -939,6 +1011,7 @@ Yes. Tested against React 18 and 19.
 | `match-sorter` | Fuzzy search (`fuzzy: true` on `useTable`) |
 | `@tanstack/react-query` | `useQueryTable` |
 | `@testing-library/react` | `tablecraft/testing` utilities |
+| `@tanstack/react-virtual` | `useVirtualRows` |
 
 ---
 
