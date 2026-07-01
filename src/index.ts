@@ -14,6 +14,7 @@ export { useTableA11y } from './hooks/useTableA11y'
 export type { UseTableA11yOptions } from './hooks/useTableA11y'
 export { useEditableRows } from './hooks/useEditableRows'
 export { useMultiRowEditing } from './hooks/useMultiRowEditing'
+export { useVirtualRows } from './hooks/useVirtualRows'
 export { useQueryTable } from './hooks/useQueryTable'
 export { useInfiniteTable } from './hooks/useInfiniteTable'
 export { useInfiniteScroll } from './hooks/useInfiniteScroll'
@@ -55,6 +56,9 @@ export type {
   EditableReturn,
   MultiRowEditingOptions,
   MultiRowEditingReturn,
+  VirtualRowsOptions,
+  VirtualRow,
+  VirtualRowsReturn,
   EmptyStateReturn,
   TableKitDefaults,
   PersistStorage,
