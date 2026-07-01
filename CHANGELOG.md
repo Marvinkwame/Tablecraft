@@ -4,6 +4,14 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [2.5.0] — 2026-05-27
+
+### Added
+
+- **`useVirtualRows`** — standalone hook for virtualizing large datasets. Wraps `@tanstack/react-virtual`'s `useVirtualizer` internally — consumers never import from that library directly. Only rows visible in the scroll viewport are rendered as DOM nodes. Supports fixed row height. Works identically with `useTable`, `useQueryTable`, and `useInfiniteTable`. Returns `virtualRows`, `totalHeight`, `containerRef`, and a `scrollToIndex` helper. Requires `@tanstack/react-virtual` (optional peer dependency).
+
+---
+
 ## [2.4.0] — 2026-05-26
 
 ### Added
