@@ -4,6 +4,15 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **`pagination: false` no longer caps rows at the initial data length.** Disabling pagination previously faked a page size equal to `data.length` at mount, so rows added later (e.g. from an async fetch) were silently cut off. The pagination row model is now skipped entirely when pagination is disabled.
+- **`fuzzy` now accepts a custom `FilterFn`** (`useTable`, `useQueryTable`), used directly as the global filter function. `fuzzy: true` loads `match-sorter` via `require()`, which is unavailable in ESM-only environments (Vite, browsers) — there it failed silently with a warning that wrongly claimed `match-sorter` wasn't installed. The warning now explains the ESM limitation and recommends passing a filter function.
+
+---
+
 ## [2.5.0] — 2026-05-27
 
 ### Added
