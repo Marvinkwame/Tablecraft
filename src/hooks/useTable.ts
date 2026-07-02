@@ -116,12 +116,11 @@ export function useTable<TData extends RowData>(
   const urlState = urlStateRef.current
 
   // ─── Resolve pagination options ──────────────────────────
+  // When disabled, the pagination row model is skipped entirely so every row
+  // renders regardless of how data changes after mount.
+  const paginationEnabled = paginationOpts !== false
   const paginationConfig =
-    typeof paginationOpts === 'object'
-      ? paginationOpts
-      : paginationOpts
-        ? {}
-        : { pageSize: data.length || 1 }
+    typeof paginationOpts === 'object' ? { ...paginationOpts } : {}
 
   // Apply persisted pagination if available
   if (persisted.pagination) {
@@ -192,6 +191,7 @@ export function useTable<TData extends RowData>(
   // ─── Fuzzy filter ────────────────────────────────────────
   const fuzzyFilterFn = useMemo<FilterFn<TData> | undefined>(() => {
     if (!fuzzy) return undefined
+    if (typeof fuzzy === 'function') return fuzzy
     try {
       const matchSorterLib = require('match-sorter')
       const matchSorter: typeof import('match-sorter').matchSorter =
@@ -212,8 +212,10 @@ export function useTable<TData extends RowData>(
       return fn
     } catch {
       console.warn(
-        '[tablecraft] fuzzy: true requires "match-sorter" as a peer dependency. ' +
-        'Install it with: npm install match-sorter'
+        '[tablecraft] fuzzy: true could not load "match-sorter". ' +
+        'If it is not installed: npm install match-sorter. ' +
+        'If it IS installed, your bundler is ESM-only (e.g. Vite) where require() is unavailable — ' +
+        'pass a filter function instead: fuzzy: (row, columnId, value) => boolean'
       )
       return undefined
     }
@@ -239,7 +241,8 @@ export function useTable<TData extends RowData>(
     onPaginationChange: externalOnPaginationChange ?? paginationState.onPaginationChange,
     manualPagination,
     rowCount,
-    getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
+    getPaginationRowModel:
+      paginationEnabled && !manualPagination ? getPaginationRowModel() : undefined,
 
     // Sorting
     onSortingChange: externalOnSortingChange ?? sortState.onSortingChange,
