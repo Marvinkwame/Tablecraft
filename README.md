@@ -1,5 +1,8 @@
 # tablecraft
 
+[![CI](https://github.com/Marvinkwame/Tablecraft/actions/workflows/ci.yml/badge.svg)](https://github.com/Marvinkwame/Tablecraft/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/%40marvinackerman%2Ftablecraft)](https://www.npmjs.com/package/@marvinackerman/tablecraft)
+
 > Batteries-included [TanStack Table](https://tanstack.com/table) wrapper for React. TypeScript-first, headless, zero UI lock-in.
 
 **Go from ~100 lines of TanStack Table boilerplate to ~10 lines.** No CSS. No component library. Full escape hatch to the raw table instance.
@@ -139,8 +142,9 @@ const {
   // Row grouping
   grouping: { defaultGrouping: ['role'] },     // or true
 
-  // Fuzzy search (requires match-sorter)
-  fuzzy: true,
+  // Fuzzy search — `true` loads match-sorter via require() (CJS/Node only).
+  // In ESM-only bundlers (Vite, browsers), pass your own filter function instead.
+  fuzzy: true,               // or (row, columnId, value) => boolean
 
   // State persistence
   persist: 'localStorage',   // or 'sessionStorage'
@@ -1008,7 +1012,7 @@ Yes. Tested against React 18 and 19.
 
 | Package | Feature |
 |---------|---------|
-| `match-sorter` | Fuzzy search (`fuzzy: true` on `useTable`) |
+| `match-sorter` | Fuzzy search (`fuzzy: true` on `useTable`) — loaded via `require()`, so CJS/Node environments only. In ESM-only bundlers (e.g. Vite), pass a custom `FilterFn` as `fuzzy` instead; no dependency needed. |
 | `@tanstack/react-query` | `useQueryTable` |
 | `@testing-library/react` | `tablecraft/testing` utilities |
 | `@tanstack/react-virtual` | `useVirtualRows` |
