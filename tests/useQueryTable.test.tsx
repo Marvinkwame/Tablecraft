@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import React from 'react'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { FilterFn } from '@tanstack/react-table'
 import { useQueryTable } from '../src/hooks/useQueryTable'
 import { createColumns } from '../src/helpers/createColumns'
 
@@ -41,6 +42,46 @@ function createMockQueryFn(data: User[] = mockUsers, rowCount?: number) {
 }
 
 describe('useQueryTable', () => {
+  it('uses a custom filter function passed as fuzzy', async () => {
+    const queryFn = createMockQueryFn()
+    // Exact-match filter: a cell passes only when it strictly equals the search value
+    const exactMatch: FilterFn<User> = (row, columnId, filterValue) =>
+      row.getValue(columnId) === filterValue
+
+    const { result } = renderHook(
+      () =>
+        useQueryTable({
+          queryKey: ['users'],
+          queryFn,
+          columns,
+          fuzzy: exactMatch,
+        }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => {
+      expect(result.current.query.isLoading).toBe(false)
+    })
+
+    act(() => {
+      result.current.globalFilter.setValue('Alice')
+    })
+
+    await waitFor(() => {
+      expect(result.current.table.getRowModel().rows).toHaveLength(1)
+    })
+
+    act(() => {
+      result.current.globalFilter.setValue('Ali')
+    })
+
+    // A partial value would pass match-sorter's fuzzy matching,
+    // but the custom exact-match filter must reject it
+    await waitFor(() => {
+      expect(result.current.table.getRowModel().rows).toHaveLength(0)
+    })
+  })
+
   // ─── Basic loading and data ─────────────────────────────
 
   it('returns loading state initially', () => {
