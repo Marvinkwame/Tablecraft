@@ -1,0 +1,36 @@
+name: Publish to npm
+
+# Publishes with provenance when a GitHub release is published.
+# Requires an npm automation token saved as the NPM_TOKEN repository secret
+# (npmjs.com → Access Tokens → Generate New Token → Automation).
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run lint
+
+      # prepublishOnly runs build + test automatically before publishing
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
