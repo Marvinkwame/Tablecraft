@@ -261,6 +261,7 @@ export function useQueryTable<TData extends RowData>(
   // ─── Fuzzy filter ────────────────────────────────────────
   const fuzzyFilterFn = useMemo<FilterFn<TData> | undefined>(() => {
     if (!fuzzy) return undefined
+    if (typeof fuzzy === 'function') return fuzzy
     try {
       const matchSorterLib = require('match-sorter')
       const matchSorter = matchSorterLib.matchSorter
@@ -279,6 +280,12 @@ export function useQueryTable<TData extends RowData>(
       fn.autoRemove = (val: unknown) => !val
       return fn
     } catch {
+      console.warn(
+        '[tablecraft] fuzzy: true could not load "match-sorter". ' +
+        'If it is not installed: npm install match-sorter. ' +
+        'If it IS installed, your bundler is ESM-only (e.g. Vite) where require() is unavailable — ' +
+        'pass a filter function instead: fuzzy: (row, columnId, value) => boolean'
+      )
       return undefined
     }
   }, [fuzzy])
