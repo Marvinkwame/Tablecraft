@@ -4,6 +4,7 @@ import type {
   ColumnFiltersState,
   ColumnPinningState,
   ExpandedState,
+  FilterFn,
   GroupingState,
   OnChangeFn,
   PaginationState,
@@ -357,7 +358,12 @@ export interface UseTableOptions<TData extends RowData> {
   columnPinning?: ColumnPinningOptions | boolean
 
   // v1.x — Fuzzy search
-  fuzzy?: boolean
+  /**
+   * `true` loads `match-sorter` via `require()` — works in CJS/Node environments only.
+   * In ESM-only environments (Vite, browsers), pass a `FilterFn` instead; it is used
+   * directly as the global filter function.
+   */
+  fuzzy?: boolean | FilterFn<TData>
 
   // v1.x — State persistence
   persist?: PersistStorage | false
