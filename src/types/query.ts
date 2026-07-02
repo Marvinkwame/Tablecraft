@@ -1,6 +1,7 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
+  FilterFn,
   GroupingState,
   RowData,
   SortingState,
@@ -65,7 +66,12 @@ export interface UseQueryTableOptions<TData extends RowData> {
   rowExpansion?: RowExpansionOptions | boolean
   grouping?: GroupingOptions | boolean
   columnPinning?: ColumnPinningOptions | boolean
-  fuzzy?: boolean
+  /**
+   * `true` loads `match-sorter` via `require()` — works in CJS/Node environments only.
+   * In ESM-only environments (Vite, browsers), pass a `FilterFn` instead; it is used
+   * directly as the global filter function.
+   */
+  fuzzy?: boolean | FilterFn<TData>
   persist?: PersistStorage | false
   persistKey?: string
   persistOptions?: PersistOptions
