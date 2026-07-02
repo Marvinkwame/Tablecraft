@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
+import type { FilterFn } from '@tanstack/react-table'
 import { useTable } from '../src/hooks/useTable'
 import { createColumns } from '../src/helpers/createColumns'
 
@@ -66,6 +67,31 @@ describe('fuzzy search', () => {
       result.current.globalFilter.setValue('zzzzxxxxxqqqq')
     })
 
+    expect(result.current.table.getRowModel().rows).toHaveLength(0)
+  })
+
+  it('uses a custom filter function passed as fuzzy', () => {
+    // Exact-match filter: a cell passes only when it strictly equals the search value
+    const exactMatch: FilterFn<User> = (row, columnId, filterValue) =>
+      row.getValue(columnId) === filterValue
+
+    const { result } = renderHook(() =>
+      useTable({ data: testData, columns, fuzzy: exactMatch, pagination: false })
+    )
+
+    act(() => {
+      result.current.globalFilter.setValue('admin')
+    })
+
+    // Both admin rows match exactly on the role column
+    expect(result.current.table.getRowModel().rows).toHaveLength(2)
+
+    act(() => {
+      result.current.globalFilter.setValue('admi')
+    })
+
+    // A partial value would pass match-sorter's fuzzy matching,
+    // but the custom exact-match filter must reject it
     expect(result.current.table.getRowModel().rows).toHaveLength(0)
   })
 
