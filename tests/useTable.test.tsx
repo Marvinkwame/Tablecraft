@@ -126,6 +126,22 @@ describe('useTable', () => {
     expect(result.current.table.getRowModel().rows).toHaveLength(25)
   })
 
+  it('shows all rows when pagination is false and data grows after mount', () => {
+    const initial = testData.slice(0, 5)
+
+    const { result, rerender } = renderHook(
+      ({ data }: { data: User[] }) =>
+        useTable({ data, columns, pagination: false }),
+      { initialProps: { data: initial } }
+    )
+
+    expect(result.current.table.getRowModel().rows).toHaveLength(5)
+
+    rerender({ data: testData })
+
+    expect(result.current.table.getRowModel().rows).toHaveLength(25)
+  })
+
   // ─── Sorting ──────────────────────────────────────────────
 
   it('starts with empty sorting by default', () => {
