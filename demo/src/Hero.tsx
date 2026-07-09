@@ -90,7 +90,7 @@ export function Hero() {
           style={{ animationDelay: '320ms' }}
         >
           {[
-            ['~6 KB', 'min+gzip core'],
+            ['~4 KB', 'core, min+gzip'],
             ['0', 'CSS dependencies'],
             ['100%', 'TypeScript'],
           ].map(([stat, label]) => (
