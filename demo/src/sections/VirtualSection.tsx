@@ -3,6 +3,7 @@ import { useTable, useVirtualRows } from '@marvinackerman/tablecraft'
 import { flexRender } from '@tanstack/react-table'
 import { generateEmployees } from '../data/seed'
 import { employeeColumns } from '../columns'
+import { Section } from '../ui/Section'
 import { CodePeek } from '../ui/CodePeek'
 
 const ROW_HEIGHT = 44
@@ -26,33 +27,57 @@ export function VirtualSection() {
   const headers = table.getHeaderGroups()[0].headers
 
   return (
-    <section className="mt-16">
-      <h2 className="text-xl font-semibold">Virtualization</h2>
-      <p className="mt-1 text-muted">
-        {TOTAL.toLocaleString()} rows, buttery scroll —{' '}
-        <span className="font-mono text-accent">{virtualRows.length}</span> rendered in the DOM.
-      </p>
-
-      <div className="mt-4 rounded-lg border border-line bg-surface" role="table" aria-rowcount={TOTAL}>
-        <div className="flex border-b border-line" role="row">
+    <Section
+      index="03 · PERFORMANCE"
+      title="Virtualization"
+      description={
+        <>
+          {TOTAL.toLocaleString()} rows, buttery scroll — only{' '}
+          <span className="rounded bg-accent/15 px-1.5 py-0.5 font-mono text-accent-soft">{virtualRows.length}</span>{' '}
+          of them exist in the DOM at any moment.
+        </>
+      }
+    >
+      <div
+        className="overflow-hidden rounded-xl border border-line bg-surface/70 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.9)] backdrop-blur-sm"
+        role="table"
+        aria-rowcount={TOTAL}
+      >
+        <div className="flex border-b border-line bg-elevated/40" role="row">
           {headers.map((header) => (
-            <div key={header.id} role="columnheader" className="flex-1 truncate px-4 py-2.5 text-sm font-medium text-muted">
+            <div
+              key={header.id}
+              role="columnheader"
+              className={`flex-1 truncate px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted ${
+                header.column.id === 'salary' ? 'text-right' : ''
+              }`}
+            >
               {flexRender(header.column.columnDef.header, header.getContext())}
             </div>
           ))}
         </div>
 
-        <div ref={containerRef} style={{ height: 480, overflow: 'auto' }}>
+        <div
+          ref={containerRef}
+          className="[scrollbar-gutter:stable]"
+          style={{ height: 480, overflow: 'auto' }}
+        >
           <div role="rowgroup" style={{ height: totalHeight, position: 'relative' }}>
             {virtualRows.map(({ row, start, size }) => (
               <div
                 key={row.id}
                 role="row"
-                className="flex border-b border-line/60"
+                className="flex border-b border-line/40 transition-colors hover:bg-elevated/50"
                 style={{ position: 'absolute', top: start, height: size, width: '100%' }}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <div key={cell.id} role="cell" className="flex flex-1 items-center truncate px-4 text-sm">
+                  <div
+                    key={cell.id}
+                    role="cell"
+                    className={`flex flex-1 items-center truncate px-4 text-sm ${
+                      cell.column.id === 'salary' ? 'justify-end' : ''
+                    }`}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </div>
                 ))}
@@ -62,7 +87,7 @@ export function VirtualSection() {
         </div>
       </div>
 
-      <CodePeek code={SNIPPET} />
-    </section>
+      <CodePeek code={SNIPPET} filename="useVirtualRows.tsx" />
+    </Section>
   )
 }
