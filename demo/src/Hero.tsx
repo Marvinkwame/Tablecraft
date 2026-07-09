@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button } from './ui/Button'
+import { buttonClasses } from './ui/Button'
 
 const INSTALL = 'npm i @marvinackerman/tablecraft @tanstack/react-table'
 
@@ -7,8 +7,8 @@ export function Hero() {
   const [copied, setCopied] = useState(false)
   const copy = () => {
     navigator.clipboard.writeText(INSTALL)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+      .then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500) })
+      .catch(() => {})
   }
   return (
     <header className="border-b border-line pb-12">
@@ -28,11 +28,11 @@ export function Hero() {
           <span className="text-muted">$</span> {INSTALL}
           <span className="text-accent">{copied ? '✓ copied' : '⧉'}</span>
         </button>
-        <a href="https://github.com/Marvinkwame/Tablecraft" target="_blank" rel="noreferrer">
-          <Button>GitHub</Button>
+        <a className={buttonClasses('ghost')} href="https://github.com/Marvinkwame/Tablecraft" target="_blank" rel="noreferrer">
+          GitHub
         </a>
-        <a href="https://www.npmjs.com/package/@marvinackerman/tablecraft" target="_blank" rel="noreferrer">
-          <Button>npm</Button>
+        <a className={buttonClasses('ghost')} href="https://www.npmjs.com/package/@marvinackerman/tablecraft" target="_blank" rel="noreferrer">
+          npm
         </a>
       </div>
     </header>
