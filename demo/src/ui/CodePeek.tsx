@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Highlight, themes } from 'prism-react-renderer'
+import { CodeBlock } from './CodeBlock'
 
 export function CodePeek({ code, filename = 'example.tsx' }: { code: string; filename?: string }) {
   const [open, setOpen] = useState(false)
@@ -34,23 +34,9 @@ export function CodePeek({ code, filename = 'example.tsx' }: { code: string; fil
             <span className="size-2.5 rounded-full bg-emerald-400/70" />
             <span className="ml-2 font-mono text-xs text-muted">{filename}</span>
           </div>
-          <Highlight theme={themes.nightOwl} code={code.trim()} language="tsx">
-            {({ style, tokens, getLineProps, getTokenProps }) => (
-              <pre
-                className="overflow-x-auto p-4 text-[13px] leading-relaxed"
-                style={{ ...style, background: 'transparent' }}
-              >
-                {tokens.map((line, i) => (
-                  <div key={i} {...getLineProps({ line })}>
-                    <span className="mr-4 inline-block w-4 select-none text-right text-faint">{i + 1}</span>
-                    {line.map((token, key) => (
-                      <span key={key} {...getTokenProps({ token })} />
-                    ))}
-                  </div>
-                ))}
-              </pre>
-            )}
-          </Highlight>
+          <div className="p-4">
+            <CodeBlock code={code} lineNumbers />
+          </div>
         </div>
       )}
     </div>
