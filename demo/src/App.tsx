@@ -1,5 +1,6 @@
 import { CoreSection } from './sections/CoreSection'
 import { EditingSection } from './sections/EditingSection'
+import { VirtualSection } from './sections/VirtualSection'
 
 export default function App() {
   return (
@@ -7,6 +8,7 @@ export default function App() {
       <h1 className="text-3xl font-semibold">tablecraft</h1>
       <CoreSection />
       <EditingSection />
+      <VirtualSection />
     </div>
   )
 }
