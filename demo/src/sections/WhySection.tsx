@@ -10,7 +10,7 @@ const ROWS: [string, Mark, Mark, Mark, Mark][] = [
   ['TypeScript-first', 'yes', 'yes', 'yes', 'yes'],
   ['State persistence', 'no', 'paid', 'no', 'free'],
   ['Inline editing', 'no', 'paid', 'no', 'free'],
-  ['Bundle size', '~15 KB', '~300 KB', '~50 KB', '~21 KB'],
+  ['Bundle size', '~14 KB', '~300 KB', '~50 KB', '~4 KB'],
   ['License', 'MIT', 'MIT*', 'MIT', 'MIT'],
 ]
 
@@ -84,7 +84,10 @@ export function WhySection() {
           </table>
         </div>
       </div>
-      <p className="mt-3 font-mono text-xs text-faint">* AG Grid Community is MIT; persistence and editing are paid Enterprise features.</p>
+      <p className="mt-3 font-mono text-xs text-faint">
+        Sizes are min+gzip; tablecraft's ~4 KB is its own core, on top of the TanStack Table peer. * AG Grid
+        Community is MIT; persistence and editing are paid Enterprise features.
+      </p>
     </Section>
   )
 }
