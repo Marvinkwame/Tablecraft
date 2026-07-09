@@ -14,8 +14,8 @@ const editColumns = createColumns<Employee>([
 ])
 
 const SNIPPET = `const { startEditing, setField, getDraft, getErrors,
-        saveRow, cancelRow, saveAll, isEditing, isDirty,
-        hasUnsavedChanges } = useMultiRowEditing(table, {
+        saveRow, cancelRow, saveAll, cancelAll, isEditing, isDirty,
+        hasUnsavedChanges, isSavingAll } = useMultiRowEditing(table, {
   onSave: async (rowId, draft) => {
     const errors: Record<string, string> = {}
     if (!draft.name?.trim()) errors.name = 'Name is required'

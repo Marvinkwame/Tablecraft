@@ -8,7 +8,7 @@ import { Toolbar } from '../ui/Toolbar'
 import { Button } from '../ui/Button'
 import { CodePeek } from '../ui/CodePeek'
 
-const SNIPPET = `const { table, pagination, sorting, globalFilter } = useTable({
+const SNIPPET = `const { table, pagination, globalFilter, emptyState } = useTable({
   data: employees,
   columns,
   pagination: { pageSize: 10 },
