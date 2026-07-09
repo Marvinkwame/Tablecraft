@@ -93,8 +93,10 @@ Sorting, pagination, global search, full TypeScript generics — wired up in one
 | TypeScript-first | Yes | Yes | Yes | **Yes** |
 | State persistence | No | Enterprise $$ | No | **Free** |
 | Inline editing | No | Enterprise $$ | No | **Free** |
-| Bundle size (min+gzip) | ~14 KB | ~300 KB | ~50 KB | **~4 KB** + TanStack peer |
+| Bundle size | ~14 KB | ≈300 KB† | ≈50 KB† | **~4 KB** + TanStack peer |
 | License | MIT | MIT* | MIT | **MIT** |
+
+<sub>† tablecraft (~4 KB core) and TanStack Table figures are measured min+gzip; AG Grid and Material React Table are approximate published sizes that vary with configuration. * AG Grid Community is MIT; persistence and inline editing are paid Enterprise features.</sub>
 
 ---
 
