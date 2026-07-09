@@ -1,8 +1,10 @@
 import { Hero } from './Hero'
+import { WhySection } from './sections/WhySection'
 import { CoreSection } from './sections/CoreSection'
 import { EditingSection } from './sections/EditingSection'
 import { VirtualSection } from './sections/VirtualSection'
 import { FeatureStrip } from './FeatureStrip'
+import { Contribute } from './Contribute'
 
 export default function App() {
   return (
@@ -38,10 +40,12 @@ export default function App() {
 
       <div id="app-root" className="mx-auto max-w-6xl px-6 pb-24">
         <Hero />
+        <WhySection />
         <CoreSection />
         <EditingSection />
         <VirtualSection />
         <FeatureStrip />
+        <Contribute />
 
         <footer className="mt-28 flex flex-col items-start justify-between gap-3 border-t border-line pt-8 text-sm text-muted sm:flex-row sm:items-center">
           <span>
