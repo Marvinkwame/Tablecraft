@@ -86,7 +86,7 @@ export function Hero() {
         </div>
 
         <dl
-          className="reveal mt-12 grid max-w-2xl grid-cols-3 gap-px overflow-hidden rounded-xl border border-line bg-line"
+          className="reveal mt-12 grid max-w-2xl grid-cols-1 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3"
           style={{ animationDelay: '320ms' }}
         >
           {[
