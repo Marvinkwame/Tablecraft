@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --color-canvas: #0a0a0b;
+  --color-surface: #131317;
+  --color-elevated: #1a1a20;
+  --color-line: #262630;
+  --color-ink: #ededf2;
+  --color-muted: #8a8a96;
+  --color-faint: #5a5a66;
+  --color-accent: #7c5cff;
+  --color-accent-soft: #b3a4ff;
+  --color-cyan: #34e5db;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Scenic backdrop: violet/cyan aurora + fading grid ───────────── */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  background:
+    radial-gradient(58rem 40rem at 12% -8%, color-mix(in oklab, var(--color-accent) 24%, transparent), transparent 60%),
+    radial-gradient(48rem 38rem at 104% -4%, color-mix(in oklab, var(--color-cyan) 12%, transparent), transparent 55%);
+}
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-line) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-line) 55%, transparent) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: radial-gradient(80% 55% at 50% 0%, black, transparent 78%);
+  opacity: 0.5;
+}
+
+/* ── Gradient ink for accent words ───────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(105deg, var(--color-ink) 10%, var(--color-accent-soft) 55%, var(--color-cyan) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── Staggered load-in ───────────────────────────────────────────── */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal { animation: reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ── Focus, selection, scrollbar ─────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-accent) 70%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+::selection { background: color-mix(in oklab, var(--color-accent) 32%, transparent); color: #fff; }
+
+* { scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border: 3px solid var(--color-canvas);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover { background: #3a3a45; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+  * { scroll-behavior: auto !important; }
+}
+
+html { scroll-behavior: smooth; }
