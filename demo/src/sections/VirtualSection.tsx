@@ -33,17 +33,17 @@ export function VirtualSection() {
         <span className="font-mono text-accent">{virtualRows.length}</span> rendered in the DOM.
       </p>
 
-      <div className="mt-4 rounded-lg border border-line bg-surface">
+      <div className="mt-4 rounded-lg border border-line bg-surface" role="table" aria-rowcount={TOTAL}>
         <div className="flex border-b border-line" role="row">
           {headers.map((header) => (
-            <div key={header.id} role="columnheader" className="flex-1 px-4 py-2.5 text-sm font-medium text-muted">
+            <div key={header.id} role="columnheader" className="flex-1 truncate px-4 py-2.5 text-sm font-medium text-muted">
               {flexRender(header.column.columnDef.header, header.getContext())}
             </div>
           ))}
         </div>
 
         <div ref={containerRef} style={{ height: 480, overflow: 'auto' }}>
-          <div style={{ height: totalHeight, position: 'relative' }}>
+          <div role="rowgroup" style={{ height: totalHeight, position: 'relative' }}>
             {virtualRows.map(({ row, start, size }) => (
               <div
                 key={row.id}
@@ -52,7 +52,7 @@ export function VirtualSection() {
                 style={{ position: 'absolute', top: start, height: size, width: '100%' }}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <div key={cell.id} role="cell" className="flex flex-1 items-center px-4 text-sm">
+                  <div key={cell.id} role="cell" className="flex flex-1 items-center truncate px-4 text-sm">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </div>
                 ))}

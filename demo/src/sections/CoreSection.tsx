@@ -50,7 +50,13 @@ export function CoreSection() {
                 {hg.headers.map((header) => (
                   <th
                     key={header.id}
+                    tabIndex={0}
+                    role="columnheader"
+                    aria-sort={header.column.getIsSorted() === 'asc' ? 'ascending' : header.column.getIsSorted() === 'desc' ? 'descending' : 'none'}
                     onClick={header.column.getToggleSortingHandler()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); header.column.getToggleSortingHandler()?.(e) }
+                    }}
                     className="cursor-pointer select-none px-4 py-2.5 font-medium text-muted hover:text-ink"
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
