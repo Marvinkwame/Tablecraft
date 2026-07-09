@@ -16,10 +16,11 @@ describe('generateEmployees', () => {
   it('produces valid field shapes', () => {
     const [row] = generateEmployees(1)
     expect(typeof row.name).toBe('string')
-    expect(row.email).toContain('@')
+    expect(row.email).toMatch(/^[^@]+@example\.com$/)
     expect(['active', 'invited', 'suspended']).toContain(row.status)
     expect(typeof row.salary).toBe('number')
     expect(new Date(row.lastActive).toString()).not.toBe('Invalid Date')
+    expect(Object.keys(row).sort()).toEqual(['department', 'email', 'id', 'lastActive', 'name', 'role', 'salary', 'status'])
   })
 
   it('handles large counts without duplicating ids', () => {
