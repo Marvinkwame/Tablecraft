@@ -1,6 +1,6 @@
 import { Section } from '../ui/Section'
 
-type Mark = 'yes' | 'no' | 'free' | 'paid' | string
+type Mark = 'yes' | 'no' | 'paid' | string
 
 const COLS = ['TanStack Table', 'AG Grid', 'Material RT', 'tablecraft']
 
@@ -8,8 +8,9 @@ const ROWS: [string, Mark, Mark, Mark, Mark][] = [
   ['Headless — no CSS', 'yes', 'no', 'no', 'yes'],
   ['Zero boilerplate', 'no', 'yes', 'yes', 'yes'],
   ['TypeScript-first', 'yes', 'yes', 'yes', 'yes'],
-  ['State persistence', 'no', 'paid', 'no', 'free'],
-  ['Inline editing', 'no', 'paid', 'no', 'free'],
+  ['Inline editing', 'no', 'yes', 'yes', 'yes'],
+  ['State persistence', 'no', 'yes', 'no', 'yes'],
+  ['Row grouping', 'yes', 'paid', 'yes', 'yes'],
   ['Bundle size', '~14 KB', '≈300 KB', '≈50 KB', '~4 KB'],
   ['License', 'MIT', 'MIT*', 'MIT', 'MIT'],
 ]
@@ -17,7 +18,6 @@ const ROWS: [string, Mark, Mark, Mark, Mark][] = [
 function mark(v: Mark) {
   if (v === 'yes') return <span className="text-emerald-400">✓</span>
   if (v === 'no') return <span className="text-faint">✕</span>
-  if (v === 'free') return <span className="font-medium text-emerald-400">Free</span>
   if (v === 'paid') return <span className="text-amber-400">Enterprise $$</span>
   return <span className="text-muted">{v}</span>
 }
@@ -86,8 +86,8 @@ export function WhySection() {
       </div>
       <p className="mt-3 font-mono text-xs leading-relaxed text-faint">
         tablecraft (~4 KB core) and TanStack Table are measured min+gzip; AG Grid and Material React Table (≈)
-        are approximate published sizes that vary with setup. AG Grid Community is MIT; persistence and inline
-        editing are paid Enterprise features.
+        are approximate published sizes that vary with setup. AG Grid Community is MIT; its Enterprise tier
+        (row grouping, pivoting, server-side row model, Excel export) requires a paid licence.
       </p>
     </Section>
   )
