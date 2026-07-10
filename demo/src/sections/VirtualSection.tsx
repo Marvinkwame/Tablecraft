@@ -9,7 +9,12 @@ import { CodePeek } from '../ui/CodePeek'
 const ROW_HEIGHT = 44
 const TOTAL = 50_000
 
-const SNIPPET = `const { virtualRows, totalHeight, containerRef } =
+const SNIPPET = `import { useTable, useVirtualRows } from '@marvinackerman/tablecraft'
+// peer dependency: @tanstack/react-virtual
+
+const { table } = useTable({ data, columns, pagination: false })
+
+const { virtualRows, totalHeight, containerRef } =
   useVirtualRows(table, { rowHeight: 44 })
 
 // Only the rows in view are in the DOM:

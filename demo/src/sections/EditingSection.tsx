@@ -14,13 +14,19 @@ const editColumns = createColumns<Employee>([
   { accessorKey: 'role', header: 'Role' },
 ])
 
-const SNIPPET = `const { startEditing, setField, getDraft, getErrors,
+const SNIPPET = `import { useTable, useMultiRowEditing } from '@marvinackerman/tablecraft'
+
+const { table } = useTable({ data, columns, pagination: false })
+
+const { startEditing, setField, getDraft, getErrors,
         saveRow, cancelRow, saveAll, cancelAll, isEditing, isDirty,
         hasUnsavedChanges, isSavingAll } = useMultiRowEditing(table, {
+  // draft is the full row with your edits applied
   onSave: async (rowId, draft) => {
-    const errors: Record<string, string> = {}
+    const errors: Partial<Record<keyof Employee, string>> = {}
     if (!draft.name?.trim()) errors.name = 'Name is required'
     if (!draft.email?.includes('@')) errors.email = 'Invalid email'
+    // return errors to keep the row in edit mode, undefined to commit
     return Object.keys(errors).length ? errors : undefined
   },
 })`
