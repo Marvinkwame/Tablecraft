@@ -938,13 +938,15 @@ A floating debug panel showing current table state — sorting, pagination, filt
 import { TablecraftDevtools } from '@marvinackerman/tablecraft/devtools'
 
 function MyTable() {
-  const { table } = useTable({ data, columns })
+  // Devtools takes the whole useTable(...) return value, not just `table`
+  const tableReturn = useTable({ data, columns })
+  const { table } = tableReturn
 
   return (
     <>
       {/* your table */}
       {process.env.NODE_ENV === 'development' && (
-        <TablecraftDevtools table={table} />
+        <TablecraftDevtools tableReturn={tableReturn} />
       )}
     </>
   )
