@@ -6,7 +6,9 @@ const FEATURES: Feature[] = [
   {
     title: 'Column pinning',
     blurb: 'Freeze columns to either edge.',
-    code: `const { columnPinning } = useTable({
+    code: `import { useTable } from '@marvinackerman/tablecraft'
+
+const { columnPinning } = useTable({
   data, columns, columnPinning: true,
 })
 columnPinning.pinLeft('name')`,
@@ -14,7 +16,9 @@ columnPinning.pinLeft('name')`,
   {
     title: 'Row grouping & aggregation',
     blurb: 'Group rows by any column.',
-    code: `const { grouping } = useTable({
+    code: `import { useTable } from '@marvinackerman/tablecraft'
+
+const { grouping } = useTable({
   data, columns, grouping: true,
 })
 grouping.toggleGrouping('department')`,
@@ -22,7 +26,9 @@ grouping.toggleGrouping('department')`,
   {
     title: 'Expandable sub-rows',
     blurb: 'Nested, collapsible child rows.',
-    code: `useTable({
+    code: `import { useTable } from '@marvinackerman/tablecraft'
+
+useTable({
   data, columns,
   rowExpansion: { getSubRows: (r) => r.children },
 })`,
@@ -30,13 +36,17 @@ grouping.toggleGrouping('department')`,
   {
     title: 'URL state sync',
     blurb: 'Sort/page/filter live in the URL.',
-    code: `useTable({ data, columns, syncUrl: true })
-// → ?page=2&sort=name&q=ava`,
+    code: `import { useTable } from '@marvinackerman/tablecraft'
+
+useTable({ data, columns, syncUrl: true })
+// → ?page=2&sort=name_asc&filter=ava`,
   },
   {
     title: 'localStorage persistence',
     blurb: 'State survives reloads.',
-    code: `useTable({
+    code: `import { useTable } from '@marvinackerman/tablecraft'
+
+useTable({
   data, columns,
   persist: 'localStorage', persistKey: 'users',
 })`,
@@ -44,7 +54,9 @@ grouping.toggleGrouping('department')`,
   {
     title: 'ARIA + keyboard nav',
     blurb: 'WAI-ARIA grid, prop getters.',
-    code: `const a11y = useTableA11y(table, {
+    code: `import { useTableA11y } from '@marvinackerman/tablecraft'
+
+const a11y = useTableA11y(table, {
   selectionEnabled: true,
 })
 <tr {...a11y.getRowProps(row.id)} />`,
@@ -52,14 +64,20 @@ grouping.toggleGrouping('department')`,
   {
     title: 'TanStack Query',
     blurb: 'Server data, auto refetch.',
-    code: `const { table, query } = useQueryTable({
+    code: `import { useQueryTable } from '@marvinackerman/tablecraft'
+// peer dependency: @tanstack/react-query
+
+const { table, query } = useQueryTable({
   queryKey: ['users'], queryFn, columns,
 })`,
   },
   {
     title: 'Infinite scroll',
     blurb: 'Cursor paging + sentinel wiring.',
-    code: `const { loadMore, hasNextPage } =
+    code: `import { useInfiniteTable, useInfiniteScroll } from '@marvinackerman/tablecraft'
+// peer dependency: @tanstack/react-query
+
+const { loadMore, hasNextPage } =
   useInfiniteTable({ queryKey, queryFn, columns })
 const ref = useInfiniteScroll(loadMore, { enabled: hasNextPage })`,
   },
@@ -69,7 +87,10 @@ const ref = useInfiniteScroll(loadMore, { enabled: hasNextPage })`,
     code: `import { TablecraftDevtools } from
   '@marvinackerman/tablecraft/devtools'
 
-<TablecraftDevtools table={table} />`,
+// pass the whole useTable(...) return value
+const tableReturn = useTable({ data, columns })
+
+<TablecraftDevtools tableReturn={tableReturn} />`,
   },
 ]
 
