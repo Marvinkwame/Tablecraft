@@ -85,6 +85,16 @@ export function Hero() {
           </a>
         </div>
 
+        <p
+          className="reveal mt-6 max-w-2xl text-sm leading-relaxed text-muted"
+          style={{ animationDelay: '290ms' }}
+        >
+          <span className="text-ink">Using shadcn/ui?</span> Its data table is built on TanStack Table — swap the
+          boilerplate for{' '}
+          <code className="rounded bg-elevated px-1.5 py-0.5 font-mono text-[13px] text-accent-soft">useTable</code>{' '}
+          and keep every one of your components.
+        </p>
+
         <dl
           className="reveal mt-12 grid max-w-2xl grid-cols-1 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3"
           style={{ animationDelay: '320ms' }}
