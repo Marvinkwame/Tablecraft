@@ -85,7 +85,7 @@ export function FeatureStrip() {
         The same one-hook ergonomics cover the rest of the surface area. A taste of each:
       </p>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map((f) => (
           <div
             key={f.title}

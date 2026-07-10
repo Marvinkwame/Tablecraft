@@ -10,7 +10,7 @@ const ROWS: [string, Mark, Mark, Mark, Mark][] = [
   ['TypeScript-first', 'yes', 'yes', 'yes', 'yes'],
   ['State persistence', 'no', 'paid', 'no', 'free'],
   ['Inline editing', 'no', 'paid', 'no', 'free'],
-  ['Bundle size', '~14 KB', '~300 KB', '~50 KB', '~4 KB'],
+  ['Bundle size', '~14 KB', '≈300 KB', '≈50 KB', '~4 KB'],
   ['License', 'MIT', 'MIT*', 'MIT', 'MIT'],
 ]
 
@@ -29,7 +29,7 @@ export function WhySection() {
       title="Why tablecraft?"
       description="TanStack Table is intentionally 100% headless — that's its strength, and its tax."
     >
-      <div className="grid gap-8 lg:grid-cols-[1fr_1.15fr] lg:items-start">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.15fr] lg:items-start">
         <div className="space-y-4 leading-relaxed text-muted">
           <p>
             Every project that reaches for <code className="rounded bg-elevated px-1.5 py-0.5 font-mono text-[13px] text-ink">@tanstack/react-table</code> starts
@@ -84,9 +84,10 @@ export function WhySection() {
           </table>
         </div>
       </div>
-      <p className="mt-3 font-mono text-xs text-faint">
-        Sizes are min+gzip; tablecraft's ~4 KB is its own core, on top of the TanStack Table peer. * AG Grid
-        Community is MIT; persistence and editing are paid Enterprise features.
+      <p className="mt-3 font-mono text-xs leading-relaxed text-faint">
+        tablecraft (~4 KB core) and TanStack Table are measured min+gzip; AG Grid and Material React Table (≈)
+        are approximate published sizes that vary with setup. AG Grid Community is MIT; persistence and inline
+        editing are paid Enterprise features.
       </p>
     </Section>
   )
