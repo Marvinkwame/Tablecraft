@@ -27,3 +27,6 @@ npm-debug.log*
 .env.*
 
 .claude/
+
+# Local planning/design docs — never published to GitHub
+docs/
