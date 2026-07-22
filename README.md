@@ -7,6 +7,8 @@
 
 **Go from ~100 lines of TanStack Table boilerplate to ~10 lines.** No CSS. No component library. Full escape hatch to the raw table instance.
 
+> **Using shadcn/ui?** Its data table is built on TanStack Table. Swap the boilerplate for `useTable` and keep every one of your components — tablecraft ships zero markup and zero styles.
+
 ```
 npm i @marvinackerman/tablecraft @tanstack/react-table
 ```
@@ -91,12 +93,15 @@ Sorting, pagination, global search, full TypeScript generics — wired up in one
 | Headless (no CSS) | Yes | No | No | **Yes** |
 | Zero boilerplate | No | Yes | Yes | **Yes** |
 | TypeScript-first | Yes | Yes | Yes | **Yes** |
-| State persistence | No | Enterprise $$ | No | **Free** |
-| Inline editing | No | Enterprise $$ | No | **Free** |
+| Inline editing | No | Yes | Yes | **Yes** |
+| State persistence | No | Yes | No | **Yes** |
+| Row grouping | Yes | Enterprise $$ | Yes | **Yes** |
 | Bundle size | ~14 KB | ≈300 KB† | ≈50 KB† | **~4 KB** + TanStack peer |
 | License | MIT | MIT* | MIT | **MIT** |
 
-<sub>† tablecraft (~4 KB core) and TanStack Table figures are measured min+gzip; AG Grid and Material React Table are approximate published sizes that vary with configuration. * AG Grid Community is MIT; persistence and inline editing are paid Enterprise features.</sub>
+<sub>† tablecraft (~4 KB core) and TanStack Table figures are measured min+gzip; AG Grid and Material React Table are approximate published sizes that vary with configuration. * AG Grid Community is MIT; its Enterprise tier (row grouping, pivoting, server-side row model, Excel export, master/detail) requires a paid licence.</sub>
+
+**The combination is the point:** tablecraft is the only one that is *both* fully headless and zero-boilerplate.
 
 ---
 
@@ -979,13 +984,15 @@ A floating debug panel showing current table state — sorting, pagination, filt
 import { TablecraftDevtools } from '@marvinackerman/tablecraft/devtools'
 
 function MyTable() {
-  const { table } = useTable({ data, columns })
+  // Devtools takes the whole useTable(...) return value, not just `table`
+  const tableReturn = useTable({ data, columns })
+  const { table } = tableReturn
 
   return (
     <>
       {/* your table */}
       {process.env.NODE_ENV === 'development' && (
-        <TablecraftDevtools table={table} />
+        <TablecraftDevtools tableReturn={tableReturn} />
       )}
     </>
   )
