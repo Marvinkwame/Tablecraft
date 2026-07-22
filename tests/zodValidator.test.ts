@@ -32,8 +32,10 @@ describe.each(versions)('zodValidator (%s)', (_label, z) => {
     })
   })
 
-  it('keeps only the first message per field', () => {
-    const schema = z.object({ name: z.string().min(2, 'Too short').max(3, 'Too long') })
+  it('keeps only the first message per field when one field has multiple failures', () => {
+    // min() and email() BOTH fail on 'a', producing two issues on the same path.
+    // (min+max can never both fail, which made the previous version tautological.)
+    const schema = z.object({ name: z.string().min(5, 'Too short').email('Invalid email') })
     const validate = zodValidator(schema)
     const errors = validate({ name: 'a' }) as Record<string, string>
     expect(errors.name).toBe('Too short')
@@ -55,6 +57,9 @@ describe.each(versions)('zodValidator (%s)', (_label, z) => {
   })
 
   it('attaches object-level errors to the first shape key by default', () => {
+    // NOTE: on Zod 3 the refine strips .shape so this resolves via the value-key
+    // step; on Zod 4 .shape survives and it resolves via the shape-key step. Both
+    // yield the same field here. The zod4-only test below disambiguates the order.
     const schema = z
       .object({ start: z.number(), end: z.number() })
       .refine((d: any) => d.end > d.start, { message: 'End must be after start' })
@@ -71,13 +76,15 @@ describe.each(versions)('zodValidator (%s)', (_label, z) => {
   })
 
   it('falls back to a key of the validated object when the schema exposes no shape', () => {
-    // A wrapped schema has no `.shape`, so the fallback must come from the value.
-    const schema = z
-      .object({ start: z.number(), end: z.number() })
-      .refine((d: any) => d.end > d.start, { message: 'End must be after start' })
+    // z.any() has no `.shape` on EITHER major, so this genuinely exercises the
+    // value-key step. (A .refine()-wrapped object would still expose .shape on
+    // Zod 4 and would quietly take the shape-key step instead.)
+    const schema = z.any().refine((d: any) => d && d.end > d.start, {
+      message: 'End must be after start',
+    })
     const validate = zodValidator(schema)
     const errors = validate({ start: 10, end: 5 }) as Record<string, string>
-    expect(Object.values(errors)).toContain('End must be after start')
+    expect(errors).toEqual({ start: 'End must be after start' })
   })
 
   it('accepts wrapped (.refine) schemas — unlike columnsFromZod', () => {
@@ -91,5 +98,20 @@ describe.each(versions)('zodValidator (%s)', (_label, z) => {
     const schema = z.object({}).refine(() => false, { message: 'Always fails' })
     const validate = zodValidator(schema)
     expect(() => validate({})).toThrow(/rootErrorField/)
+  })
+})
+
+// Only Zod 4 can produce an object-level issue on a schema that still exposes
+// `.shape` (Zod 3's .refine() strips it), so the shape-key-beats-value-key
+// ordering is only observable on Zod 4.
+describe('zodValidator — cascade order, zod4 only', () => {
+  it('prefers the schema shape key over a key of the validated object', () => {
+    const schema = z4
+      .object({ alpha: z4.number(), beta: z4.number() })
+      .refine(() => false, { message: 'Object rule failed' })
+    const validate = zodValidator(schema)
+    // shape's first key is `alpha`; the value's first key is `beta`.
+    const errors = validate({ beta: 1, alpha: 2 }) as Record<string, string>
+    expect(errors).toEqual({ alpha: 'Object rule failed' })
   })
 })
