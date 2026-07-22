@@ -18,9 +18,13 @@ export interface ColumnsFromZodOptions<TData> {
  * Produces `{ accessorKey, header }` per top-level field — no cell renderers,
  * no styling. Unlike `inferColumns`, this needs no sample data.
  *
- * Depth-1 only: nested object fields are skipped. Requires a plain
- * `z.object({...})`; wrapped schemas (`.refine()`) throw — use `zodValidator`
- * for those, which supports them fully.
+ * Fields whose schema directly exposes `.shape` (a nested `z.object`) are
+ * skipped. Arrays, records, and optional/nullable-wrapped objects are NOT
+ * auto-detected — `.shape` is `undefined` on `z.array(...)`, `z.record(...)`,
+ * and `z.object({...}).optional()` / `.nullable()`, so those fields still get
+ * a column. Use `exclude` for those. Requires a plain `z.object({...})`;
+ * wrapped schemas (`.refine()`) throw — use `zodValidator` for those, which
+ * supports them fully.
  */
 export function columnsFromZod<TSchema extends z.ZodType>(
   schema: TSchema,

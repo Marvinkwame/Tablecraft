@@ -953,7 +953,7 @@ const editing = useMultiRowEditing(table, {
 
 **`columnsFromZod(schema, options?)`** — generates headless `{ accessorKey, header }` columns from the schema's top-level fields (headers are humanized: `firstName` → "First Name"). Needs no sample data. Options: `include`, `exclude`, `overrides` — identical to `inferColumns`.
 
-Depth-1 only: nested object fields are skipped. Requires a schema that exposes `.shape`.
+Fields whose schema directly exposes `.shape` (a nested `z.object`) are skipped. Arrays, records, and optional/nullable-wrapped objects are **not** auto-detected — since `.shape` is `undefined` on `z.array(...)`, `z.record(...)`, and `z.object({...}).optional()` / `.nullable()`, those fields still produce a column. Use `exclude` to remove them. Requires a schema that exposes `.shape`.
 
 > **`.refine()` behaves differently across Zod majors.** Zod 3 wraps refined schemas so `.shape` is hidden — `columnsFromZod` throws with instructions (pass the base object, or `.innerType()`). Zod 4 keeps `.shape`, so refined schemas work normally. `zodValidator` accepts refined schemas on both.
 

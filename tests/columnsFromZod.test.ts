@@ -65,6 +65,18 @@ describe.each(versions)('columnsFromZod (%s)', (_label, z) => {
   it('throws an actionable error for a non-object schema', () => {
     expect(() => columnsFromZod(z.string() as any)).toThrow(/requires a Zod object schema/)
   })
+
+  it('does not auto-skip arrays or wrapped objects (documented limitation)', () => {
+    const schema = z.object({
+      id: z.string(),
+      tags: z.array(z.string()),
+      address: z.object({ city: z.string() }).optional(),
+      nested: z.object({ city: z.string() }),
+    })
+    const cols = columnsFromZod(schema) as any[]
+    // `nested` is skipped (exposes .shape); `tags` and `address` are not detected.
+    expect(cols.map((c) => c.accessorKey)).toEqual(['id', 'tags', 'address'])
+  })
 })
 
 // Wrapped-schema behaviour is genuinely version-dependent and cannot be made
