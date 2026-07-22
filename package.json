@@ -84,7 +84,7 @@
     "zod-v3": "npm:zod@^3.25.76"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node scripts/check-dts.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

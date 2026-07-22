@@ -27,7 +27,7 @@ export interface ZodValidatorOptions<TData> {
 export function zodValidator<TSchema extends z.ZodType>(
   schema: TSchema,
   options: ZodValidatorOptions<z.infer<TSchema>> = {}
-) {
+): (values: unknown) => Partial<Record<keyof z.infer<TSchema>, string>> | undefined {
   type TData = z.infer<TSchema>
   type Errors = Partial<Record<keyof TData, string>>
 
