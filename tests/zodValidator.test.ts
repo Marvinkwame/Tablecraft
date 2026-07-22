@@ -99,6 +99,19 @@ describe.each(versions)('zodValidator (%s)', (_label, z) => {
     const validate = zodValidator(schema)
     expect(() => validate({})).toThrow(/rootErrorField/)
   })
+
+  it('treats a numeric path[0] (array index) as object-level, not a field key', () => {
+    // Verified empirically: a top-level `z.array(...)` schema produces an issue
+    // whose path[0] is a number (the failing item's index), on both Zod majors.
+    const arraySchema = z.array(z.string())
+    const validate = zodValidator(arraySchema as any)
+    const errors = validate(['ok', 123]) as Record<string, string>
+    // If the numeric index were used directly as a field key it would show up
+    // as '1' (the failing item's index). Instead the numeric path is treated
+    // as object-level and falls through to the root-field cascade, which
+    // resolves to '0' — the first key of the validated array value.
+    expect(Object.keys(errors)).toEqual(['0'])
+  })
 })
 
 // Only Zod 4 can produce an object-level issue on a schema that still exposes

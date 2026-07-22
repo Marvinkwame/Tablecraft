@@ -3,8 +3,18 @@ import { getShape, safeParseWith } from './introspect'
 
 export interface ZodValidatorOptions<TData> {
   /**
-   * Field that receives object-level (empty-path) issues, e.g. from `.refine()`.
-   * Default: first key of the schema's shape, else a key of the validated object.
+   * Field that receives object-level (empty-path) issues, e.g. from `.refine()`
+   * or `.superRefine()`.
+   *
+   * Resolution order when not set explicitly:
+   *   1. `rootErrorField`, if provided.
+   *   2. The first key of the schema's `.shape` (when the schema exposes one).
+   *   3. The first key of the validated object.
+   *
+   * Note: if the resolved field already has a field-level error for this
+   * validation round, the object-level message is *not* attached — the row
+   * still stays in edit mode (the field-level error keeps it there), and the
+   * object-level message will surface once that field's own error is fixed.
    */
   rootErrorField?: keyof TData
 }
@@ -51,7 +61,7 @@ export function zodValidator<TSchema extends z.ZodType>(
     }
 
     if (rootMessages.length > 0) {
-      const field = resolveRootField<TData>(options.rootErrorField, schema, values, errors)
+      const field = resolveRootField<TData>(options.rootErrorField, schema, values)
       if (field !== undefined && errors[field] === undefined) {
         errors[field] = rootMessages[0]
       }
@@ -69,12 +79,11 @@ export function zodValidator<TSchema extends z.ZodType>(
   }
 }
 
-/** rootErrorField → first shape key → first key of the value → first already-errored field. */
+/** rootErrorField → first shape key → first key of the value. */
 function resolveRootField<TData>(
   configured: keyof TData | undefined,
   schema: unknown,
-  values: unknown,
-  errors: Partial<Record<keyof TData, string>>
+  values: unknown
 ): keyof TData | undefined {
   if (configured !== undefined) return configured
 
@@ -87,6 +96,5 @@ function resolveRootField<TData>(
     if (valueKey) return valueKey as keyof TData
   }
 
-  const erroredKey = Object.keys(errors)[0]
-  return erroredKey ? (erroredKey as keyof TData) : undefined
+  return undefined
 }
