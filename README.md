@@ -923,6 +923,52 @@ Also works in `useQueryTable` and `useInfiniteTable` with the same `columnPinnin
 
 ---
 
+### Zod Schemas — `@marvinackerman/tablecraft/zod`
+
+Use one Zod schema as the source of truth for a table's columns *and* its edit validation. Requires `zod` (optional peer, works with Zod 3 and 4):
+
+```
+npm i zod
+```
+
+```tsx
+import { useTable, useMultiRowEditing } from '@marvinackerman/tablecraft'
+import { columnsFromZod, zodValidator } from '@marvinackerman/tablecraft/zod'
+import { z } from 'zod'
+
+const userSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email'),
+})
+type User = z.infer<typeof userSchema>
+
+const columns = columnsFromZod(userSchema)   // ColumnDef<User>[]
+const validate = zodValidator(userSchema)
+
+const { table } = useTable({ data, columns })
+const editing = useMultiRowEditing(table, {
+  onSave: async (rowId, draft) => validate(draft) ?? api.save(rowId, draft),
+})
+```
+
+**`columnsFromZod(schema, options?)`** — generates headless `{ accessorKey, header }` columns from the schema's top-level fields (headers are humanized: `firstName` → "First Name"). Needs no sample data. Options: `include`, `exclude`, `overrides` — identical to `inferColumns`.
+
+Depth-1 only: nested object fields are skipped. Requires a schema that exposes `.shape`.
+
+> **`.refine()` behaves differently across Zod majors.** Zod 3 wraps refined schemas so `.shape` is hidden — `columnsFromZod` throws with instructions (pass the base object, or `.innerType()`). Zod 4 keeps `.shape`, so refined schemas work normally. `zodValidator` accepts refined schemas on both.
+
+**`zodValidator(schema, options?)`** — returns `(row) => errors | undefined`, matching the error-map contract of `useEditableRows` / `useMultiRowEditing`. Returns `undefined` when the row is valid, so it composes directly with `??`.
+
+Wrapped schemas *are* supported here, so cross-field `.refine()` rules run. Because an object-level issue has no field path, its message is attached to a field so the row stays in edit mode — the first schema field by default, or `rootErrorField`:
+
+```tsx
+const validate = zodValidator(dateRangeSchema, { rootErrorField: 'endDate' })
+```
+
+> **Invalid rows are never silently committed.** If the schema rejects a row, the returned map is always non-empty — an empty map would collapse to `undefined` and the row would save despite failing validation.
+
+---
+
 ### Devtools
 
 A floating debug panel showing current table state — sorting, pagination, filters, selection, expansion, grouping. Zero-config, dev-only.
@@ -1016,6 +1062,7 @@ Yes. Tested against React 18 and 19.
 | `@tanstack/react-query` | `useQueryTable` |
 | `@testing-library/react` | `tablecraft/testing` utilities |
 | `@tanstack/react-virtual` | `useVirtualRows` |
+| `zod` | `tablecraft/zod` — `columnsFromZod`, `zodValidator` (Zod 3 and 4) |
 
 ---
 
