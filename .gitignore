@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+*.tsbuildinfo
 
 # IDE
 .vscode/
@@ -26,3 +27,6 @@ npm-debug.log*
 .env.*
 
 .claude/
+
+# Local planning/design docs — never published to GitHub
+docs/

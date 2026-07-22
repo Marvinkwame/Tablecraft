@@ -6,6 +6,13 @@ All notable changes to tablecraft are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **`@marvinackerman/tablecraft/zod`** — a new subpath export bridging Zod schemas to the table. Requires `zod` (optional peer, supports both Zod 3 (`>=3.23.0`) and Zod 4).
+  - **`columnsFromZod(schema, options?)`** — generates headless `{ accessorKey, header }` columns straight from a Zod object schema's top-level fields, no sample data required. Supports `include` / `exclude` / `overrides`, matching `inferColumns`.
+  - **`zodValidator(schema, options?)`** — adapts a Zod schema into the `(row) => errors | undefined` shape `useEditableRows` / `useMultiRowEditing` expect. **Invalid rows are never silently committed**: when the schema rejects a value, the returned error map is guaranteed non-empty (an empty map would collapse to `undefined` via the caller's typical `Object.keys(e).length ? e : undefined` check and let the invalid row save). Supports wrapped schemas (`.refine()` / `.superRefine()`); object-level issues are attached to a field via `rootErrorField` (or a documented fallback cascade) so the row stays in edit mode.
+  - **`.refine()` behaves differently across Zod majors.** Zod 3 wraps refined schemas so `.shape` is hidden — `columnsFromZod` throws with an actionable message (pass the base object schema, or use `.innerType()`). Zod 4 keeps `.shape`, so refined schemas work with `columnsFromZod` normally. `zodValidator` accepts refined schemas on both majors.
+
 ### Fixed
 
 - **`pagination: false` no longer caps rows at the initial data length.** Disabling pagination previously faked a page size equal to `data.length` at mount, so rows added later (e.g. from an async fetch) were silently cut off. The pagination row model is now skipped entirely when pagination is disabled.
