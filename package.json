@@ -29,19 +29,26 @@
       "types": "./dist/devtools/index.d.ts",
       "import": "./dist/devtools/index.mjs",
       "require": "./dist/devtools/index.js"
+    },
+    "./zod": {
+      "types": "./dist/zod/index.d.ts",
+      "import": "./dist/zod/index.mjs",
+      "require": "./dist/zod/index.js"
     }
   },
   "files": [
     "dist",
     "testing",
     "devtools",
+    "zod",
     "CHANGELOG.md"
   ],
   "sideEffects": false,
   "peerDependencies": {
     "@tanstack/react-table": ">=8",
     "react": ">=18",
-    "@tanstack/react-virtual": ">=3"
+    "@tanstack/react-virtual": ">=3",
+    "zod": ">=3.23.0"
   },
   "peerDependenciesMeta": {
     "match-sorter": {
@@ -54,6 +61,9 @@
       "optional": true
     },
     "@tanstack/react-virtual": {
+      "optional": true
+    },
+    "zod": {
       "optional": true
     }
   },
@@ -69,7 +79,9 @@
     "react-dom": "^18.3.0",
     "tsup": "^8.0.0",
     "typescript": "^5.5.0",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "zod": "^4.4.3",
+    "zod-v3": "npm:zod@^3.25.76"
   },
   "scripts": {
     "build": "tsup",
