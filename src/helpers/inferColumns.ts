@@ -1,4 +1,5 @@
 import type { ColumnDef, RowData } from '@tanstack/react-table'
+import { humanizeKey } from '../utils/humanizeKey'
 
 export interface InferColumnsOptions<TData extends RowData> {
   /** Whitelist — only include these keys as columns */
@@ -51,17 +52,7 @@ export function inferColumns<TData extends RowData>(
     .map((key) => {
       const override = (overrides as Record<string, Partial<ColumnDef<TData, any>> | undefined>)[key] ?? {}
 
-      // Generate a human-readable header from the key
-      // "firstName" → "First Name", "created_at" → "Created At"
-      const header =
-        (override.header as string) ??
-        String(key)
-          // camelCase → spaced
-          .replace(/([a-z])([A-Z])/g, '$1 $2')
-          // snake_case → spaced
-          .replace(/[_-]/g, ' ')
-          // capitalize each word
-          .replace(/\b\w/g, (c) => c.toUpperCase())
+      const header = (override.header as string) ?? humanizeKey(String(key))
 
       return {
         accessorKey: key,
