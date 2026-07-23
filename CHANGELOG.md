@@ -4,7 +4,7 @@ All notable changes to tablecraft are documented here.
 
 ---
 
-## [Unreleased]
+## [2.6.0] — 2026-07-23
 
 ### Added
 
