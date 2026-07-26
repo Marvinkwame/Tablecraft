@@ -31,7 +31,7 @@ reach for that feature, not up front:
 
 | Package | Needed for |
 |---|---|
-| `zod` | The `@marvinackerman/tablecraft/zod` entry (`columnsFromZod`, `zodValidator`) — derive columns and row-edit validation from a single Zod schema. Works with Zod 3 and 4. |
+| `zod` `>=3.23.0` | The `@marvinackerman/tablecraft/zod` entry (`columnsFromZod`, `zodValidator`) — derive columns and row-edit validation from a single Zod schema. Works with Zod 3 and 4. |
 | `@tanstack/react-query` | `useQueryTable` and `useInfiniteTable` — server-driven and infinite-scroll tables backed by TanStack Query. |
 | `match-sorter` | Fuzzy search (`fuzzy: true` on `useTable`). Loaded via `require()`, so this only applies in CJS/Node bundlers — in ESM-only bundlers (e.g. Vite), pass your own filter function instead and skip this dependency entirely. |
 
