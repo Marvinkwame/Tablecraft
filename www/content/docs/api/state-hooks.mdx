@@ -1,0 +1,179 @@
+---
+title: State hooks
+description: Granular, standalone state hooks for composing your own useReactTable call instead of using useTable.
+---
+
+For advanced setups where you compose your own `useReactTable` call directly,
+each piece of [`useTable`](/docs/api/use-table)'s state is available as a
+standalone hook. Each returns state plus setters compatible with TanStack
+Table's `state` and `on*Change` props.
+
+```tsx
+import {
+  usePaginationState,
+  useSortState,
+  useFilterState,
+  useColumnFilterState,
+  useRowSelectionState,
+  useColumnVisibilityState,
+  useColumnPinningState,
+  useRowExpansionState,
+  useGroupingState,
+} from '@marvinackerman/tablecraft'
+
+const pagination = usePaginationState({ pageSize: 25 })
+const sorting = useSortState({ defaultSort: [{ id: 'createdAt', desc: true }] })
+const globalFilter = useFilterState()
+const columnFilters = useColumnFilterState()
+const rowSelection = useRowSelectionState()
+const columnVisibility = useColumnVisibilityState({ defaultVisibility: { id: false } })
+const columnPinning = useColumnPinningState()
+const rowExpansion = useRowExpansionState({ allowMultiple: false })
+const grouping = useGroupingState({ defaultGrouping: ['department'] })
+```
+
+## `usePaginationState`
+
+```ts
+function usePaginationState(options?: PaginationOptions): {
+  state: PaginationState
+  onPaginationChange: Dispatch<SetStateAction<PaginationState>>
+  setPageIndex: (index: number) => void
+  setPageSize: (size: number) => void
+  nextPage: () => void
+  previousPage: () => void
+}
+```
+
+`PaginationOptions`: `{ pageSize?: number, pageIndex?: number }`
+
+## `useSortState`
+
+```ts
+function useSortState(options?: SortingOptions): {
+  state: SortingState
+  onSortingChange: Dispatch<SetStateAction<SortingState>>
+  clearSorting: () => void
+}
+```
+
+`SortingOptions`: `{ defaultSort?: SortingState }`
+
+## `useFilterState`
+
+```ts
+function useFilterState(defaultValue?: string): {
+  state: string
+  onGlobalFilterChange: Dispatch<SetStateAction<string>>
+  clear: () => void
+}
+```
+
+Takes a plain string default — not an options object.
+
+## `useColumnFilterState`
+
+```ts
+function useColumnFilterState(defaultState?: ColumnFiltersState): {
+  state: ColumnFiltersState
+  onColumnFiltersChange: Dispatch<SetStateAction<ColumnFiltersState>>
+  setFilter: (columnId: string, value: unknown) => void
+  clearFilter: (columnId: string) => void
+  clearAll: () => void
+}
+```
+
+Takes a `ColumnFiltersState` default directly — not an options object.
+
+## `useRowSelectionState`
+
+```ts
+function useRowSelectionState(options?: UseRowSelectionOptions): {
+  state: RowSelectionState
+  onRowSelectionChange: Dispatch<SetStateAction<RowSelectionState>>
+  toggleRow: (rowId: string) => void
+  toggleAll: (rowIds: string[]) => void
+  clearSelection: () => void
+  selectedRowIds: string[]
+  selectedCount: number
+  isSelected: (rowId: string) => boolean
+  enableMultiRowSelection: boolean
+}
+```
+
+`UseRowSelectionOptions`: `{ defaultSelection?: RowSelectionState, enableMultiRowSelection?: boolean }`
+
+Note: `toggleAll` here takes the full array of row IDs (`(rowIds: string[]) => void`) — unlike `useTable`'s `rowSelection.toggleAll()`, which takes no arguments because it already has the table's rows in scope.
+
+## `useColumnVisibilityState`
+
+```ts
+function useColumnVisibilityState(options?: UseColumnVisibilityOptions): {
+  state: VisibilityState
+  onColumnVisibilityChange: Dispatch<SetStateAction<VisibilityState>>
+  toggleColumn: (columnId: string) => void
+  showColumn: (columnId: string) => void
+  hideColumn: (columnId: string) => void
+  showAll: () => void
+  hiddenColumns: string[]
+}
+```
+
+`UseColumnVisibilityOptions`: `{ defaultVisibility?: VisibilityState }`
+
+## `useColumnPinningState`
+
+```ts
+function useColumnPinningState(options?: ColumnPinningOptions): {
+  state: ColumnPinningState
+  setState: Dispatch<SetStateAction<ColumnPinningState>>
+  pinLeft: (id: string) => void
+  pinRight: (id: string) => void
+  unpin: (id: string) => void
+  clearPinning: () => void
+  isPinned: (id: string) => 'left' | 'right' | false
+  leftColumns: string[]
+  rightColumns: string[]
+}
+```
+
+`ColumnPinningOptions`: `{ defaultPinning?: ColumnPinningState }`
+
+## `useRowExpansionState`
+
+```ts
+function useRowExpansionState(options?: UseRowExpansionOptions): {
+  state: ExpandedState
+  onExpandedChange: OnChangeFn<ExpandedState>
+  toggleRow: (rowId: string) => void
+  expandRow: (rowId: string) => void
+  collapseRow: (rowId: string) => void
+  clearExpansion: () => void
+  expandedRowIds: string[]
+  isExpanded: (rowId: string) => boolean
+}
+```
+
+`UseRowExpansionOptions` (granular-hook form): `{ defaultExpanded?: ExpandedState, allowMultiple?: boolean }`.
+`allowMultiple` defaults to `true`; set `false` so expanding a new row collapses all others.
+
+Note: `useTable`'s `rowExpansion` option accepts a wider `RowExpansionOptions`
+that also includes `paginateExpandedRows` and `getSubRows` (for nested
+sub-rows) — those two extra fields are not part of this standalone hook's
+options.
+
+## `useGroupingState`
+
+```ts
+function useGroupingState(options?: UseGroupingOptions): {
+  state: GroupingState
+  onGroupingChange: OnChangeFn<GroupingState>
+  toggleGrouping: (columnId: string) => void
+  setGrouping: (cols: GroupingState) => void
+  clearGrouping: () => void
+  isGrouped: (columnId: string) => boolean
+  groupedColumns: GroupingState
+}
+```
+
+`UseGroupingOptions`: `{ defaultGrouping?: GroupingState, manualGrouping?: boolean, groupedColumnMode?: false | 'reorder' | 'remove' }`
