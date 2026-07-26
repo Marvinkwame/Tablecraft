@@ -48,11 +48,16 @@ Each `VirtualRow<TData>`:
 
 ## Usage
 
+> **Note:** Pass `pagination: false` to `useTable` when combining it with
+> `useVirtualRows`. `useTable` paginates to a default page size of 10, so
+> without disabling it the virtualizer only ever sees ~10 rows instead of
+> your full dataset.
+
 ```tsx
 import { useTable, useVirtualRows } from '@marvinackerman/tablecraft'
 import { flexRender } from '@tanstack/react-table'
 
-const { table } = useTable({ data, columns })
+const { table } = useTable({ data, columns, pagination: false })
 
 const { virtualRows, totalHeight, containerRef, scrollToIndex } = useVirtualRows(table, {
   rowHeight: 48,
