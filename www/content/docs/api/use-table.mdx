@@ -1,0 +1,192 @@
+---
+title: useTable
+description: The primary hook — covers pagination, sorting, filtering, selection, expansion, grouping, pinning, persistence, and URL sync in one call.
+---
+
+The single hook that covers most use cases. Every option is optional; the
+returned `table` is a full TanStack `Table<TData>` instance.
+
+## Signature
+
+```ts
+function useTable<TData extends RowData>(
+  options: UseTableOptions<TData>
+): UseTableReturn<TData>
+```
+
+## Options
+
+| Option | Type | Description |
+|---|---|---|
+| `data` | `TData[]` | Row data (required) |
+| `columns` | `ColumnDef<TData, any>[]` | Column definitions (required) |
+| `pagination` | `PaginationOptions \| boolean` | `{ pageSize?, pageIndex? }`, or `true` (defaults), or `false` (disabled) |
+| `manualPagination` | `boolean` | Server-driven pagination — pair with `rowCount` |
+| `rowCount` | `number` | Total row count, used with `manualPagination` |
+| `onPaginationChange` | `OnChangeFn<PaginationState>` | Custom pagination change handler |
+| `sorting` | `SortingOptions \| boolean` | `{ defaultSort? }`, or `true`, or `false` |
+| `manualSorting` | `boolean` | Server-driven sorting |
+| `onSortingChange` | `OnChangeFn<SortingState>` | Custom sorting change handler |
+| `globalFilter` | `boolean` | Enable global text filter |
+| `onGlobalFilterChange` | `(value: string) => void` | Custom global filter handler |
+| `columnFilters` | `boolean` | Enable per-column filters |
+| `onColumnFiltersChange` | `OnChangeFn<ColumnFiltersState>` | Custom column filter handler |
+| `rowSelection` | `RowSelectionOptions \| boolean` | `true`, or `{ enableMultiRowSelection? }` |
+| `columnVisibility` | `ColumnVisibilityOptions \| boolean` | `true`, or `{ defaultVisibility? }` |
+| `rowExpansion` | `RowExpansionOptions \| boolean` | `true`, or `{ defaultExpanded?, allowMultiple?, paginateExpandedRows?, getSubRows? }` |
+| `grouping` | `GroupingOptions \| boolean` | `true`, or `{ defaultGrouping?, manualGrouping?, groupedColumnMode? }` |
+| `columnPinning` | `ColumnPinningOptions \| boolean` | `true`, or `{ defaultPinning? }` |
+| `fuzzy` | `boolean \| FilterFn<TData>` | `true` loads `match-sorter` via `require()` — CJS/Node only. In ESM-only bundlers (Vite, browsers), pass a `FilterFn` directly instead. |
+| `persist` | `'localStorage' \| 'sessionStorage' \| false` | Persist state across reloads — see [Persistence & URL sync](/docs/api/persistence-url) |
+| `persistKey` | `string` | Storage key — required when `persist` is set |
+| `persistOptions` | `PersistOptions` | Which state slices to persist |
+| `syncUrl` | `boolean \| URLSyncOptions` | Sync state to the URL — see [Persistence & URL sync](/docs/api/persistence-url) |
+
+## Usage
+
+```tsx
+import { useTable } from '@marvinackerman/tablecraft'
+
+const {
+  table,          // Full TanStack Table<TData> instance
+  pagination,
+  sorting,
+  globalFilter,
+  columnFilters,
+  rowSelection,
+  columnVisibility,
+  rowExpansion,
+  grouping,
+  columnPinning,
+  emptyState,
+} = useTable({
+  data,
+  columns,
+  pagination: { pageSize: 20 },
+  sorting: { defaultSort: [{ id: 'name', desc: false }] },
+  globalFilter: true,
+  columnFilters: true,
+  rowSelection: true,
+  columnVisibility: { defaultVisibility: { email: false } },
+  rowExpansion: { getSubRows: (row) => row.children },
+  grouping: { defaultGrouping: ['role'] },
+  fuzzy: true,
+  persist: 'localStorage',
+  persistKey: 'my-table',
+  persistOptions: { sorting: true, pagination: true },
+  syncUrl: true,
+})
+```
+
+## Return
+
+### `pagination`
+
+| Property | Type | Description |
+|---|---|---|
+| `pageIndex` | `number` | Current page (0-indexed) |
+| `pageSize` | `number` | Rows per page |
+| `pageCount` | `number` | Total pages |
+| `canPreviousPage` | `boolean` | Can go back |
+| `canNextPage` | `boolean` | Can go forward |
+| `previousPage` | `() => void` | Go to previous page |
+| `nextPage` | `() => void` | Go to next page |
+| `setPageIndex` | `(index: number) => void` | Jump to page |
+| `setPageSize` | `(size: number) => void` | Change page size |
+
+### `sorting`
+
+| Property | Type | Description |
+|---|---|---|
+| `sortingState` | `SortingState` | Current sort state |
+| `setSorting` | `OnChangeFn<SortingState>` | Set sort state directly |
+| `clearSorting` | `() => void` | Clear all sorting |
+
+### `globalFilter`
+
+| Property | Type | Description |
+|---|---|---|
+| `value` | `string` | Current search string |
+| `setValue` | `(val: string) => void` | Set the search string |
+| `clear` | `() => void` | Clear the search string |
+
+### `columnFilters`
+
+| Property | Type | Description |
+|---|---|---|
+| `state` | `ColumnFiltersState` | Current per-column filter values |
+| `setFilter` | `(columnId, value) => void` | Set a single column's filter |
+| `clearFilter` | `(columnId) => void` | Clear one column's filter |
+| `clearAll` | `() => void` | Clear all column filters |
+
+### `rowSelection`
+
+| Property | Type | Description |
+|---|---|---|
+| `state` | `RowSelectionState` | Current selection map |
+| `toggleRow` | `(rowId: string) => void` | Toggle a row |
+| `toggleAll` | `() => void` | Select / deselect all |
+| `clearSelection` | `() => void` | Clear all |
+| `selectedRowIds` | `string[]` | IDs of selected rows |
+| `selectedCount` | `number` | Number selected |
+| `isSelected` | `(rowId: string) => boolean` | Check if selected |
+
+### `columnVisibility`
+
+| Property | Type | Description |
+|---|---|---|
+| `state` | `VisibilityState` | Current visibility map |
+| `toggleColumn` | `(columnId: string) => void` | Toggle a column |
+| `showColumn` | `(columnId: string) => void` | Show a column |
+| `hideColumn` | `(columnId: string) => void` | Hide a column |
+| `showAll` | `() => void` | Show every column |
+| `hiddenColumns` | `string[]` | Currently hidden column IDs |
+
+### `rowExpansion`
+
+| Property | Type | Description |
+|---|---|---|
+| `state` | `ExpandedState` | Current expanded rows |
+| `toggleRow` | `(rowId: string) => void` | Toggle expand |
+| `expandRow` | `(rowId: string) => void` | Expand a row |
+| `collapseRow` | `(rowId: string) => void` | Collapse a row |
+| `clearExpansion` | `() => void` | Collapse all |
+| `expandedRowIds` | `string[]` | IDs of expanded rows |
+| `isExpanded` | `(rowId: string) => boolean` | Check if expanded |
+
+### `grouping`
+
+| Property | Type | Description |
+|---|---|---|
+| `state` | `GroupingState` | Current grouped columns |
+| `toggleGrouping` | `(columnId: string) => void` | Toggle group by column |
+| `setGrouping` | `(cols: GroupingState) => void` | Set grouping directly |
+| `clearGrouping` | `() => void` | Remove all grouping |
+| `isGrouped` | `(columnId: string) => boolean` | Check if grouped |
+| `groupedColumns` | `string[]` | Currently grouped column IDs |
+
+### `columnPinning`
+
+| Property | Type | Description |
+|---|---|---|
+| `state` | `ColumnPinningState` | Raw TanStack pinning state |
+| `pinLeft` | `(columnId: string) => void` | Pin column to left edge |
+| `pinRight` | `(columnId: string) => void` | Pin column to right edge |
+| `unpin` | `(columnId: string) => void` | Remove pin from column |
+| `clearPinning` | `() => void` | Unpin all columns |
+| `isPinned` | `(columnId: string) => 'left' \| 'right' \| false` | Query pin status |
+| `leftColumns` | `string[]` | Currently left-pinned column IDs |
+| `rightColumns` | `string[]` | Currently right-pinned column IDs |
+
+### `emptyState`
+
+| Property | Type | Description |
+|---|---|---|
+| `isEmpty` | `boolean` | `true` when data has 0 rows total |
+| `isFilteredEmpty` | `boolean` | `true` when data exists but filters return 0 rows |
+
+## Notes
+
+- `position: sticky` for pinned columns is plain CSS — tablecraft only provides state and the pixel offsets (`column.getStart('left')`, `column.getAfter('right')`). No UI lock-in.
+- `columnPinning` is also available on [`useQueryTable`](/docs/api/use-query-table) and [`useInfiniteTable`](/docs/api/use-infinite-table) with the identical option shape.
+- See [Persistence & URL sync](/docs/api/persistence-url) for `persist*` / `syncUrl` details, and [State hooks](/docs/api/state-hooks) if you're composing `useReactTable` yourself instead of using `useTable`.

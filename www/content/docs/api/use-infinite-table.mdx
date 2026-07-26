@@ -1,0 +1,110 @@
+---
+title: useInfiniteTable
+description: Cursor-based infinite scroll powered by TanStack Query's useInfiniteQuery — accumulated pages, no pagination controls.
+---
+
+Cursor-based infinite scroll powered by TanStack Query's `useInfiniteQuery`.
+Pages accumulate into a flat list — no pagination controls needed. When sort
+or filter state changes, accumulated pages automatically reset to page 1 via
+query key composition.
+
+Requires `@tanstack/react-query`:
+
+```bash
+npm i @tanstack/react-query
+```
+
+## Signature
+
+```ts
+function useInfiniteTable<TData extends RowData, TCursor = unknown>(
+  options: UseInfiniteTableOptions<TData, TCursor>
+): UseInfiniteTableReturn<TData>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `queryKey` | `unknown[]` | required | TanStack Query cache key |
+| `queryFn` | `(context) => Promise<{ data: TData[], nextCursor?: TCursor }>` | required | Fetcher — return `nextCursor: undefined` to signal the last page |
+| `columns` | `ColumnDef<TData, any>[]` | required | Column definitions |
+| `initialPageParam` | `TCursor` | `0` | First value passed as `pageParam` |
+| `sorting` | `SortingOptions \| boolean` | `true` | Enable sorting |
+| `globalFilter` | `boolean` | `true` | Enable global search |
+| `columnFilters` | `boolean` | `true` | Enable column filters |
+| `rowSelection` | `RowSelectionOptions \| boolean` | `false` | Enable row selection |
+| `columnVisibility` | `ColumnVisibilityOptions \| boolean` | `false` | Enable column visibility |
+| `grouping` | `GroupingOptions \| boolean` | `false` | Enable row grouping |
+| `columnPinning` | `ColumnPinningOptions \| boolean` | `false` | Enable column pinning |
+| `staleTime` | `number` | — | TanStack Query `staleTime` |
+| `gcTime` | `number` | — | TanStack Query `gcTime` |
+| `enabled` | `boolean` | — | TanStack Query `enabled` |
+
+The `queryFn` context (`InfiniteTableFnContext<TCursor>`) receives:
+
+| Property | Type |
+|---|---|
+| `pageParam` | `TCursor` |
+| `sorting` | `SortingState` |
+| `columnFilters` | `ColumnFiltersState` |
+| `globalFilter` | `string` |
+| `grouping` | `GroupingState` |
+
+## Return
+
+| Property | Type | Description |
+|---|---|---|
+| `table` | `Table<TData>` | Full TanStack Table instance with all accumulated rows |
+| `loadMore` | `() => void` | Fetch the next page |
+| `hasNextPage` | `boolean` | `true` when `nextCursor` was returned from the last page |
+| `isFetchingNextPage` | `boolean` | `true` while a `loadMore` call is in-flight |
+| `isLoading` | `boolean` | `true` on the very first fetch |
+| `isError` | `boolean` | `true` if the query threw |
+| `error` | `Error \| null` | The thrown error, if any |
+| `refetch` | `() => void` | Re-run the query from the beginning |
+| `sorting` | `SortingReturn` | Same shape as `useTable` |
+| `globalFilter` | `GlobalFilterReturn` | Same shape as `useTable` |
+| `columnFilters` | `ColumnFiltersReturn` | Same shape as `useTable` |
+| `rowSelection` | `RowSelectionReturn` | Opt-in — pass `rowSelection: true` |
+| `columnVisibility` | `ColumnVisibilityReturn` | Opt-in — pass `columnVisibility: true` |
+| `grouping` | `GroupingReturn` | Opt-in — pass `grouping: true` |
+| `columnPinning` | `ColumnPinningReturn` | Opt-in — pass `columnPinning: true` |
+| `emptyState` | `EmptyStateReturn` | Same shape as `useTable` |
+
+## Usage
+
+```tsx
+import { useInfiniteTable } from '@marvinackerman/tablecraft'
+
+const { table, loadMore, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteTable({
+  queryKey: ['users'],
+  initialPageParam: null as string | null,  // TCursor inferred as string | null
+  queryFn: async ({ pageParam, sorting, globalFilter }) => {
+    const res = await api.getUsers({
+      cursor: pageParam,   // pageParam: string | null — fully typed
+      sort: sorting,
+      search: globalFilter,
+    })
+    return {
+      data: res.data,
+      nextCursor: res.nextCursor,   // string | null | undefined — typed
+    }
+  },
+  columns,
+  sorting: true,
+  globalFilter: true,
+})
+
+<button onClick={loadMore} disabled={!hasNextPage || isFetchingNextPage}>
+  {isFetchingNextPage ? 'Loading…' : 'Load more'}
+</button>
+```
+
+All rows across every loaded page are available in
+`table.getRowModel().rows` as a single flat list — no page tracking needed.
+
+## Notes
+
+- Pair with [`useInfiniteScroll`](/docs/api/use-infinite-scroll) to trigger `loadMore` automatically instead of wiring a button.
+- For paginated (non-accumulating) server tables, use [`useQueryTable`](/docs/api/use-query-table) instead.
