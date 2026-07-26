@@ -31,7 +31,7 @@ function useTable<TData extends RowData>(
 | `onGlobalFilterChange` | `(value: string) => void` | Custom global filter handler |
 | `columnFilters` | `boolean` | Enable per-column filters |
 | `onColumnFiltersChange` | `OnChangeFn<ColumnFiltersState>` | Custom column filter handler |
-| `rowSelection` | `RowSelectionOptions \| boolean` | `true`, or `{ enableMultiRowSelection? }` |
+| `rowSelection` | `RowSelectionOptions \| boolean` | `true`, or `{ defaultSelection?: RowSelectionState, enableMultiRowSelection? }` |
 | `columnVisibility` | `ColumnVisibilityOptions \| boolean` | `true`, or `{ defaultVisibility? }` |
 | `rowExpansion` | `RowExpansionOptions \| boolean` | `true`, or `{ defaultExpanded?, allowMultiple?, paginateExpandedRows?, getSubRows? }` |
 | `grouping` | `GroupingOptions \| boolean` | `true`, or `{ defaultGrouping?, manualGrouping?, groupedColumnMode? }` |
