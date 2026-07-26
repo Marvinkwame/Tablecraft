@@ -1,0 +1,70 @@
+---
+title: TableKitProvider
+description: Set app-level defaults for all tablecraft hooks — per-call options always override provider defaults.
+---
+
+Set defaults for all tables in your app. Per-call options always override
+provider defaults.
+
+## `TableKitProvider`
+
+```ts
+function TableKitProvider(props: TableKitProviderProps): JSX.Element
+```
+
+**`TableKitProviderProps`**
+
+| Prop | Type | Description |
+|---|---|---|
+| `defaults` | `TableKitDefaults` | Default options applied to all `useTable` / `useQueryTable` calls within this provider |
+| `children` | `ReactNode` | — |
+
+**`TableKitDefaults`**
+
+| Property | Type | Description |
+|---|---|---|
+| `pageSize` | `number` | Default page size for all tables |
+| `fuzzy` | `boolean` | Enable fuzzy search by default |
+| `rowSelection` | `RowSelectionOptions \| boolean` | Enable row selection by default |
+| `columnVisibility` | `ColumnVisibilityOptions \| boolean` | Enable column visibility by default |
+| `globalFilter` | `boolean` | Enable global filter by default |
+| `columnFilters` | `boolean` | Enable column filters by default |
+| `persist` | `PersistStorage \| false` | Default persistence strategy |
+| `persistOptions` | `PersistOptions` | Default persist options |
+| `syncUrl` | `boolean \| URLSyncOptions` | Default URL sync |
+| `rowExpansion` | `RowExpansionOptions \| boolean` | Enable row expansion by default |
+| `grouping` | `GroupingOptions \| boolean` | Enable row grouping by default |
+| `columnPinning` | `ColumnPinningOptions \| boolean` | Enable column pinning by default |
+
+```tsx
+import { TableKitProvider } from '@marvinackerman/tablecraft'
+
+function App() {
+  return (
+    <TableKitProvider
+      defaults={{
+        pageSize: 25,
+        globalFilter: true,
+        persist: 'localStorage',
+      }}
+    >
+      <YourApp />
+    </TableKitProvider>
+  )
+}
+```
+
+## `useTableKitDefaults`
+
+Read the current `TableKitProvider` defaults. Returns an empty object if no
+provider is present — safe to call without a provider.
+
+```ts
+function useTableKitDefaults(): TableKitDefaults
+```
+
+```tsx
+import { useTableKitDefaults } from '@marvinackerman/tablecraft'
+
+const defaults = useTableKitDefaults()
+```

@@ -1,0 +1,72 @@
+---
+title: Columns
+description: createColumns for type-safe column definitions, and inferColumns for auto-generating columns from your data shape.
+---
+
+## `createColumns`
+
+Type-safe column definition helper. Returns a stable `ColumnDef<TData>[]`
+without needing `useMemo` or manual type annotations.
+
+```ts
+function createColumns<TData extends RowData>(
+  columns: ColumnDef<TData, any>[]
+): ColumnDef<TData, any>[]
+```
+
+```tsx
+import { createColumns } from '@marvinackerman/tablecraft'
+
+const columns = createColumns<User>([
+  { accessorKey: 'name', header: 'Name', enableSorting: true },
+  { accessorKey: 'email', header: 'Email' },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) => <button onClick={() => editable.startEditing(row.id)}>Edit</button>,
+  },
+])
+```
+
+## `inferColumns`
+
+Auto-generates typed column definitions from your data shape. Infers depth-1
+(flat) keys only — nested objects and arrays are skipped.
+
+```ts
+function inferColumns<TData extends RowData>(
+  data: TData[],
+  options?: InferColumnsOptions<TData>
+): ColumnDef<TData, any>[]
+```
+
+**Parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `data` | `TData[]` | Array of data objects — needs at least one row to infer shape |
+| `options` | `InferColumnsOptions<TData>` | Include/exclude/override options |
+
+**`InferColumnsOptions<TData>`**
+
+| Option | Type | Description |
+|---|---|---|
+| `include` | `(keyof TData)[]` | Whitelist — only include these keys as columns |
+| `exclude` | `(keyof TData)[]` | Blacklist — exclude these keys from columns |
+| `overrides` | `Partial<Record<keyof TData, Partial<ColumnDef<TData, any>>>>` | Override specific column definitions while keeping the rest inferred |
+
+```tsx
+import { inferColumns } from '@marvinackerman/tablecraft'
+
+const columns = inferColumns(users, {
+  exclude: ['id'],
+  overrides: {
+    role: { header: 'Role' },
+  },
+})
+```
+
+## Notes
+
+- `inferColumns` has no `headers` shorthand — rename a column's header via `overrides: { key: { header: '...' } }`.
+- For deriving columns straight from a Zod schema (no sample data needed), see [`columnsFromZod`](/docs/api/zod).
