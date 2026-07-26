@@ -1,0 +1,91 @@
+---
+title: useTableA11y
+description: Standalone opt-in hook returning ARIA prop-getters implementing the WAI-ARIA Grid pattern, plus keyboard navigation.
+---
+
+Standalone opt-in hook. Returns prop-getter objects to spread onto your table
+elements, implementing the
+[WAI-ARIA Grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/).
+
+## Signature
+
+```ts
+function useTableA11y<TData extends RowData>(
+  table: Table<TData>,
+  options?: UseTableA11yOptions
+): TableA11yReturn
+```
+
+## Options
+
+| Option | Type | Description |
+|---|---|---|
+| `selectionEnabled` | `boolean` | Set to `true` when row selection is enabled on the table. Adds `aria-selected` to row props. |
+
+## Return
+
+| Property | Type | Description |
+|---|---|---|
+| `getTableProps` | `() => { role: 'grid', 'aria-rowcount': number, 'aria-colcount': number }` | Spread onto the table element |
+| `getHeaderProps` | `(headerId: string) => { role: 'columnheader', 'aria-sort': 'ascending' \| 'descending' \| 'none' }` | Spread onto each `<th>` |
+| `getRowProps` | `(rowId: string) => { role: 'row', 'aria-rowindex': number, 'aria-selected'?: boolean, 'aria-expanded'?: boolean, tabIndex: 0 \| -1, onKeyDown }` | Spread onto each `<tr>` |
+| `getCellProps` | `(columnIndex: number) => { role: 'gridcell', 'aria-colindex': number }` | Spread onto each `<td>` |
+| `focusedRowIndex` | `number \| null` | Current focused row index — useful for custom focus ring styling |
+
+## Usage
+
+```tsx
+import { useTable, useTableA11y } from '@marvinackerman/tablecraft'
+
+const { table } = useTable({ data, columns })
+const a11y = useTableA11y(table, {
+  selectionEnabled: true,  // adds aria-selected to row props
+})
+
+// Spread onto your elements:
+<table {...a11y.getTableProps()} />
+  // role="grid", aria-rowcount, aria-colcount
+
+<th {...a11y.getHeaderProps(header.id)} />
+  // role="columnheader", aria-sort="ascending"|"descending"|"none"
+
+<tr {...a11y.getRowProps(row.id)} />
+  // role="row", aria-rowindex, tabIndex, onKeyDown (ArrowUp/Down/Home/End)
+  // aria-selected (when selectionEnabled), aria-expanded (when expandable)
+
+<td {...a11y.getCellProps(cellIndex)} />
+  // role="gridcell", aria-colindex
+
+// Current focused row index (for custom focus ring styling):
+a11y.focusedRowIndex  // number | null
+```
+
+**Keyboard navigation** (applied automatically via `onKeyDown` on row props):
+
+| Key | Action |
+|---|---|
+| `ArrowDown` | Move focus to next row |
+| `ArrowUp` | Move focus to previous row |
+| `Home` | Move focus to first row |
+| `End` | Move focus to last row |
+| `Enter` / `Space` | Toggle row selection (when `selectionEnabled`) |
+
+## Standalone ARIA helpers
+
+The following functions back `useTableA11y` internally and are also exported
+directly, in case you're computing ARIA attributes outside the hook (e.g. for
+a custom prop-getter or a non-hook rendering path):
+
+```ts
+function getAriaSortValue(headerId: string, sorting: SortingState): 'ascending' | 'descending' | 'none'
+function getAriaRowCount<TData>(table: Table<TData>): number
+function getAriaColCount<TData>(table: Table<TData>): number
+function getAriaRowIndex<TData>(rowId: string, rows: Row<TData>[]): number
+```
+
+| Function | Description |
+|---|---|
+| `getAriaSortValue(headerId, sorting)` | `aria-sort` value for a header cell. `'none'` when the column is not currently sorted. |
+| `getAriaRowCount(table)` | Total number of filtered rows — used for `aria-rowcount`. |
+| `getAriaColCount(table)` | Number of visible leaf columns — used for `aria-colcount`. |
+| `getAriaRowIndex(rowId, rows)` | 1-based row index of the given `rowId` within the provided `rows` array. Returns `-1` if the row is not found (should not happen in normal usage). |
