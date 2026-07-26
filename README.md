@@ -15,7 +15,7 @@ tablecraft collapses the 80–150 lines of `useState`/`useMemo` boilerplate that
 npm i @marvinackerman/tablecraft @tanstack/react-table@">=8" @tanstack/react-virtual@">=3" react@">=18" react-dom@">=18"
 ```
 
-`@tanstack/react-table`, `react`/`react-dom`, and `@tanstack/react-virtual` are all required peers — the core entry statically imports react-virtual. Optional peers, installed only as you reach for the feature they back: `zod` (`>=3.23.0`, for the `tablecraft/zod` entry), `@tanstack/react-query` (for `useQueryTable`/`useInfiniteTable`), and `match-sorter` (fuzzy search). See the [Installation guide](https://<docs-site-url>/docs/getting-started/installation) for details.
+`@tanstack/react-table`, `react`/`react-dom`, and `@tanstack/react-virtual` are all required peers — the core entry statically imports react-virtual. Optional peers, installed only as you reach for the feature they back: `zod` (`>=3.23.0`, for the `tablecraft/zod` entry), `@tanstack/react-query` (for `useQueryTable`/`useInfiniteTable`), and `match-sorter` (fuzzy search). See the [Installation guide](https://<docs-site-url>/docs/installation) for details.
 
 ## Quick start
 
@@ -41,8 +41,10 @@ Sorting, pagination, global search, and full TypeScript generics are all wired u
 ## What's inside
 
 - **[Getting Started](https://<docs-site-url>/docs)** — installation, mental model, first table
-- **[API Reference](https://<docs-site-url>/docs/api)** — `useTable`, `useServerTable`, `useQueryTable`, `useInfiniteTable`, `useVirtualRows`, `useEditableRows`, `useMultiRowEditing`, `useTableA11y`, column pinning, devtools, testing utilities, and more
-- **[Guides](https://<docs-site-url>/docs/guides)** — server-side tables, inline editing, Zod-driven columns
+- **[Installation](https://<docs-site-url>/docs/installation)** — required and optional peer dependencies
+- **[API Reference](https://<docs-site-url>/docs/api/use-table)** — `useTable`, `useServerTable`, `useQueryTable`, `useInfiniteTable`, `useVirtualRows`, `useEditableRows`, `useMultiRowEditing`, `useTableA11y`, column pinning, devtools, testing utilities, and more
+- **[Guides](https://<docs-site-url>/docs/guides/inline-editing)** — server-side tables, inline editing
+- **[Zod-driven columns](https://<docs-site-url>/docs/api/zod)** — derive columns and edit validation from a single schema
 - **[Live examples](https://<docs-site-url>/docs)** — interactive tables rendered directly in the docs
 
 > **Using shadcn/ui?** Its data table is built on TanStack Table. Swap the boilerplate for `useTable` and keep every one of your components — tablecraft ships zero markup and zero styles.
