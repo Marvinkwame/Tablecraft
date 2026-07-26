@@ -12,10 +12,10 @@ tablecraft collapses the 80–150 lines of `useState`/`useMemo` boilerplate that
 ## Install
 
 ```
-npm i @marvinackerman/tablecraft @tanstack/react-table@^8 react@^18
+npm i @marvinackerman/tablecraft @tanstack/react-table@">=8" @tanstack/react-virtual@">=3" react@">=18" react-dom@">=18"
 ```
 
-`@tanstack/react-virtual` (`^3`) is an optional peer, needed only for `useVirtualRows`. `zod` (`>=3.23`) is an optional peer for the `tablecraft/zod` entry point. See the [Installation guide](https://<docs-site-url>/docs/getting-started/installation) for the full optional-peer matrix.
+`@tanstack/react-table`, `react`/`react-dom`, and `@tanstack/react-virtual` are all required peers — the core entry statically imports react-virtual. Optional peers, installed only as you reach for the feature they back: `zod` (`>=3.23.0`, for the `tablecraft/zod` entry), `@tanstack/react-query` (for `useQueryTable`/`useInfiniteTable`), and `match-sorter` (fuzzy search). See the [Installation guide](https://<docs-site-url>/docs/getting-started/installation) for details.
 
 ## Quick start
 
