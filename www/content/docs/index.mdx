@@ -1,12 +1,50 @@
 ---
-title: tablecraft
-description: A headless, type-safe table toolkit built on TanStack Table
+title: Introduction
+description: A TypeScript-first, headless wrapper around TanStack Table that eliminates boilerplate without taking away control.
 ---
 
 import BasicTableExample from '@/components/examples/BasicTableExample'
 
 # tablecraft
 
-A live tablecraft table, rendered right here in the docs:
+tablecraft is a TypeScript-first, headless, batteries-included wrapper around
+[TanStack Table](https://tanstack.com/table). TanStack Table is intentionally
+unopinionated about markup and state — that's its strength, but it means every
+project re-writes the same 80–150 lines of `useState` and `useMemo` wiring for
+sorting, pagination, and filters. tablecraft collapses that boilerplate into a
+single hook call while leaving the full TanStack Table instance available as
+an escape hatch. There's no bundled CSS and no component library — you own
+every element of markup, so tablecraft never fights your design system.
+
+## Mental model
+
+Call `useTable` with your data and column definitions. It wires up the
+TanStack Table row model and hands back everything you need to render: the
+`table` instance itself (for `getHeaderGroups()`, `getRowModel()`, and
+`flexRender`), plus a small set of feature objects — `pagination`, `sorting`,
+`globalFilter`, and more — each scoped to the feature it controls. You render
+the `<table>` markup yourself; tablecraft only supplies the state and the
+handlers behind it.
+
+Here's the setup behind the live example below:
+
+```tsx
+import { useTable, createColumns } from '@marvinackerman/tablecraft'
+import { flexRender } from '@tanstack/react-table'
+
+const columns = createColumns<User>([
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'email', header: 'Email' },
+  { accessorKey: 'role', header: 'Role' },
+  { accessorKey: 'age', header: 'Age' },
+])
+
+function UsersTable({ users }: { users: User[] }) {
+  const { table } = useTable<User>({ data: users, columns })
+  // render table.getHeaderGroups() / table.getRowModel() with flexRender
+}
+```
+
+And the live result, rendered right here in the docs:
 
 <BasicTableExample />
