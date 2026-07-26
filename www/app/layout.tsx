@@ -21,7 +21,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${mono.variable} ${display.variable} ${sans.className}`}
+      className={`${sans.variable} ${mono.variable} ${display.variable}`}
       suppressHydrationWarning
     >
       <body className="flex flex-col min-h-screen">
