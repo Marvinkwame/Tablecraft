@@ -29,4 +29,5 @@ npm-debug.log*
 .claude/
 
 # Local planning/design docs — never published to GitHub
-docs/
+# Anchored to repo root so it does NOT match nested docs dirs like www/content/docs/
+/docs/
