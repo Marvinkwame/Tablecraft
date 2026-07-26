@@ -3,6 +3,8 @@ title: Inline editing & validation
 description: Let users edit table cells in place and validate their changes with Zod, without a form library.
 ---
 
+import InlineEditingExample from '@/components/examples/InlineEditingExample'
+
 ## The problem
 
 Rendering rows is the easy part. Letting a user click a cell, edit it, and
@@ -116,7 +118,7 @@ That's a complete, editable, validated table: `columnsFromZod` generates the
 columns, `useEditableRows` manages edit/draft/error state per row, and
 `zodValidator` is the bridge between the schema and `onSave`.
 
-{/* A live, runnable version of this example renders here. */}
+<InlineEditingExample />
 
 ## Notes
 
