@@ -3,6 +3,8 @@ title: useVirtualRows
 description: Render only the rows visible in the viewport, for large datasets where rendering every row causes lag.
 ---
 
+import VirtualizationExample from '@/components/examples/VirtualizationExample'
+
 Render only the rows visible in the viewport — for large datasets where
 rendering all rows at once causes lag. Requires `@tanstack/react-virtual`:
 
@@ -79,6 +81,13 @@ const { virtualRows, totalHeight, containerRef, scrollToIndex } = useVirtualRows
 // Programmatic scroll:
 scrollToIndex(42)
 ```
+
+## Live example
+
+10,000 in-memory rows, rendered with `useVirtualRows` inside a fixed-height
+scroll container — only the rows in view (plus overscan) are ever mounted.
+
+<VirtualizationExample />
 
 ## Notes
 
