@@ -1,0 +1,48 @@
+---
+title: Installation
+---
+
+## Install
+
+```bash
+npm install @marvinackerman/tablecraft
+```
+
+## Required peer dependencies
+
+tablecraft's core entry (`useTable`, `createColumns`, and friends) is built on
+top of TanStack Table and TanStack Virtual, and needs React itself. Install
+these alongside it:
+
+```bash
+npm install @tanstack/react-table@">=8" react@">=18" @tanstack/react-virtual@">=3"
+```
+
+| Package | Version floor | Why |
+|---|---|---|
+| `@tanstack/react-table` | `>=8` | tablecraft wraps its row model, column, and state APIs |
+| `react` | `>=18` | hooks-based, requires a React 18+ runtime |
+| `@tanstack/react-virtual` | `>=3` | powers `useVirtualRows` for windowed row rendering |
+
+## Optional peer dependencies
+
+These are only needed if you use the feature they back — install them as you
+reach for that feature, not up front:
+
+| Package | Needed for |
+|---|---|
+| `zod` | The `@marvinackerman/tablecraft/zod` entry (`columnsFromZod`, `zodValidator`) — derive columns and row-edit validation from a single Zod schema. Works with Zod 3 and 4. |
+| `@tanstack/react-query` | `useQueryTable` and `useInfiniteTable` — server-driven and infinite-scroll tables backed by TanStack Query. |
+| `match-sorter` | Fuzzy search (`fuzzy: true` on `useTable`). Loaded via `require()`, so this only applies in CJS/Node bundlers — in ESM-only bundlers (e.g. Vite), pass your own filter function instead and skip this dependency entirely. |
+
+## Entry points
+
+tablecraft publishes four entry points, so you only pull in the code paths
+you actually use:
+
+| Entry | Exports |
+|---|---|
+| `@marvinackerman/tablecraft` | The core hooks — `useTable`, `createColumns`, `useQueryTable`, `useInfiniteTable`, `useInfiniteScroll`, `useVirtualRows`, and friends. |
+| `@marvinackerman/tablecraft/zod` | `columnsFromZod`, `zodValidator` — requires the optional `zod` peer. |
+| `@marvinackerman/tablecraft/devtools` | `TablecraftDevtools` — inspect table state during development. |
+| `@marvinackerman/tablecraft/testing` | Test helpers, built against `@testing-library/react`. |
