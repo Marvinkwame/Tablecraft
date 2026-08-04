@@ -130,6 +130,26 @@ describe('parseURLState', () => {
     ])
   })
 
+  it('round-trips typed column filter values (array multi-select)', () => {
+    setURL('?filter_method=' + encodeURIComponent('["Transit","Imaging"]'))
+    const state = parseURLState(defaultKeys)
+    expect(state.columnFilters).toEqual([
+      { id: 'method', value: ['Transit', 'Imaging'] },
+    ])
+  })
+
+  it('round-trips typed column filter values (numeric range tuple)', () => {
+    setURL('?filter_pl_rade=' + encodeURIComponent('[1,2]'))
+    const state = parseURLState(defaultKeys)
+    expect(state.columnFilters).toEqual([{ id: 'pl_rade', value: [1, 2] }])
+  })
+
+  it('keeps a plain (non-JSON) string column filter value as a string', () => {
+    setURL('?filter_status=active')
+    const state = parseURLState(defaultKeys)
+    expect(state.columnFilters).toEqual([{ id: 'status', value: 'active' }])
+  })
+
   it('uses custom keys when provided', () => {
     const keys = resolveURLKeys({ page: 'p', filter: 'q', columnFilterPrefix: 'cf_' })
     setURL('?p=2&q=hello&cf_status=active')
@@ -250,6 +270,44 @@ describe('writeURLState', () => {
     const url = replaceStateSpy.mock.calls[0][2] as string
     expect(url).toContain('filter_role=admin')
     expect(url).toContain('filter_age=25')
+  })
+
+  it('writes array/tuple column filter values as JSON (typed round-trip)', () => {
+    writeURLState(
+      {
+        pagination: { pageIndex: 0, pageSize: 10 },
+        sorting: [],
+        columnFilters: [
+          { id: 'method', value: ['Transit', 'Imaging'] },
+          { id: 'pl_rade', value: [1, 2] },
+        ],
+        globalFilter: '',
+      },
+      defaultKeys
+    )
+
+    const url = replaceStateSpy.mock.calls[0][2] as string
+    // decodeURIComponent to compare against the raw JSON form
+    const decoded = decodeURIComponent(url)
+    expect(decoded).toContain('filter_method=["Transit","Imaging"]')
+    expect(decoded).toContain('filter_pl_rade=[1,2]')
+  })
+
+  it('round-trips a written typed value back through parseURLState', () => {
+    writeURLState(
+      {
+        pagination: { pageIndex: 0, pageSize: 10 },
+        sorting: [],
+        columnFilters: [{ id: 'pl_rade', value: [1, 2] }],
+        globalFilter: '',
+      },
+      defaultKeys
+    )
+    const written = replaceStateSpy.mock.calls[0][2] as string
+    const search = written.slice(written.indexOf('?'))
+    setURL(search)
+    const state = parseURLState(defaultKeys)
+    expect(state.columnFilters).toEqual([{ id: 'pl_rade', value: [1, 2] }])
   })
 
   it('uses pushState when mode is push', () => {

@@ -4,6 +4,14 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [2.6.1] — 2026-08-04
+
+### Fixed
+
+- **`syncUrl` now round-trips typed column-filter values.** Column filters whose value is an array or object — multi-selects (`["a","b"]`) and numeric-range tuples (`[min, max]`) — were serialized with `String(value)` (`[1,2]` → `"1,2"`, `["a"]` → `"a"`), so they never survived a page reload: on parse they came back as raw strings, silently changing which rows matched. Array/object values are now JSON-encoded on write and parsed back on read; scalar string values stay bare, so existing URLs and behavior are unchanged.
+
+---
+
 ## [2.6.0] — 2026-07-23
 
 ### Added

@@ -20,6 +20,36 @@ export function resolveURLKeys(keys?: URLKeyMap): Required<URLKeyMap> {
   return { ...DEFAULT_KEYS, ...keys }
 }
 
+// ─── Column-filter value (de)serialization ────────────────
+//
+// Column filter values are not always strings: multi-selects use arrays,
+// numeric ranges use `[min, max]` tuples, some filters use numbers/booleans.
+// `String(value)` is lossy (`[1,2]` → "1,2", `["a"]` → "a"), so typed values
+// never survive a page reload. We JSON-encode non-string values on write and
+// attempt JSON.parse on read, falling back to the raw string when it is not
+// valid JSON. Plain strings stay bare for clean, backward-compatible URLs.
+
+function encodeFilterValue(value: unknown): string {
+  if (typeof value === 'string') return value
+  const json = JSON.stringify(value)
+  return json === undefined ? '' : json
+}
+
+function decodeFilterValue(raw: string): unknown {
+  // Only reconstruct JSON containers (arrays/objects) — the values that
+  // `String()` mangled. Scalars stay strings, preserving existing behavior
+  // (e.g. `filter_age=25` remains "25", not the number 25).
+  const trimmed = raw.trim()
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    try {
+      return JSON.parse(trimmed)
+    } catch {
+      return raw
+    }
+  }
+  return raw
+}
+
 // ─── SSR-safe helpers ──────────────────────────────────────
 
 function getSearchParams(): URLSearchParams | null {
@@ -111,7 +141,7 @@ export function parseURLState(keys: Required<URLKeyMap>): Partial<PersistableSta
     if (key.startsWith(prefix)) {
       const columnId = key.substring(prefix.length)
       if (columnId) {
-        columnFilters.push({ id: columnId, value })
+        columnFilters.push({ id: columnId, value: decodeFilterValue(value) })
       }
     }
   })
@@ -188,7 +218,7 @@ export function writeURLState(
     // Set new column filters
     if (state.columnFilters) {
       for (const cf of state.columnFilters) {
-        params.set(`${prefix}${cf.id}`, String(cf.value))
+        params.set(`${prefix}${cf.id}`, encodeFilterValue(cf.value))
       }
     }
 
