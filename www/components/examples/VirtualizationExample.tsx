@@ -1,6 +1,7 @@
 'use client'
 import { useMemo } from 'react'
-import { useTable, useVirtualRows, createColumns } from '@marvinackerman/tablecraft'
+import { useTable, createColumns } from '@marvinackerman/tablecraft'
+import { useVirtualRows } from '@marvinackerman/tablecraft/virtual'
 import { flexRender } from '@tanstack/react-table'
 
 type BigRow = { id: number; name: string; value: number }

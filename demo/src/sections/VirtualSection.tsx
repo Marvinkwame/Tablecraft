@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { useTable, useVirtualRows } from '@marvinackerman/tablecraft'
+import { useTable } from '@marvinackerman/tablecraft'
+import { useVirtualRows } from '@marvinackerman/tablecraft/virtual'
 import { flexRender } from '@tanstack/react-table'
 import { generateEmployees } from '../data/seed'
 import { employeeColumns } from '../columns'
@@ -9,7 +10,8 @@ import { CodePeek } from '../ui/CodePeek'
 const ROW_HEIGHT = 44
 const TOTAL = 50_000
 
-const SNIPPET = `import { useTable, useVirtualRows } from '@marvinackerman/tablecraft'
+const SNIPPET = `import { useTable } from '@marvinackerman/tablecraft'
+import { useVirtualRows } from '@marvinackerman/tablecraft/virtual'
 // peer dependency: @tanstack/react-virtual
 
 const { table } = useTable({ data, columns, pagination: false })
