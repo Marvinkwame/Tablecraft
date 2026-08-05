@@ -64,7 +64,7 @@ const a11y = useTableA11y(table, {
   {
     title: 'TanStack Query',
     blurb: 'Server data, auto refetch.',
-    code: `import { useQueryTable } from '@marvinackerman/tablecraft'
+    code: `import { useQueryTable } from '@marvinackerman/tablecraft/query'
 // peer dependency: @tanstack/react-query
 
 const { table, query } = useQueryTable({
@@ -74,7 +74,8 @@ const { table, query } = useQueryTable({
   {
     title: 'Infinite scroll',
     blurb: 'Cursor paging + sentinel wiring.',
-    code: `import { useInfiniteTable, useInfiniteScroll } from '@marvinackerman/tablecraft'
+    code: `import { useInfiniteTable } from '@marvinackerman/tablecraft/query'
+import { useInfiniteScroll } from '@marvinackerman/tablecraft'
 // peer dependency: @tanstack/react-query
 
 const { loadMore, hasNextPage } =

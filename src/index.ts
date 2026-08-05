@@ -14,9 +14,11 @@ export { useTableA11y } from './hooks/useTableA11y'
 export type { UseTableA11yOptions } from './hooks/useTableA11y'
 export { useEditableRows } from './hooks/useEditableRows'
 export { useMultiRowEditing } from './hooks/useMultiRowEditing'
-export { useVirtualRows } from './hooks/useVirtualRows'
-export { useQueryTable } from './hooks/useQueryTable'
-export { useInfiniteTable } from './hooks/useInfiniteTable'
+// Hooks backed by an optional peer are NOT exported here — a static import has
+// to resolve even when tree-shaking drops it, so re-exporting them would make
+// their peer mandatory for everyone. Import them from their own entry instead:
+//   useQueryTable, useInfiniteTable → '@marvinackerman/tablecraft/query'
+//   useVirtualRows                  → '@marvinackerman/tablecraft/virtual'
 export { useInfiniteScroll } from './hooks/useInfiniteScroll'
 export type { UseInfiniteScrollOptions } from './hooks/useInfiniteScroll'
 
@@ -56,9 +58,6 @@ export type {
   EditableReturn,
   MultiRowEditingOptions,
   MultiRowEditingReturn,
-  VirtualRowsOptions,
-  VirtualRow,
-  VirtualRowsReturn,
   EmptyStateReturn,
   TableKitDefaults,
   PersistStorage,
@@ -81,14 +80,3 @@ export {
   getAriaRowIndex,
 } from './a11y/ariaAttributes'
 
-export type {
-  UseQueryTableOptions,
-  UseQueryTableReturn,
-  QueryTableFnContext,
-  QueryTableResult,
-  QueryState,
-  UseInfiniteTableOptions,
-  UseInfiniteTableReturn,
-  InfiniteTableFnContext,
-  InfiniteTableResult,
-} from './types/query'

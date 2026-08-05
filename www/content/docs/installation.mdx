@@ -12,18 +12,20 @@ npm install @marvinackerman/tablecraft
 ## Required peer dependencies
 
 tablecraft's core entry (`useTable`, `createColumns`, and friends) is built on
-top of TanStack Table and TanStack Virtual, and needs React itself. Install
-these alongside it:
+top of TanStack Table and needs React itself. Install these alongside it:
 
 ```bash
-npm install @tanstack/react-table@">=8" react@">=18" @tanstack/react-virtual@">=3"
+npm install @tanstack/react-table@"^8" react@">=18"
 ```
 
-| Package | Version floor | Why |
+| Package | Range | Why |
 |---|---|---|
-| `@tanstack/react-table` | `>=8` | tablecraft wraps its row model, column, and state APIs |
+| `@tanstack/react-table` | `^8` | tablecraft wraps its row model, column, and state APIs. TanStack Table v9 renamed these (`getCoreRowModel` → `createCoreRowModel`) and is **not** supported. |
 | `react` | `>=18` | hooks-based, requires a React 18+ runtime |
-| `@tanstack/react-virtual` | `>=3` | powers `useVirtualRows` for windowed row rendering |
+
+That is the whole list. Every other dependency is optional and confined to its
+own entry point — the root entry imports nothing else, so installing tablecraft
+never drags in a library you do not use.
 
 ## Optional peer dependencies
 
@@ -33,17 +35,20 @@ reach for that feature, not up front:
 | Package | Needed for |
 |---|---|
 | `zod` `>=3.23.0` | The `@marvinackerman/tablecraft/zod` entry (`columnsFromZod`, `zodValidator`) — derive columns and row-edit validation from a single Zod schema. Works with Zod 3 and 4. |
-| `@tanstack/react-query` | `useQueryTable` and `useInfiniteTable` — server-driven and infinite-scroll tables backed by TanStack Query. |
+| `@tanstack/react-query` | The `@marvinackerman/tablecraft/query` entry (`useQueryTable`, `useInfiniteTable`) — server-driven and infinite-scroll tables backed by TanStack Query. |
+| `@tanstack/react-virtual` `>=3` | The `@marvinackerman/tablecraft/virtual` entry (`useVirtualRows`) — windowed rendering for large row counts. |
 | `match-sorter` | Fuzzy search (`fuzzy: true` on `useTable`). Loaded via `require()`, so this only applies in CJS/Node bundlers — in ESM-only bundlers (e.g. Vite), pass your own filter function instead and skip this dependency entirely. |
 
 ## Entry points
 
-tablecraft publishes four entry points, so you only pull in the code paths
+tablecraft publishes six entry points, so you only pull in the code paths
 you actually use:
 
 | Entry | Exports |
 |---|---|
-| `@marvinackerman/tablecraft` | The core hooks — `useTable`, `createColumns`, `useQueryTable`, `useInfiniteTable`, `useInfiniteScroll`, `useVirtualRows`, and friends. |
+| `@marvinackerman/tablecraft` | The core hooks — `useTable`, `createColumns`, `useInfiniteScroll`, and friends. Importable with only the required peers above. |
+| `@marvinackerman/tablecraft/query` | `useQueryTable`, `useInfiniteTable` — requires the optional `@tanstack/react-query` peer. |
+| `@marvinackerman/tablecraft/virtual` | `useVirtualRows` — requires the optional `@tanstack/react-virtual` peer. |
 | `@marvinackerman/tablecraft/zod` | `columnsFromZod`, `zodValidator` — requires the optional `zod` peer. |
 | `@marvinackerman/tablecraft/devtools` | `TablecraftDevtools` — inspect table state during development. |
 | `@marvinackerman/tablecraft/testing` | Test helpers, built against `@testing-library/react`. |

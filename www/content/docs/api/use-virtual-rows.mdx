@@ -54,7 +54,8 @@ Each `VirtualRow<TData>`:
 > your full dataset.
 
 ```tsx
-import { useTable, useVirtualRows } from '@marvinackerman/tablecraft'
+import { useTable } from '@marvinackerman/tablecraft'
+import { useVirtualRows } from '@marvinackerman/tablecraft/virtual'
 import { flexRender } from '@tanstack/react-table'
 
 const { table } = useTable({ data, columns, pagination: false })
