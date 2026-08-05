@@ -7,7 +7,7 @@
 
 tablecraft collapses the 80–150 lines of `useState`/`useMemo` boilerplate that every TanStack Table project rewrites into a single hook call — without taking away control. You get sensible defaults for sorting, pagination, and filtering, and the full TanStack Table instance is always available as an escape hatch. There's no bundled CSS and no component library, so tablecraft never fights your design system.
 
-**Full docs, guides, and live examples: <!-- TODO: replace with deployed docs URL --> [https://\<docs-site-url\>](https://tablecraft-seven.vercel.app/)**
+**Full docs, guides, and live examples: <!-- TODO: replace with deployed docs URL --> [Live example>](https://tablecraft-seven.vercel.app/)**
 **Docs: [Docs site](https://tablecraft-g1vu.vercel.app/docs)**
 
 ## Install
