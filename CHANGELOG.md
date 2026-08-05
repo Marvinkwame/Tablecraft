@@ -4,6 +4,45 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [3.0.0] — 2026-08-05
+
+### Breaking
+
+- **`useQueryTable` and `useInfiniteTable` moved to a new `@marvinackerman/tablecraft/query` entry point.** They are no longer exported from the package root, along with their types (`UseQueryTableOptions`, `UseQueryTableReturn`, `QueryTableFnContext`, `QueryTableResult`, `QueryState`, `UseInfiniteTableOptions`, `UseInfiniteTableReturn`, `InfiniteTableFnContext`, `InfiniteTableResult`).
+
+  ```diff
+  - import { useQueryTable, useInfiniteTable } from '@marvinackerman/tablecraft'
+  + import { useQueryTable, useInfiniteTable } from '@marvinackerman/tablecraft/query'
+  ```
+
+  `useInfiniteScroll` is unaffected and stays on the root entry — it is a plain `IntersectionObserver` hook with no TanStack Query dependency, so an infinite-scroll setup now imports from both entries.
+
+- **`useVirtualRows` moved to a new `@marvinackerman/tablecraft/virtual` entry point,** along with its types (`VirtualRowsOptions`, `VirtualRow`, `VirtualRowsReturn`), for the same reason.
+
+  ```diff
+  - import { useTable, useVirtualRows } from '@marvinackerman/tablecraft'
+  + import { useTable } from '@marvinackerman/tablecraft'
+  + import { useVirtualRows } from '@marvinackerman/tablecraft/virtual'
+  ```
+
+- **`@tanstack/react-virtual` is no longer a required peer dependency.** It was previously declared optional but statically imported by the root entry, so in practice every consumer had to install it — the 2.6.1 README documented it as required for exactly that reason. With `useVirtualRows` behind `/virtual`, it is genuinely optional: `@tanstack/react-table` and `react` are now the only required peers.
+
+### Fixed
+
+- **The root entry is importable again without `@tanstack/react-query` or `@tanstack/react-virtual` installed.** Because the root re-exported `useQueryTable`/`useInfiniteTable`/`useVirtualRows`, the emitted bundle carried static `import '@tanstack/react-query'` and `import '@tanstack/react-virtual'` — and a static import must *resolve* even when tree-shaking drops the code that uses it. Every consumer who never opted into TanStack Query got `ERR_MODULE_NOT_FOUND` (or a bundler resolution error) from `import { useTable } from '@marvinackerman/tablecraft'`, despite react-query being documented as optional. Moving these hooks behind their own entries confines each import to the entry that exists for it; consumers who do not use a feature never resolve its peer, and consumers who do get an error naming the package they need to install.
+
+- **`@tanstack/react-table` is now `^8` instead of `>=8`.** The unbounded range resolved to TanStack Table **v9**, which is now `latest` on npm and renamed the row-model factories (`getCoreRowModel` → `createCoreRowModel`) and moved `useReactTable`. A fresh `npm i @marvinackerman/tablecraft @tanstack/react-table` therefore installed a major tablecraft cannot work with, failing at first import with `does not provide an export named 'getCoreRowModel'`. Local development and CI never saw this because the devDependency is pinned to `^8.17.0`. v9 support is a separate piece of work; until then the range says what is actually true.
+
+- **`match-sorter`, `@tanstack/react-query`, and `@testing-library/react` are now declared in `peerDependencies`.** All three were listed only in `peerDependenciesMeta`. npm applies that block to packages declared in `peerDependencies` — an orphaned key is inert, so these were not optional peers but *undeclared* ones: no install warning, no auto-resolution, and a runtime failure the manifest gave no hint about. Each is declared with a floor matching the API actually used (`@tanstack/react-query@>=5` for `keepPreviousData` and `initialPageParam`, `@testing-library/react@>=14` for `renderHook`, `match-sorter@>=6` for `rankings`) and kept optional via the meta block, which now works.
+
+  Net effect: `npm i @marvinackerman/tablecraft` on its own resolves `react` and `@tanstack/react-table@8`, pulls in none of the optional peers, and imports cleanly.
+
+### Added
+
+- **`scripts/check-entry-deps.mjs`**, run as part of `npm run build`. It walks each published entry's real emitted module graph and enforces three invariants: the root entry never reaches an optional peer; `/query` and `/virtual` still reach theirs (a split that silently drops its feature would otherwise pass); and every package any entry imports is declared in the manifest, with no orphaned `peerDependenciesMeta` keys. The last two would have caught the undeclared-peer bug above on the build that introduced it. This class of bug is invisible to the test suite, which imports source modules directly rather than the built package.
+
+---
+
 ## [2.6.1] — 2026-08-04
 
 ### Fixed
