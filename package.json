@@ -1,6 +1,6 @@
 {
   "name": "@marvinackerman/tablecraft",
-  "version": "2.6.1",
+  "version": "3.0.0",
   "description": "Batteries-included TanStack Table wrapper for React — TypeScript-first, headless, zero UI lock-in",
   "keywords": [
     "react",
@@ -34,6 +34,16 @@
       "types": "./dist/zod/index.d.ts",
       "import": "./dist/zod/index.mjs",
       "require": "./dist/zod/index.js"
+    },
+    "./query": {
+      "types": "./dist/query/index.d.ts",
+      "import": "./dist/query/index.mjs",
+      "require": "./dist/query/index.js"
+    },
+    "./virtual": {
+      "types": "./dist/virtual/index.d.ts",
+      "import": "./dist/virtual/index.mjs",
+      "require": "./dist/virtual/index.js"
     }
   },
   "files": [
@@ -41,26 +51,31 @@
     "testing",
     "devtools",
     "zod",
+    "query",
+    "virtual",
     "CHANGELOG.md"
   ],
   "sideEffects": false,
   "peerDependencies": {
-    "@tanstack/react-table": ">=8",
+    "@tanstack/react-table": "^8",
     "react": ">=18",
+    "@tanstack/react-query": ">=5",
     "@tanstack/react-virtual": ">=3",
+    "@testing-library/react": ">=14",
+    "match-sorter": ">=6",
     "zod": ">=3.23.0"
   },
   "peerDependenciesMeta": {
-    "match-sorter": {
+    "@tanstack/react-query": {
       "optional": true
     },
-    "@tanstack/react-query": {
+    "@tanstack/react-virtual": {
       "optional": true
     },
     "@testing-library/react": {
       "optional": true
     },
-    "@tanstack/react-virtual": {
+    "match-sorter": {
       "optional": true
     },
     "zod": {
@@ -84,7 +99,7 @@
     "zod-v3": "npm:zod@^3.25.76"
   },
   "scripts": {
-    "build": "tsup && node scripts/check-dts.mjs",
+    "build": "tsup && node scripts/check-dts.mjs && node scripts/check-entry-deps.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
