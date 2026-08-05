@@ -1,0 +1,84 @@
+---
+title: Zod integration
+description: columnsFromZod and zodValidator from the @marvinackerman/tablecraft/zod entry — one Zod schema as the source of truth for columns and edit validation.
+---
+
+Use one Zod schema as the source of truth for a table's columns *and* its
+edit validation. Exported from the separate `@marvinackerman/tablecraft/zod`
+entry point. Requires `zod` (optional peer, works with Zod 3 and 4):
+
+```bash
+npm i zod
+```
+
+```tsx
+import { useTable, useMultiRowEditing } from '@marvinackerman/tablecraft'
+import { columnsFromZod, zodValidator } from '@marvinackerman/tablecraft/zod'
+import { z } from 'zod'
+
+const userSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email'),
+})
+type User = z.infer<typeof userSchema>
+
+const columns = columnsFromZod(userSchema)   // ColumnDef<User>[]
+const validate = zodValidator(userSchema)
+
+const { table } = useTable({ data, columns })
+const editing = useMultiRowEditing(table, {
+  onSave: async (rowId, draft) => validate(draft) ?? api.save(rowId, draft),
+})
+```
+
+## `columnsFromZod`
+
+```ts
+function columnsFromZod<TSchema extends z.ZodType>(
+  schema: TSchema,
+  options?: ColumnsFromZodOptions<z.infer<TSchema>>
+): ColumnDef<z.infer<TSchema>, any>[]
+```
+
+Generates headless `{ accessorKey, header }` columns from the schema's
+top-level fields — headers are humanized (`firstName` → "First Name"). Needs
+no sample data, unlike [`inferColumns`](/docs/api/columns).
+
+**`ColumnsFromZodOptions<TData>`**
+
+| Option | Type | Description |
+|---|---|---|
+| `include` | `(keyof TData)[]` | Whitelist — only include these keys, in the order given |
+| `exclude` | `(keyof TData)[]` | Blacklist — exclude these keys |
+| `overrides` | `Partial<Record<keyof TData, Partial<ColumnDef<TData, any>>>>` | Override specific column definitions while keeping the rest generated |
+
+## `zodValidator`
+
+```ts
+function zodValidator<TSchema extends z.ZodType>(
+  schema: TSchema,
+  options?: ZodValidatorOptions<z.infer<TSchema>>
+): (values: unknown) => Partial<Record<keyof z.infer<TSchema>, string>> | undefined
+```
+
+Returns `(row) => errors | undefined`, matching the error-map contract of
+[`useEditableRows` / `useMultiRowEditing`](/docs/api/editing). Returns
+`undefined` when the row is valid, so it composes directly with `??`.
+
+**`ZodValidatorOptions<TData>`**
+
+| Option | Type | Description |
+|---|---|---|
+| `rootErrorField` | `keyof TData` | Field that receives object-level (empty-path) issues from `.refine()` / `.superRefine()`. Resolution order: `rootErrorField`, then the first key of the schema's `.shape` (if present), then the first key of the validated object. |
+
+```tsx
+const validate = zodValidator(dateRangeSchema, { rootErrorField: 'endDate' })
+```
+
+## Notes
+
+- Fields whose schema directly exposes `.shape` (a nested `z.object`) are skipped by `columnsFromZod`. Arrays, records, and optional/nullable-wrapped objects are **not** auto-detected — `.shape` is `undefined` on `z.array(...)`, `z.record(...)`, and `z.object({...}).optional()` / `.nullable()`, so those fields still get a column. Use `exclude` for those.
+- `columnsFromZod` requires a plain `z.object({...})`; wrapped schemas (`.refine()`) throw — use `zodValidator` for those, which supports them fully.
+- `.refine()` behaves differently across Zod majors: Zod 3 wraps refined schemas so `.shape` is hidden — `columnsFromZod` throws with instructions (pass the base object, or `.innerType()`). Zod 4 keeps `.shape`, so refined schemas work normally with `columnsFromZod` too. `zodValidator` accepts refined schemas on both.
+- **Invalid rows are never silently committed.** If the schema rejects a row, the map `zodValidator` returns is always non-empty — an empty map would collapse to `undefined` under the caller's `Object.keys(e).length ? e : undefined` idiom, and the row would be committed despite being invalid.
+- If the resolved `rootErrorField` already has a field-level error for this validation round, the object-level message is *not* attached — the row still stays in edit mode (the field-level error keeps it there), and the object-level message surfaces once that field's own error is fixed.

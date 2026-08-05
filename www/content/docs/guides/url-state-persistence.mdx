@@ -1,0 +1,141 @@
+---
+title: URL state & persistence
+description: Make a table's sort, page, and filters shareable via URL and durable across reloads.
+---
+
+## The problem
+
+A table's sort/filter/page state normally lives in React state — refresh the
+page, or send the link to a teammate, and it's gone. You want two related but
+distinct things: the current view **shareable** (encoded in the URL so a
+pasted link reproduces it) and **durable** (remembered on this device even
+without a URL, e.g. plain `localhost:3000/users` should reopen to whatever
+view you left it in).
+
+## The quick path
+
+For the common case, `useTable` (and `useServerTable` / `useQueryTable` /
+`useInfiniteTable`) do both automatically via the `persist*` and `syncUrl`
+options:
+
+```tsx
+useTable({
+  data,
+  columns,
+  persist: 'localStorage',
+  persistKey: 'users-table', // unique per table
+  syncUrl: true,
+})
+```
+
+See [`useTable`](/docs/api/use-table) and
+[Persistence & URL sync](/docs/api/persistence-url) for the full option
+shapes. If that covers your case, stop there — the rest of this guide is for
+when you need manual control over *how* state round-trips: custom routers,
+combining a URL-first / storage-fallback strategy, or state you're managing
+outside `useTable` (e.g. the `useServerTable` pattern from
+[Server-side data](/docs/guides/server-side-data)).
+
+## The solution: manual control
+
+Four utilities back the options above, exported for direct use:
+
+- [`parseURLState(keys)`](/docs/api/persistence-url) — reads the current URL
+  search params, returns only the state slices present in the URL.
+- [`writeURLState(state, keys, mode?)`](/docs/api/persistence-url) — writes
+  state back to the URL via `history.replaceState` (default) or
+  `pushState`.
+- [`loadPersistedState(storage, key, options?)`](/docs/api/persistence-url) —
+  reads previously saved state from `localStorage` / `sessionStorage`.
+- [`savePersistedState(storage, key, state, options?)`](/docs/api/persistence-url) —
+  writes state to storage.
+
+Note the argument order: both persistence functions take `storage` and `key`
+*first*, then the state/options.
+
+## Walkthrough: URL first, storage as fallback
+
+The URL should win when present (that's what makes a link shareable); when
+there's no URL state, fall back to whatever was last persisted on this
+device. Read both once on mount, merge them, and write to both on every
+change:
+
+```tsx
+'use client'
+
+import { useMemo, useState } from 'react'
+import { useTable } from '@marvinackerman/tablecraft'
+import {
+  resolveURLKeys,
+  parseURLState,
+  writeURLState,
+  loadPersistedState,
+  savePersistedState,
+} from '@marvinackerman/tablecraft'
+import type { SortingState, PaginationState } from '@tanstack/react-table'
+
+const STORAGE_KEY = 'users-table'
+
+function UsersTable({ data, columns }) {
+  const keys = useMemo(() => resolveURLKeys(), [])
+
+  // URL wins over persisted storage; persisted storage wins over defaults.
+  const [initial] = useState(() => ({
+    ...loadPersistedState('localStorage', STORAGE_KEY),
+    ...parseURLState(keys),
+  }))
+
+  const [sort, setSort] = useState<SortingState>(initial.sorting ?? [])
+  const [pagination, setPagination] = useState<PaginationState>(
+    initial.pagination ?? { pageIndex: 0, pageSize: 20 },
+  )
+
+  const persistAndSync = (next: { sorting?: SortingState; pagination?: PaginationState }) => {
+    const state = { sorting: sort, pagination, ...next }
+    writeURLState(state, keys, 'replace')
+    savePersistedState('localStorage', STORAGE_KEY, state, { pagination: true })
+  }
+
+  const { table } = useTable({
+    data,
+    columns,
+    sorting: { defaultSort: sort },
+    pagination: { pageIndex: pagination.pageIndex, pageSize: pagination.pageSize },
+    onSortingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(sort) : updater
+      setSort(next)
+      persistAndSync({ sorting: next })
+    },
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(pagination) : updater
+      setPagination(next)
+      persistAndSync({ pagination: next })
+    },
+  })
+
+  return <table>{/* render as usual */}</table>
+}
+```
+
+Reloading the page (no URL params) restores the last persisted sort and
+page. Sharing the URL sends the exact view — the recipient's `parseURLState`
+call picks up the same sort and page from the query string, taking priority
+over anything already in their own storage.
+
+## Notes
+
+- `parseURLState` and `writeURLState` read/write `window.location` directly
+  — they only run client-side (`'use client'` in Next.js App Router, and
+  guard against SSR if you call them outside an effect/event handler).
+- `resolveURLKeys({ page: 'p', sort: 's' })` lets you shorten or rename the
+  query params; pass the same resolved `keys` object to both
+  `parseURLState` and `writeURLState`.
+- `PersistOptions` (the last argument to both persistence functions) controls
+  which state slices are read/written — it defaults to everything **except**
+  `pagination`, which is why the example above passes `{ pagination: true }`
+  explicitly to `savePersistedState`.
+- `writeURLState` omits values that match their defaults, so the URL stays
+  clean instead of accumulating every possible param.
+- These same utilities work identically alongside `useServerTable` and
+  `useQueryTable` — persist/sync whatever state you're already tracking for
+  the refetch, as shown in [Server-side data](/docs/guides/server-side-data).

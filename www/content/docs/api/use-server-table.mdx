@@ -1,0 +1,54 @@
+---
+title: useServerTable
+description: The server-driven variant of useTable — forces manual pagination and sorting for backend-owned data.
+---
+
+Forces `manualPagination` and `manualSorting` to `true`. Use this when your
+backend handles sorting, pagination, and filtering.
+
+## Signature
+
+```ts
+function useServerTable<TData extends RowData>(
+  options: UseServerTableOptions<TData>
+): UseTableReturn<TData>
+```
+
+`UseServerTableOptions<TData>` is [`UseTableOptions<TData>`](/docs/api/use-table)
+minus `manualPagination` / `manualSorting`, with `rowCount` required instead of optional:
+
+| Option | Type | Description |
+|---|---|---|
+| `rowCount` | `number` | Required — total rows in the full dataset |
+| `onPaginationChange` | `OnChangeFn<PaginationState>` | Called when the user changes page/page size |
+| `onSortingChange` | `OnChangeFn<SortingState>` | Called when the user changes sort |
+| `onColumnFiltersChange` | `OnChangeFn<ColumnFiltersState>` | Called when the user changes a column filter |
+| ...rest | — | Every other [`useTable`](/docs/api/use-table) option |
+
+The return shape is identical to [`useTable`](/docs/api/use-table)'s
+`UseTableReturn<TData>`.
+
+## Usage
+
+```tsx
+import { useServerTable } from '@marvinackerman/tablecraft'
+
+const { table, pagination, sorting } = useServerTable({
+  data: serverData,       // current page from your API
+  columns,
+  rowCount: totalRows,    // required — total rows in the dataset
+  pagination: { pageSize: 20 },
+  onPaginationChange: (updater) => {
+    const next = typeof updater === 'function' ? updater(currentState) : updater
+    refetch({ page: next.pageIndex, pageSize: next.pageSize })
+  },
+  onSortingChange: (updater) => {
+    const next = typeof updater === 'function' ? updater(currentSort) : updater
+    refetch({ sort: next })
+  },
+})
+```
+
+## Notes
+
+- If you're fetching with TanStack Query, prefer [`useQueryTable`](/docs/api/use-query-table) — it wraps this same manual-mode behavior with query-key-driven refetching.

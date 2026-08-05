@@ -1,0 +1,57 @@
+---
+title: useInfiniteScroll
+description: Automatic scroll wiring for useInfiniteTable — fires loadMore when a sentinel element enters the viewport.
+---
+
+Pairs with [`useInfiniteTable`](/docs/api/use-infinite-table) to trigger
+`loadMore` automatically when a sentinel element enters the viewport. Handles
+observer cleanup on unmount, reconnect when options change, and stale-closure
+prevention internally.
+
+## Signature
+
+```ts
+function useInfiniteScroll(
+  loadMore: () => void,
+  options?: UseInfiniteScrollOptions
+): (node: Element | null) => void
+```
+
+Returns a ref callback to attach to a sentinel element at the bottom of your
+list.
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | `boolean` | `true` | Gate the observer. Pass `hasNextPage && !isFetchingNextPage` to prevent double-firing |
+| `rootMargin` | `string` | `'0px'` | IntersectionObserver `rootMargin` — e.g. `'200px'` to load ahead of scroll position |
+
+## Usage
+
+```tsx
+import { useInfiniteScroll } from '@marvinackerman/tablecraft'
+
+const { table, loadMore, hasNextPage, isFetchingNextPage } = useInfiniteTable({ /* ... */ })
+
+const sentinelRef = useInfiniteScroll(loadMore, {
+  enabled: hasNextPage && !isFetchingNextPage,  // never double-fires
+})
+
+return (
+  <>
+    <table>
+      <tbody>
+        {table.getRowModel().rows.map((row) => (
+          <tr key={row.id}>{/* ... */}</tr>
+        ))}
+      </tbody>
+    </table>
+
+    {/* Place sentinel below the last row — fires loadMore as it scrolls into view */}
+    <div ref={sentinelRef} />
+
+    {isFetchingNextPage && <p>Loading more…</p>}
+  </>
+)
+```

@@ -1,0 +1,109 @@
+---
+title: Persistence & URL sync
+description: Utilities backing useTable's persist/syncUrl options — manual control over localStorage/sessionStorage state and URL search params.
+---
+
+`useTable` (and `useQueryTable` / `useInfiniteTable`) can persist state via
+`persist` / `persistKey` / `persistOptions`, and sync state to the URL via
+`syncUrl` — see [`useTable`](/docs/api/use-table). The functions below are the
+underlying utilities, exported for manual control.
+
+## State persistence
+
+```ts
+type PersistStorage = 'localStorage' | 'sessionStorage'
+
+interface PersistableState {
+  sorting?: SortingState
+  columnFilters?: ColumnFiltersState
+  globalFilter?: string
+  pagination?: PaginationState
+}
+
+interface PersistOptions {
+  sorting?: boolean
+  columnFilters?: boolean
+  globalFilter?: boolean
+  pagination?: boolean
+}
+
+function loadPersistedState(
+  storage: PersistStorage,
+  key: string,
+  options?: PersistOptions
+): Partial<PersistableState>
+
+function savePersistedState(
+  storage: PersistStorage,
+  key: string,
+  state: PersistableState,
+  options?: PersistOptions
+): void
+
+function clearPersistedState(storage: PersistStorage, key: string): void
+```
+
+`PersistOptions` controls which state slices are read/written; it defaults to
+all slices except `pagination`.
+
+```tsx
+import { savePersistedState, loadPersistedState, clearPersistedState } from '@marvinackerman/tablecraft'
+
+savePersistedState('localStorage', 'my-key', state, { sorting: true, pagination: true })
+loadPersistedState('localStorage', 'my-key')
+clearPersistedState('localStorage', 'my-key')
+```
+
+## URL state sync
+
+```ts
+interface URLKeyMap {
+  /** URL param key for page number (default: 'page') */
+  page?: string
+  /** URL param key for page size (default: 'pageSize') */
+  pageSize?: string
+  /** URL param key for sorting (default: 'sort') */
+  sort?: string
+  /** URL param key for global filter (default: 'filter') */
+  filter?: string
+  /** Prefix for column filter params (default: 'filter_') */
+  columnFilterPrefix?: string
+}
+
+function resolveURLKeys(keys?: URLKeyMap): Required<URLKeyMap>
+function parseURLState(keys: Required<URLKeyMap>): Partial<PersistableState>
+function writeURLState(
+  state: PersistableState,
+  keys: Required<URLKeyMap>,
+  mode?: 'replace' | 'push'
+): void
+```
+
+| Function | Description |
+|---|---|
+| `resolveURLKeys(keys?)` | Merge user-provided URL keys with defaults, returning the fully-resolved key map. |
+| `parseURLState(keys)` | Read current URL search params and return table state. Returns only the slices present in the URL. |
+| `writeURLState(state, keys, mode?)` | Write table state to URL search params via `replaceState` or `pushState`. Omits default values to keep URLs clean. |
+
+```tsx
+const { table } = useTable({
+  data,
+  columns,
+  syncUrl: true,
+  // or with custom keys:
+  syncUrl: {
+    keys: { page: 'p', pageSize: 'ps', sort: 's', filter: 'q' },
+    mode: 'replace',   // or 'push' (adds a browser history entry)
+  },
+})
+```
+
+For manual control without `useTable`'s `syncUrl` option:
+
+```tsx
+import { resolveURLKeys, parseURLState, writeURLState } from '@marvinackerman/tablecraft'
+
+const keys = resolveURLKeys({ page: 'p' })
+const initial = parseURLState(keys)
+writeURLState(currentState, keys, 'replace')
+```

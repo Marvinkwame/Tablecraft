@@ -1,0 +1,135 @@
+---
+title: Inline editing & validation
+description: Let users edit table cells in place and validate their changes with Zod, without a form library.
+---
+
+import InlineEditingExample from '@/components/examples/InlineEditingExample'
+
+## The problem
+
+Rendering rows is the easy part. Letting a user click a cell, edit it, and
+save it back requires its own little state machine: which row is being
+edited, what the in-progress (draft) values are, whether anything actually
+changed, what the validation errors are, and whether a save is in flight —
+all before you've written a single `<input>`.
+
+## The solution
+
+[`useEditableRows`](/docs/api/editing) owns that state machine for a single
+row at a time. You give it an `onSave` callback; it gives back the draft
+values, dirty tracking, errors, and the `startEditing` / `setField` /
+`saveEditing` / `cancelEditing` actions to wire into your markup.
+
+For validation, [`zodValidator`](/docs/api/zod) (from the separate
+`@marvinackerman/tablecraft/zod` entry) turns a Zod schema into the exact
+error-map shape `onSave` expects — `Partial<Record<keyof TData, string>> |
+undefined`. Compose it with `??` so a real save only runs once validation
+passes:
+
+```ts
+onSave: async (rowId, draft) => validate(draft) ?? api.save(rowId, draft)
+```
+
+## Walkthrough
+
+Install `zod` if you haven't already (it's an optional peer dependency):
+
+```bash
+npm i zod
+```
+
+Define one schema and derive both the columns and the validator from it:
+
+```tsx
+import { useTable } from '@marvinackerman/tablecraft'
+import { useEditableRows } from '@marvinackerman/tablecraft'
+import { columnsFromZod, zodValidator } from '@marvinackerman/tablecraft/zod'
+import { flexRender } from '@tanstack/react-table'
+import { z } from 'zod'
+
+const userSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email'),
+})
+type User = z.infer<typeof userSchema>
+
+const columns = columnsFromZod(userSchema) // ColumnDef<User>[] — no cell renderers, headers humanized
+const validate = zodValidator(userSchema)
+
+function UsersTable({ users }: { users: User[] }) {
+  const { table } = useTable<User>({ data: users, columns })
+
+  const editable = useEditableRows(table, {
+    onSave: async (rowId, draft) => {
+      // Run the schema first — returning an error map keeps the row in edit mode.
+      const errors = validate(draft)
+      if (errors) return errors
+
+      // Validation passed — commit to your backend, then exit edit mode.
+      await api.updateUser(rowId, draft)
+    },
+  })
+
+  return (
+    <table>
+      <tbody>
+        {table.getRowModel().rows.map((row) => (
+          <tr key={row.id}>
+            {row.getVisibleCells().map((cell) => {
+              const field = cell.column.id as keyof User
+
+              if (editable.isEditing(row.id)) {
+                return (
+                  <td key={cell.id}>
+                    <input
+                      value={(editable.draftData[field] as string) ?? ''}
+                      onChange={(e) => editable.setField(field, e.target.value)}
+                    />
+                    {editable.errors[field] && (
+                      <span className="error">{editable.errors[field]}</span>
+                    )}
+                  </td>
+                )
+              }
+
+              return <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+            })}
+            <td>
+              {editable.isEditing(row.id) ? (
+                <>
+                  <button onClick={editable.saveEditing} disabled={editable.isSaving}>
+                    {editable.isSaving ? 'Saving…' : 'Save'}
+                  </button>
+                  <button onClick={editable.cancelEditing}>Cancel</button>
+                </>
+              ) : (
+                <button onClick={() => editable.startEditing(row.id)}>Edit</button>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+```
+
+That's a complete, editable, validated table: `columnsFromZod` generates the
+columns, `useEditableRows` manages edit/draft/error state per row, and
+`zodValidator` is the bridge between the schema and `onSave`.
+
+<InlineEditingExample />
+
+## Notes
+
+- `zodValidator`'s guarantee: if the schema rejects a value, the returned
+  error map is never empty — so an invalid row can't accidentally slip
+  through a caller's `Object.keys(e).length ? e : undefined` idiom. See
+  [Zod integration](/docs/api/zod) for the full details, including
+  `rootErrorField` for cross-field `.refine()` errors.
+- Editing multiple rows at once (bulk save, per-row save, `saveAll`) is a
+  separate hook, [`useMultiRowEditing`](/docs/api/editing#usemultirowediting)
+  — same error-map contract, same `zodValidator` output plugs straight in.
+- Don't have a schema yet? [`inferColumns`](/docs/api/columns) generates
+  columns from sample data instead, but you'll need your own validation
+  function matching the same error-map shape.

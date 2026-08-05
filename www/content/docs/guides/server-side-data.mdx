@@ -1,0 +1,136 @@
+---
+title: Server-side data
+description: Drive a table from a paginated, sorted, and filtered API instead of a client-side array.
+---
+
+## The problem
+
+`useTable`'s default pagination and sorting run entirely in memory — great
+for a few thousand rows, useless once the data lives behind an API and only
+one page of it is ever in the browser at a time. You need the table's
+pagination and sorting *state* without letting it run the actual row math,
+and you need to react when the user changes a page or a sort so you can
+refetch.
+
+## The solution
+
+[`useServerTable`](/docs/api/use-server-table) is `useTable` with
+`manualPagination` and `manualSorting` forced to `true`, and `rowCount`
+required instead of optional. You pass it only the current page's data plus
+the total row count; `onPaginationChange` / `onSortingChange` tell you when
+to refetch.
+
+If you're already using TanStack Query, [`useQueryTable`](/docs/api/use-query-table)
+wraps this same manual-mode model with query-key-driven refetching, so you
+don't have to wire the `useState` + `useEffect` refetch loop yourself.
+
+## Walkthrough: `useServerTable`
+
+```tsx
+import { useState, useEffect, useCallback } from 'react'
+import { useServerTable } from '@marvinackerman/tablecraft'
+import type { SortingState } from '@tanstack/react-table'
+
+interface User {
+  id: string
+  name: string
+  email: string
+}
+
+function UsersTable() {
+  const [rows, setRows] = useState<User[]>([])
+  const [rowCount, setRowCount] = useState(0)
+  const [pageIndex, setPageIndex] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
+  const [sort, setSort] = useState<SortingState>([])
+
+  const refetch = useCallback(async () => {
+    const res = await api.getUsers({ page: pageIndex, pageSize, sort })
+    setRows(res.data)
+    setRowCount(res.total)
+  }, [pageIndex, pageSize, sort])
+
+  useEffect(() => {
+    refetch()
+  }, [refetch])
+
+  const { table, pagination, sorting } = useServerTable<User>({
+    data: rows,
+    columns,
+    rowCount, // required — total rows in the full dataset, drives pageCount
+    pagination: { pageIndex, pageSize },
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater({ pageIndex, pageSize }) : updater
+      setPageIndex(next.pageIndex)
+      setPageSize(next.pageSize)
+    },
+    onSortingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(sort) : updater
+      setSort(next)
+    },
+  })
+
+  return (
+    <table>
+      {/* render table.getHeaderGroups() / table.getRowModel() as usual */}
+    </table>
+  )
+}
+```
+
+`pagination` and `sorting` from the return value give you the same
+`pageIndex` / `pageCount` / `canNextPage` / `sortingState` helpers you'd get
+from client-side `useTable` — only the row model behind them is now driven
+by your fetch instead of an in-memory array.
+
+## Walkthrough: `useQueryTable` (TanStack Query)
+
+`useQueryTable` collapses the `useState` + `useEffect` refetch loop above
+into a single `queryFn` keyed by `queryKey`. It refetches automatically
+whenever pagination, sorting, filters, or grouping change:
+
+```tsx
+import { useQueryTable } from '@marvinackerman/tablecraft'
+
+const { table, pagination, sorting, query } = useQueryTable<User>({
+  queryKey: ['users'],
+  queryFn: async ({ pagination, sorting, globalFilter }) => {
+    const res = await api.getUsers({
+      page: pagination.pageIndex,
+      pageSize: pagination.pageSize,
+      sort: sorting,
+      search: globalFilter,
+    })
+    return { data: res.data, rowCount: res.total }
+  },
+  columns,
+  pagination: { pageSize: 20 },
+  sorting: true,
+  globalFilter: true,
+})
+
+// query.isLoading / query.isError / query.error for loading & error UI
+```
+
+Requires `@tanstack/react-query` (`npm i @tanstack/react-query`). See
+[`useQueryTable`](/docs/api/use-query-table) for the full option list —
+`persist`, `syncUrl`, `rowSelection`, `columnPinning`, and the TanStack Query
+pass-through options (`staleTime`, `refetchOnWindowFocus`, etc.) all work the
+same way they do on `useTable`.
+
+## Which one?
+
+- **`useServerTable`** — you own the fetching (a REST call, SWR, a server
+  action, whatever). You write the `onPaginationChange` / `onSortingChange`
+  handlers and decide when to refetch.
+- **`useQueryTable`** — you're already on TanStack Query and want its cache,
+  retries, and automatic refetch-on-state-change for free.
+- Cursor-based infinite lists (as opposed to page-numbered ones) are a third
+  case — see [`useInfiniteTable`](/docs/api/use-infinite-table).
+
+## Notes
+
+- `rowCount` is required on `useServerTable` — without it the table can't
+  compute `pageCount` or `canNextPage`.
+- Want the current page/sort/filter reflected in the URL so a server-driven
+  view is shareable? See [URL state & persistence](/docs/guides/url-state-persistence).

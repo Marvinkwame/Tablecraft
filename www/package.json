@@ -1,0 +1,36 @@
+{
+  "name": "tablecraft-docs",
+  "version": "0.0.8",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "start": "next start",
+    "types:check": "fumadocs-mdx && next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@marvinackerman/tablecraft": "^2.6.0",
+    "@tanstack/react-query": "^5.101.4",
+    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.14.8",
+    "cnfast": "^0.0.8",
+    "fumadocs-core": "^16.12.1",
+    "fumadocs-mdx": "^15.2.0",
+    "fumadocs-ui": "^16.12.1",
+    "lucide-react": "^1.25.0",
+    "next": "16.2.11",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/mdx": "^2.0.14",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "postcss": "^8.5.21",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,99 @@
+---
+title: useQueryTable
+description: Combines server-side tables with TanStack Query — automatic refetching on sort, page, or filter changes.
+---
+
+Combines the `useServerTable` model with TanStack Query. Automatically
+re-fetches when sort, page, or filter state changes.
+
+Requires `@tanstack/react-query`:
+
+```bash
+npm i @tanstack/react-query
+```
+
+## Signature
+
+```ts
+function useQueryTable<TData extends RowData>(
+  options: UseQueryTableOptions<TData>
+): UseQueryTableReturn<TData>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `queryKey` | `unknown[]` | required | TanStack Query cache key |
+| `queryFn` | `(context) => Promise<{ data: TData[], rowCount: number }>` | required | Fetcher |
+| `columns` | `ColumnDef<TData, any>[]` | required | Column definitions |
+| `pagination` | `PaginationOptions \| boolean` | — | Same shape as `useTable` |
+| `sorting` | `SortingOptions \| boolean` | — | Same shape as `useTable` |
+| `globalFilter` | `boolean` | — | Enable global search |
+| `columnFilters` | `boolean` | — | Enable column filters |
+| `rowSelection` | `RowSelectionOptions \| boolean` | — | Opt-in row selection |
+| `columnVisibility` | `ColumnVisibilityOptions \| boolean` | — | Opt-in column visibility |
+| `rowExpansion` | `RowExpansionOptions \| boolean` | — | Opt-in row expansion |
+| `grouping` | `GroupingOptions \| boolean` | — | Opt-in row grouping |
+| `columnPinning` | `ColumnPinningOptions \| boolean` | — | Opt-in column pinning |
+| `fuzzy` | `boolean \| FilterFn<TData>` | — | Same caveat as `useTable` — `true` requires CJS/Node |
+| `persist` | `PersistStorage \| false` | — | Same as `useTable` |
+| `persistKey` | `string` | — | Storage key |
+| `persistOptions` | `PersistOptions` | — | Which slices to persist |
+| `syncUrl` | `boolean \| URLSyncOptions` | — | Same as `useTable` |
+| `staleTime` | `number` | — | TanStack Query `staleTime` |
+| `gcTime` | `number` | — | TanStack Query `gcTime` |
+| `enabled` | `boolean` | — | TanStack Query `enabled` |
+| `refetchOnWindowFocus` | `boolean` | — | TanStack Query pass-through |
+| `refetchOnMount` | `boolean \| 'always'` | — | TanStack Query pass-through |
+| `refetchOnReconnect` | `boolean \| 'always'` | — | TanStack Query pass-through |
+| `refetchInterval` | `number \| false` | — | TanStack Query pass-through |
+| `retry` | `boolean \| number` | — | TanStack Query pass-through |
+| `queryOptions` | `Record<string, unknown>` | — | Pass-through for any TanStack Query option not surfaced above |
+
+The `queryFn` context (`QueryTableFnContext`) receives:
+
+| Property | Type |
+|---|---|
+| `pagination` | `{ pageIndex: number, pageSize: number }` |
+| `sorting` | `SortingState` |
+| `columnFilters` | `ColumnFiltersState` |
+| `globalFilter` | `string` |
+| `grouping` | `GroupingState` |
+
+## Return
+
+`UseQueryTableReturn<TData>` extends [`UseTableReturn<TData>`](/docs/api/use-table)
+and adds:
+
+| Property | Type | Description |
+|---|---|---|
+| `query` | `QueryState<TData>` | Raw query result — `data`, `isLoading`, `isError`, `isFetching`, `isPlaceholderData`, `error`, `refetch`, `status`, `fetchStatus` |
+
+## Usage
+
+```tsx
+import { useQueryTable } from '@marvinackerman/tablecraft'
+
+const { table, pagination, sorting, query } = useQueryTable({
+  queryKey: ['users'],
+  queryFn: async ({ pagination, sorting, globalFilter, columnFilters }) => {
+    const res = await api.getUsers({
+      page: pagination.pageIndex,
+      pageSize: pagination.pageSize,
+      sort: sorting,
+      search: globalFilter,
+    })
+    return { data: res.data, rowCount: res.total }
+  },
+  columns,
+  pagination: { pageSize: 20 },
+  sorting: true,
+  globalFilter: true,
+})
+```
+
+## Notes
+
+- `query` is the raw TanStack Query result — use `query.isLoading` / `query.isError` for loading and error UI.
+- For cursor-based infinite lists instead of paginated pages, use [`useInfiniteTable`](/docs/api/use-infinite-table).
