@@ -90,7 +90,7 @@ into a single `queryFn` keyed by `queryKey`. It refetches automatically
 whenever pagination, sorting, filters, or grouping change:
 
 ```tsx
-import { useQueryTable } from '@marvinackerman/tablecraft'
+import { useQueryTable } from '@marvinackerman/tablecraft/query'
 
 const { table, pagination, sorting, query } = useQueryTable<User>({
   queryKey: ['users'],
