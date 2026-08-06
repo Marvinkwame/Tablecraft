@@ -106,4 +106,10 @@ describe('dedupeLabels', () => {
   it('tracks each label independently', () => {
     expect(dedupeLabels(['A', 'B', 'A', 'B'])).toEqual(['A', 'B', 'A (2)', 'B (2)'])
   })
+
+  it('does not let a generated suffix collide with an existing label', () => {
+    const result = dedupeLabels(['Name', 'Name', 'Name (2)'])
+    expect(new Set(result).size).toBe(result.length)
+    expect(result).toEqual(['Name', 'Name (2)', 'Name (2) (2)'])
+  })
 })

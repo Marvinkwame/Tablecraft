@@ -63,10 +63,15 @@ export function resolveColumnLabel(header: unknown, columnId: string): string {
 
 /** Suffix repeated labels ("Name", "Name (2)") so every column keeps its own key. */
 export function dedupeLabels(labels: string[]): string[] {
-  const seen = new Map<string, number>()
+  const seen = new Set<string>()
   return labels.map((label) => {
-    const count = seen.get(label) ?? 0
-    seen.set(label, count + 1)
-    return count === 0 ? label : `${label} (${count + 1})`
+    let candidate = label
+    let n = 2
+    while (seen.has(candidate)) {
+      candidate = `${label} (${n})`
+      n++
+    }
+    seen.add(candidate)
+    return candidate
   })
 }
