@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { coerceValue, escapeCSVField, toCSVString } from '../src/utils/exportRows'
+import { coerceValue, escapeCSVField, toCSVString, resolveColumnLabel, dedupeLabels } from '../src/utils/exportRows'
 
 describe('coerceValue', () => {
   it('renders null and undefined as an empty string', () => {
@@ -73,5 +73,37 @@ describe('toCSVString', () => {
 
   it('emits just the header when there are no rows', () => {
     expect(toCSVString([], labels)).toBe('Name,Age\r\n')
+  })
+})
+
+describe('resolveColumnLabel', () => {
+  it('uses a string header verbatim', () => {
+    expect(resolveColumnLabel('Full Name', 'name')).toBe('Full Name')
+  })
+
+  it('humanizes the column id when the header is a function', () => {
+    expect(resolveColumnLabel(() => null, 'firstName')).toBe('First Name')
+  })
+
+  it('humanizes the column id when there is no header', () => {
+    expect(resolveColumnLabel(undefined, 'created_at')).toBe('Created At')
+  })
+
+  it('humanizes the column id when the header is an empty string', () => {
+    expect(resolveColumnLabel('', 'user_id')).toBe('User Id')
+  })
+})
+
+describe('dedupeLabels', () => {
+  it('leaves unique labels untouched', () => {
+    expect(dedupeLabels(['Name', 'Age'])).toEqual(['Name', 'Age'])
+  })
+
+  it('suffixes repeats so no key is lost', () => {
+    expect(dedupeLabels(['Name', 'Name', 'Name'])).toEqual(['Name', 'Name (2)', 'Name (3)'])
+  })
+
+  it('tracks each label independently', () => {
+    expect(dedupeLabels(['A', 'B', 'A', 'B'])).toEqual(['A', 'B', 'A (2)', 'B (2)'])
   })
 })

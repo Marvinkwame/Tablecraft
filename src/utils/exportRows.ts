@@ -1,3 +1,5 @@
+import { humanizeKey } from './humanizeKey'
+
 /**
  * Convert an exported cell value into its string form for CSV.
  *
@@ -49,4 +51,22 @@ export function toCSVString(
 
   if (lines.length === 0) return ''
   return lines.join('\r\n') + '\r\n'
+}
+
+/**
+ * A column's export label: its string header, else a humanized column id.
+ * Function headers render JSX, so they cannot be used as a label.
+ */
+export function resolveColumnLabel(header: unknown, columnId: string): string {
+  return typeof header === 'string' && header.length > 0 ? header : humanizeKey(columnId)
+}
+
+/** Suffix repeated labels ("Name", "Name (2)") so every column keeps its own key. */
+export function dedupeLabels(labels: string[]): string[] {
+  const seen = new Map<string, number>()
+  return labels.map((label) => {
+    const count = seen.get(label) ?? 0
+    seen.set(label, count + 1)
+    return count === 0 ? label : `${label} (${count + 1})`
+  })
 }
