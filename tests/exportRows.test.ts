@@ -234,12 +234,12 @@ describe('extractRows', () => {
     const { rows } = extractRows(result.current.table)
 
     // Group header rows (e.g. "category:Electronics") carry no Name/Price
-    // values — none should survive the `!row.getIsGrouped()` filter.
-    expect(rows.length).toBeGreaterThan(0)
+    // values, and each leaf row must be counted exactly once even though
+    // TanStack's flatRows lists every leaf twice under grouping (once
+    // top-level, once as a sub-row of its group).
+    expect(rows).toHaveLength(3)
+    expect(rows.map((r) => r.Name)).toEqual(['Phone', 'Tablet', 'Shirt'])
     expect(rows.every((r) => typeof r.Name === 'string' && typeof r.Price === 'number')).toBe(true)
-
-    // Every leaf product row is represented in the export.
-    expect(new Set(rows.map((r) => r.Name))).toEqual(new Set(['Phone', 'Tablet', 'Shirt']))
   })
 
   it('excludes display columns (no accessorFn) from labels and rows', () => {

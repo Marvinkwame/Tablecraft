@@ -104,8 +104,18 @@ export function extractRows<TData extends RowData>(
           ? table.getCoreRowModel()
           : table.getPrePaginationRowModel()
 
-  // flatRows includes sub-rows; group header rows carry no cell values.
-  const dataRows = rowModel.flatRows.filter((row) => !row.getIsGrouped())
+  // flatRows includes sub-rows, which is what we want for the expansion case.
+  // But under grouping, TanStack lists every leaf row twice: once as a
+  // top-level entry and once again as a sub-row of its group header. Filtering
+  // out the group headers alone leaves both leaf copies behind, so de-dupe by
+  // row.id (unique per row) and keep the first occurrence to preserve order.
+  const seenRowIds = new Set<string>()
+  const dataRows = rowModel.flatRows.filter((row) => {
+    if (row.getIsGrouped()) return false
+    if (seenRowIds.has(row.id)) return false
+    seenRowIds.add(row.id)
+    return true
+  })
 
   let columns =
     columnScope === 'all' ? table.getAllLeafColumns() : table.getVisibleLeafColumns()
