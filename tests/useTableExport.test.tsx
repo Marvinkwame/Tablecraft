@@ -137,3 +137,11 @@ describe('useTableExport download', () => {
     }
   })
 })
+
+import * as tablecraft from '../src'
+
+describe('public export surface', () => {
+  it('exports useTableExport from the root entry', () => {
+    expect(typeof tablecraft.useTableExport).toBe('function')
+  })
+})
