@@ -1,3 +1,5 @@
+import type { RowData, Table } from '@tanstack/react-table'
+import type { UseTableExportOptions } from '../types'
 import { humanizeKey } from './humanizeKey'
 
 /**
@@ -74,4 +76,64 @@ export function dedupeLabels(labels: string[]): string[] {
     seen.add(candidate)
     return candidate
   })
+}
+
+export interface ExtractedRows {
+  labels: string[]
+  rows: Record<string, unknown>[]
+}
+
+/**
+ * Resolve the requested rows and columns into label-keyed plain objects.
+ *
+ * `'filtered'` reads getPrePaginationRowModel() — getFilteredRowModel() sits
+ * before sorting in TanStack's pipeline and would drop the user's sort order.
+ */
+export function extractRows<TData extends RowData>(
+  table: Table<TData>,
+  options: UseTableExportOptions = {}
+): ExtractedRows {
+  const { rows: rowScope = 'filtered', columns: columnScope = 'visible', include, exclude } = options
+
+  const rowModel =
+    rowScope === 'page'
+      ? table.getRowModel()
+      : rowScope === 'selected'
+        ? table.getFilteredSelectedRowModel()
+        : rowScope === 'all'
+          ? table.getCoreRowModel()
+          : table.getPrePaginationRowModel()
+
+  // flatRows includes sub-rows; group header rows carry no cell values.
+  const dataRows = rowModel.flatRows.filter((row) => !row.getIsGrouped())
+
+  let columns =
+    columnScope === 'all' ? table.getAllLeafColumns() : table.getVisibleLeafColumns()
+
+  // Display columns (checkboxes, action buttons) have no accessor and nothing to export.
+  columns = columns.filter((column) => !!column.accessorFn)
+
+  if (include) {
+    const allowed = new Set(include)
+    columns = columns.filter((column) => allowed.has(column.id))
+  }
+  if (exclude) {
+    const denied = new Set(exclude)
+    columns = columns.filter((column) => !denied.has(column.id))
+  }
+
+  const labels = dedupeLabels(
+    columns.map((column) => resolveColumnLabel(column.columnDef.header, column.id))
+  )
+
+  const rows = dataRows.map((row) => {
+    const out: Record<string, unknown> = {}
+    columns.forEach((column, i) => {
+      const exportValue = column.columnDef.meta?.exportValue
+      out[labels[i]] = exportValue ? exportValue(row) : row.getValue(column.id)
+    })
+    return out
+  })
+
+  return { labels, rows }
 }

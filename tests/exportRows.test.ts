@@ -1,5 +1,8 @@
-import { describe, it, expect } from 'vitest'
-import { coerceValue, escapeCSVField, toCSVString, resolveColumnLabel, dedupeLabels } from '../src/utils/exportRows'
+import { describe, it, expect, vi } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import { coerceValue, escapeCSVField, toCSVString, resolveColumnLabel, dedupeLabels, extractRows } from '../src/utils/exportRows'
+import { useTable } from '../src/hooks/useTable'
+import { createColumns } from '../src/helpers/createColumns'
 
 describe('coerceValue', () => {
   it('renders null and undefined as an empty string', () => {
@@ -111,5 +114,83 @@ describe('dedupeLabels', () => {
     const result = dedupeLabels(['Name', 'Name', 'Name (2)'])
     expect(new Set(result).size).toBe(result.length)
     expect(result).toEqual(['Name', 'Name (2)', 'Name (2) (2)'])
+  })
+})
+
+type Person = { id: number; name: string; age: number }
+
+const people: Person[] = [
+  { id: 1, name: 'Carol', age: 41 },
+  { id: 2, name: 'Alice', age: 30 },
+  { id: 3, name: 'Bob', age: 25 },
+]
+
+const personColumns = createColumns<Person>([
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'age', header: 'Age' },
+])
+
+function makeTable(overrides: Record<string, unknown> = {}) {
+  const { result } = renderHook(() =>
+    useTable<Person>({ data: people, columns: personColumns, ...overrides })
+  )
+  return result.current.table
+}
+
+describe('extractRows', () => {
+  it('returns labels and label-keyed rows', () => {
+    const { labels, rows } = extractRows(makeTable())
+    expect(labels).toEqual(['Name', 'Age'])
+    expect(rows[0]).toEqual({ Name: 'Carol', Age: 41 })
+  })
+
+  it('keeps raw value types rather than stringifying', () => {
+    const { rows } = extractRows(makeTable())
+    expect(typeof rows[0].Age).toBe('number')
+  })
+
+  it("'filtered' reflects the active sort order, not the data order", () => {
+    const table = makeTable({ sorting: { defaultSort: [{ id: 'name', desc: false }] } })
+    const { rows } = extractRows(table, { rows: 'filtered' })
+    expect(rows.map((r) => r.Name)).toEqual(['Alice', 'Bob', 'Carol'])
+  })
+
+  it("'filtered' spans all pages, 'page' does not", () => {
+    const table = makeTable({ pagination: { pageSize: 2 } })
+    expect(extractRows(table, { rows: 'filtered' }).rows).toHaveLength(3)
+    expect(extractRows(table, { rows: 'page' }).rows).toHaveLength(2)
+  })
+
+  it("'all' ignores an active filter", () => {
+    const table = makeTable()
+    table.setGlobalFilter('Alice')
+    expect(extractRows(table, { rows: 'all' }).rows).toHaveLength(3)
+  })
+
+  it('excludes hidden columns by default and includes them under columns: all', () => {
+    const table = makeTable({ columnVisibility: true })
+    act(() => {
+      table.getColumn('age')!.toggleVisibility(false)
+    })
+    expect(extractRows(table).labels).toEqual(['Name'])
+    expect(extractRows(table, { columns: 'all' }).labels).toEqual(['Name', 'Age'])
+  })
+
+  it('honours include and exclude, ignoring unknown ids', () => {
+    const table = makeTable()
+    expect(extractRows(table, { include: ['name', 'nope'] }).labels).toEqual(['Name'])
+    expect(extractRows(table, { exclude: ['age'] }).labels).toEqual(['Name'])
+  })
+
+  it('uses meta.exportValue when present and never calls the cell renderer', () => {
+    const cell = vi.fn(() => null)
+    const cols = createColumns<Person>([
+      { accessorKey: 'name', header: 'Name', cell },
+      { accessorKey: 'age', header: 'Age', meta: { exportValue: (row) => `${row.original.age}y` } },
+    ])
+    const { result } = renderHook(() => useTable<Person>({ data: people, columns: cols }))
+    const { rows } = extractRows(result.current.table)
+    expect(rows[0]).toEqual({ Name: 'Carol', Age: '41y' })
+    expect(cell).not.toHaveBeenCalled()
   })
 })
