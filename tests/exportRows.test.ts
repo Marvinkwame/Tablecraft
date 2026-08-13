@@ -193,4 +193,65 @@ describe('extractRows', () => {
     expect(rows[0]).toEqual({ Name: 'Carol', Age: '41y' })
     expect(cell).not.toHaveBeenCalled()
   })
+
+  it("'selected' returns only selected rows", () => {
+    const table = makeTable({ rowSelection: true })
+    act(() => {
+      table.getRow('1').toggleSelected(true)
+    })
+    expect(extractRows(table, { rows: 'selected' }).rows).toEqual([{ Name: 'Alice', Age: 30 }])
+  })
+
+  it("'selected' returns an empty array when none selected", () => {
+    const table = makeTable({ rowSelection: true })
+    expect(extractRows(table, { rows: 'selected' }).rows).toEqual([])
+  })
+
+  it('excludes group header rows and exports only leaf data rows', () => {
+    type Product = { id: number; category: string; name: string; price: number }
+
+    const products: Product[] = [
+      { id: 1, category: 'Electronics', name: 'Phone', price: 699 },
+      { id: 2, category: 'Electronics', name: 'Tablet', price: 499 },
+      { id: 3, category: 'Clothing', name: 'Shirt', price: 29 },
+    ]
+
+    const productColumns = createColumns<Product>([
+      { accessorKey: 'category', header: 'Category' },
+      { accessorKey: 'name', header: 'Name' },
+      { accessorKey: 'price', header: 'Price', aggregationFn: 'sum' },
+    ])
+
+    const { result } = renderHook(() =>
+      useTable<Product>({
+        data: products,
+        columns: productColumns,
+        grouping: { defaultGrouping: ['category'] },
+        pagination: false,
+      })
+    )
+
+    const { rows } = extractRows(result.current.table)
+
+    // Group header rows (e.g. "category:Electronics") carry no Name/Price
+    // values — none should survive the `!row.getIsGrouped()` filter.
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows.every((r) => typeof r.Name === 'string' && typeof r.Price === 'number')).toBe(true)
+
+    // Every leaf product row is represented in the export.
+    expect(new Set(rows.map((r) => r.Name))).toEqual(new Set(['Phone', 'Tablet', 'Shirt']))
+  })
+
+  it('excludes display columns (no accessorFn) from labels and rows', () => {
+    const cols = createColumns<Person>([
+      { accessorKey: 'name', header: 'Name' },
+      { accessorKey: 'age', header: 'Age' },
+      { id: 'actions', header: 'Actions', cell: () => null },
+    ])
+    const { result } = renderHook(() => useTable<Person>({ data: people, columns: cols }))
+    const { labels, rows } = extractRows(result.current.table)
+    expect(labels).toEqual(['Name', 'Age'])
+    expect(rows[0]).toEqual({ Name: 'Carol', Age: 41 })
+    expect(rows[0]).not.toHaveProperty('Actions')
+  })
 })
