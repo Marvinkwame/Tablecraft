@@ -51,7 +51,7 @@ Sorting, pagination, global search, and full TypeScript generics are all wired u
 
 - **[Getting Started](https://tablecraft-g1vu.vercel.app/docs)** — installation, mental model, first table
 - **[Installation](https://tablecraft-g1vu.vercel.app/docs/installation)** — required and optional peer dependencies
-- **[API Reference](https://tablecraft-g1vu.vercel.app/docs/api/use-table)** — `useTable`, `useServerTable`, `useQueryTable`, `useInfiniteTable`, `useVirtualRows`, `useEditableRows`, `useMultiRowEditing`, `useTableA11y`, column pinning, devtools, testing utilities, and more
+- **[API Reference](https://tablecraft-g1vu.vercel.app/docs/api/use-table)** — `useTable`, `useServerTable`, `useQueryTable`, `useInfiniteTable`, `useVirtualRows`, `useEditableRows`, `useMultiRowEditing`, `useTableA11y`, `useTableExport`, column pinning, devtools, testing utilities, and more
 - **[Guides](https://tablecraft-g1vu.vercel.app/docs/guides/inline-editing)** — server-side tables, inline editing
 - **[Zod-driven columns](https://tablecraft-g1vu.vercel.app/docs/api/zod)** — derive columns and edit validation from a single schema
 - **[Live examples](https://tablecraft-g1vu.vercel.app/docs)** — interactive tables rendered directly in the docs

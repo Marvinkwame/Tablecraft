@@ -10,6 +10,7 @@
     "editing",
     "use-virtual-rows",
     "use-table-a11y",
+    "use-table-export",
     "columns",
     "provider",
     "persistence-url",
