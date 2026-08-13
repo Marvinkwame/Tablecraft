@@ -420,3 +420,44 @@ export interface VirtualRowsReturn<TData> {
   containerRef:  React.RefObject<HTMLDivElement>
   scrollToIndex: (index: number) => void
 }
+
+// ─── Table Export ─────────────────────────────────────────────
+
+declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    /**
+     * Value to use for this column when exporting. Receives the row.
+     * Falls back to `row.getValue(columnId)` when omitted.
+     */
+    exportValue?: (row: Row<TData>) => unknown
+  }
+}
+
+export interface UseTableExportOptions {
+  /** Which rows to include. Default: 'filtered'. */
+  rows?: 'filtered' | 'page' | 'selected' | 'all'
+  /** Which columns to include. Default: 'visible'. */
+  columns?: 'visible' | 'all'
+  /** Explicit column id allow-list. Overrides `columns` when present. */
+  include?: string[]
+  /** Column ids to omit. Applied after `columns` / `include`. */
+  exclude?: string[]
+  /** CSV field separator. Default: ','. */
+  delimiter?: string
+  /** Emit a header row. Default: true. */
+  header?: boolean
+}
+
+export interface DownloadOptions extends UseTableExportOptions {
+  /** Prepend a UTF-8 BOM so Excel reads accents correctly. CSV only. Default: true. */
+  bom?: boolean
+}
+
+export interface TableExportReturn {
+  /** Label-keyed rows with raw (uncoerced) values. */
+  toRows: (overrides?: UseTableExportOptions) => Record<string, unknown>[]
+  toCSV: (overrides?: UseTableExportOptions) => string
+  toJSON: (overrides?: UseTableExportOptions) => string
+  download: (format: 'csv' | 'json', filename?: string, overrides?: DownloadOptions) => void
+}
