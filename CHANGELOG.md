@@ -4,6 +4,32 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [3.1.0] — 2026-09-02
+
+### Fixed
+
+- **`aria-rowindex` now reports position in the full row set instead of restarting on every page.** It was computed against `getRowModel()` (the current page) while `aria-rowcount` was computed against the whole filtered set, so on page 2 of a paginated grid screen readers announced "row 1 of 50, row 2 of 50…" for rows that were actually 11–20. It now reads `getPrePaginationRowModel()`, which — unlike `getFilteredRowModel()` — also reflects the user's sort rather than the original data order.
+
+- **The roving tabindex now actually moves DOM focus.** `getRowProps` and `getCellProps` return a `ref` to register the element; a keyboard move focuses the newly-current one. Previously only `tabIndex` changed, so a keyboard user pressing `ArrowDown` saw no focus movement at all. Mounting a grid never steals focus — only a keypress moves it.
+
+### Added
+
+- **`cellNavigation` option for `useTableA11y`, providing the 2D keyboard navigation that `role="grid"` advertises.** Off by default, so existing row-level behaviour is unchanged.
+
+  ```tsx
+  const a11y = useTableA11y(table, { cellNavigation: true })
+
+  <td {...a11y.getCellProps(columnIndex, row.id)} />
+  ```
+
+  When enabled: `ArrowLeft`/`ArrowRight` move by column, `ArrowUp`/`ArrowDown` move by row while keeping the column, `Home`/`End` move to the first/last cell **in the current row**, `Ctrl`+`Home`/`End` move to the first/last cell in the grid, `PageUp`/`PageDown` move ten rows, and `Enter`/`Space` toggle selection of the focused cell's row. The roving tabindex moves from the row to the cell, and the row's `onKeyDown` goes inert so a keypress bubbling from cell to row cannot move twice.
+
+- **`focusedCell`** on the `useTableA11y` return — `{ rowIndex, columnIndex }` when `cellNavigation` is on, otherwise `null`.
+
+- `getCellProps` accepts an optional second `rowId` argument. Calling it with one argument behaves exactly as before.
+
+---
+
 ## [3.1.0] — unreleased
 
 ### Added

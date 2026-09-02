@@ -21,6 +21,7 @@ function useTableA11y<TData extends RowData>(
 | Option | Type | Description |
 |---|---|---|
 | `selectionEnabled` | `boolean` | Set to `true` when row selection is enabled on the table. Adds `aria-selected` to row props. |
+| `cellNavigation` | `boolean` | Opt in to cell-level (2D) keyboard navigation. Defaults to `false`, which keeps the row-level behaviour described below. |
 
 ## Return
 
@@ -28,9 +29,10 @@ function useTableA11y<TData extends RowData>(
 |---|---|---|
 | `getTableProps` | `() => { role: 'grid', 'aria-rowcount': number, 'aria-colcount': number }` | Spread onto the table element |
 | `getHeaderProps` | `(headerId: string) => { role: 'columnheader', 'aria-sort': 'ascending' \| 'descending' \| 'none' }` | Spread onto each `<th>` |
-| `getRowProps` | `(rowId: string) => { role: 'row', 'aria-rowindex': number, 'aria-selected'?: boolean, 'aria-expanded'?: boolean, tabIndex: 0 \| -1, onKeyDown }` | Spread onto each `<tr>` |
-| `getCellProps` | `(columnIndex: number) => { role: 'gridcell', 'aria-colindex': number }` | Spread onto each `<td>` |
+| `getRowProps` | `(rowId: string) => { role: 'row', ref, 'aria-rowindex': number, 'aria-selected'?: boolean, 'aria-expanded'?: boolean, tabIndex: 0 \| -1, onKeyDown }` | Spread onto each `<tr>` |
+| `getCellProps` | `(columnIndex: number, rowId?: string) => { role: 'gridcell', 'aria-colindex': number, ref?, tabIndex?: 0 \| -1, onKeyDown? }` | Spread onto each `<td>`. Pass `rowId` to enable cell navigation. |
 | `focusedRowIndex` | `number \| null` | Current focused row index — useful for custom focus ring styling |
+| `focusedCell` | `{ rowIndex, columnIndex } \| null` | Focused cell when `cellNavigation` is on, otherwise `null`. Row index is page-relative. |
 
 ## Usage
 
@@ -60,7 +62,7 @@ const a11y = useTableA11y(table, {
 a11y.focusedRowIndex  // number | null
 ```
 
-**Keyboard navigation** (applied automatically via `onKeyDown` on row props):
+**Row navigation** (the default — applied via `onKeyDown` on row props):
 
 | Key | Action |
 |---|---|
@@ -69,6 +71,45 @@ a11y.focusedRowIndex  // number | null
 | `Home` | Move focus to first row |
 | `End` | Move focus to last row |
 | `Enter` / `Space` | Toggle row selection (when `selectionEnabled`) |
+
+Focus moves for real: spread the returned `ref` onto the element so the hook can
+move DOM focus as the roving tabindex changes. Mounting a grid never steals
+focus — only a keypress moves it.
+
+## Cell navigation
+
+`role="grid"` promises two-dimensional keyboard navigation. Pass
+`cellNavigation: true` and give `getCellProps` the row id to provide it:
+
+```tsx
+const a11y = useTableA11y(table, { cellNavigation: true })
+
+<tr {...a11y.getRowProps(row.id)}>
+  {row.getVisibleCells().map((cell, columnIndex) => (
+    <td key={cell.id} {...a11y.getCellProps(columnIndex, row.id)}>
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    </td>
+  ))}
+</tr>
+```
+
+The roving tabindex moves from the row to the cell, so exactly one cell in the
+whole grid is tabbable at a time and the row handler goes inert (otherwise a
+keypress bubbling from cell to row would move twice).
+
+| Key | Action |
+|---|---|
+| `ArrowRight` / `ArrowLeft` | Move one column, clamped at the edges |
+| `ArrowDown` / `ArrowUp` | Move one row, keeping the column |
+| `Home` / `End` | First / last cell **in the current row** |
+| `Ctrl` + `Home` / `End` | First / last cell **in the grid** |
+| `PageDown` / `PageUp` | Move ten rows, clamped |
+| `Enter` / `Space` | Toggle selection of the focused cell's row (when `selectionEnabled`) |
+
+Row indices are page-relative because you can only focus a row that is actually
+rendered. `aria-rowindex`, by contrast, is the position within the full row set,
+so screen readers announce "row 12 of 50" correctly on page 2 rather than
+restarting at 1.
 
 ## Standalone ARIA helpers
 
@@ -88,4 +129,4 @@ function getAriaRowIndex<TData>(rowId: string, rows: Row<TData>[]): number
 | `getAriaSortValue(headerId, sorting)` | `aria-sort` value for a header cell. `'none'` when the column is not currently sorted. |
 | `getAriaRowCount(table)` | Total number of filtered rows — used for `aria-rowcount`. |
 | `getAriaColCount(table)` | Number of visible leaf columns — used for `aria-colcount`. |
-| `getAriaRowIndex(rowId, rows)` | 1-based row index of the given `rowId` within the provided `rows` array. Returns `-1` if the row is not found (should not happen in normal usage). |
+| `getAriaRowIndex(rowId, rows)` | 1-based row index of the given `rowId` within the provided `rows` array. Returns `-1` if the row is not found (should not happen in normal usage). The hook passes it `getPrePaginationRowModel().rows`, so the index covers the full sorted set rather than the current page. |
