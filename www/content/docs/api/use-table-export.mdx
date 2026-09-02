@@ -1,0 +1,57 @@
+---
+title: useTableExport
+description: Export table data to CSV or JSON, respecting filters, sort, and column visibility.
+---
+
+Turns any tablecraft table into CSV or JSON. Returns the data so you can upload,
+preview, or test it — plus a `download()` helper for the common case.
+
+```tsx
+import { useTable, useTableExport } from '@marvinackerman/tablecraft'
+
+const { table } = useTable<User>({ data, columns })
+const { toCSV, toJSON, toRows, download } = useTableExport(table)
+
+<button onClick={() => download('csv', 'users.csv')}>Export CSV</button>
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `rows` | `'filtered' \| 'page' \| 'selected' \| 'all'` | `'filtered'` | Which rows to include |
+| `columns` | `'visible' \| 'all'` | `'visible'` | Whether hidden columns are included |
+| `include` | `string[]` | — | Column id allow-list |
+| `exclude` | `string[]` | — | Column ids to omit |
+| `delimiter` | `string` | `','` | CSV field separator |
+| `header` | `boolean` | `true` | Emit a header row |
+
+`'filtered'` means everything matching the current filters, in the current sort
+order, across all pages — not just the page on screen.
+
+## Custom values
+
+Columns that render JSX export their underlying value. When that is not what you
+want, set `meta.exportValue`:
+
+```tsx
+createColumns<User>([
+  { accessorKey: 'status', header: 'Status', cell: () => <Badge /> },
+  {
+    accessorKey: 'createdAt',
+    header: 'Created',
+    meta: { exportValue: (row) => row.original.createdAt.toISOString().slice(0, 10) },
+  },
+])
+```
+
+## Notes
+
+- `toCSV()` returns clean RFC 4180 CSV. `download('csv')` additionally prepends a
+  UTF-8 BOM so Excel renders accented characters correctly — pass `{ bom: false }`
+  to opt out.
+- `download()` throws if called during server-side rendering. `toRows`, `toCSV`,
+  and `toJSON` are SSR-safe.
+- `rows: 'selected'` requires `rowSelection` to be enabled on the table.
+- Large exports are built synchronously; a 100k-row CSV will briefly block the
+  main thread.

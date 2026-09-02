@@ -21,6 +21,7 @@ export { useMultiRowEditing } from './hooks/useMultiRowEditing'
 //   useVirtualRows                  → '@marvinackerman/tablecraft/virtual'
 export { useInfiniteScroll } from './hooks/useInfiniteScroll'
 export type { UseInfiniteScrollOptions } from './hooks/useInfiniteScroll'
+export { useTableExport } from './hooks/useTableExport'
 
 // Context
 export { TableKitProvider, useTableKitDefaults } from './context/TableKitContext'
@@ -62,6 +63,9 @@ export type {
   TableKitDefaults,
   PersistStorage,
   PersistOptions,
+  UseTableExportOptions,
+  DownloadOptions,
+  TableExportReturn,
 } from './types'
 
 export type { InferColumnsOptions } from './helpers/inferColumns'
