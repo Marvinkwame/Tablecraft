@@ -130,17 +130,26 @@ export interface TableA11yReturn {
   }
   getRowProps: (rowId: string) => {
     role: 'row'
+    ref: (el: HTMLElement | null) => void
     'aria-rowindex': number
     'aria-selected'?: boolean
     'aria-expanded'?: boolean
     tabIndex: 0 | -1
     onKeyDown: (e: React.KeyboardEvent) => void
   }
-  getCellProps: (columnIndex: number) => {
+  getCellProps: (columnIndex: number, rowId?: string) => {
     role: 'gridcell'
     'aria-colindex': number
+    ref?: (el: HTMLElement | null) => void
+    tabIndex?: 0 | -1
+    onKeyDown?: (e: React.KeyboardEvent) => void
   }
   focusedRowIndex: number | null
+  /**
+   * The focused cell when `cellNavigation` is enabled, otherwise null.
+   * Row index is page-relative; column index counts visible leaf columns.
+   */
+  focusedCell: { rowIndex: number; columnIndex: number } | null
 }
 
 // ─── Editable Rows ───────────────────────────────────────────
