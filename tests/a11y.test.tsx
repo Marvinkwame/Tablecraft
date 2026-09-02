@@ -200,3 +200,305 @@ describe('useTableA11y — getCellProps', () => {
     expect(col1['aria-colindex']).toBe(2)
   })
 })
+
+// ─── aria-rowindex across pagination and sorting ──────────
+
+describe('useTableA11y — aria-rowindex reflects position in the full row set', () => {
+  function renderPaged() {
+    return renderHook(() => {
+      const tableReturn = useTable({ data: users, columns, pagination: { pageSize: 2 } })
+      return { ...tableReturn, a11y: useTableA11y(tableReturn.table) }
+    })
+  }
+
+  it('reports rows 3 and 4 on the second page, not 1 and 2', () => {
+    const { result } = renderPaged()
+
+    act(() => result.current.pagination.setPageIndex(1))
+
+    const rows = result.current.table.getRowModel().rows
+    expect(rows).toHaveLength(2)
+    expect(result.current.a11y.getRowProps(rows[0].id)['aria-rowindex']).toBe(3)
+    expect(result.current.a11y.getRowProps(rows[1].id)['aria-rowindex']).toBe(4)
+  })
+
+  it('reports the last row as index 5, matching aria-rowcount', () => {
+    const { result } = renderPaged()
+
+    act(() => result.current.pagination.setPageIndex(2))
+
+    const rows = result.current.table.getRowModel().rows
+    const rowCount = result.current.a11y.getTableProps()['aria-rowcount']
+    expect(result.current.a11y.getRowProps(rows[0].id)['aria-rowindex']).toBe(rowCount)
+  })
+
+  it('follows sort order rather than original data order', () => {
+    const { result } = renderHook(() => {
+      const tableReturn = useTable({ data: users, columns, pagination: { pageSize: 2 } })
+      return { ...tableReturn, a11y: useTableA11y(tableReturn.table) }
+    })
+
+    act(() => result.current.sorting.setSorting([{ id: 'name', desc: true }]))
+    act(() => result.current.pagination.setPageIndex(1))
+
+    // Sorted desc the order is User 4, 3, 2, 1, 0 — so page 2 holds User 2 and
+    // User 1 at positions 3 and 4. Reading getFilteredRowModel() instead of the
+    // pre-pagination model would place User 1 at 2, in original data order.
+    const rows = result.current.table.getRowModel().rows
+    expect(rows.map((r) => r.original.name)).toEqual(['User 2', 'User 1'])
+    expect(result.current.a11y.getRowProps(rows[0].id)['aria-rowindex']).toBe(3)
+    expect(result.current.a11y.getRowProps(rows[1].id)['aria-rowindex']).toBe(4)
+  })
+})
+
+// ─── Roving tabindex is page-relative ─────────────────────
+
+describe('useTableA11y — roving tabindex on a paginated table', () => {
+  it('gives exactly one rendered row tabIndex=0 on every page', () => {
+    const { result } = renderHook(() => {
+      const tableReturn = useTable({ data: users, columns, pagination: { pageSize: 2 } })
+      return { ...tableReturn, a11y: useTableA11y(tableReturn.table) }
+    })
+
+    act(() => result.current.pagination.setPageIndex(1))
+
+    const rows = result.current.table.getRowModel().rows
+    const tabbable = rows.filter((r) => result.current.a11y.getRowProps(r.id).tabIndex === 0)
+    expect(tabbable).toHaveLength(1)
+    expect(tabbable[0].id).toBe(rows[0].id)
+  })
+})
+
+// ─── Opt-in cell navigation ───────────────────────────────
+
+function renderCellNav(data: User[] = users) {
+  return renderHook(() => {
+    const tableReturn = useTable({ data, columns, pagination: false })
+    const a11y = useTableA11y(tableReturn.table, { cellNavigation: true })
+    return { ...tableReturn, a11y }
+  })
+}
+
+function press(result: any, key: string, init: Partial<KeyboardEvent> = {}) {
+  const rows = result.current.table.getRowModel().rows
+  const cell = result.current.a11y.getCellProps(0, rows[0].id)
+  act(() => {
+    cell.onKeyDown!({
+      key,
+      preventDefault: () => {},
+      ...init,
+    } as unknown as React.KeyboardEvent)
+  })
+}
+
+describe('useTableA11y — cell navigation is off by default', () => {
+  it('omits tabIndex and onKeyDown from getCellProps', () => {
+    const { result } = renderA11yHook()
+    const props = result.current.a11y.getCellProps(0)
+    expect('tabIndex' in props).toBe(false)
+    expect('onKeyDown' in props).toBe(false)
+  })
+
+  it('still returns role and aria-colindex from the one-argument call', () => {
+    const { result } = renderA11yHook()
+    const props = result.current.a11y.getCellProps(1)
+    expect(props.role).toBe('gridcell')
+    expect(props['aria-colindex']).toBe(2)
+  })
+})
+
+describe('useTableA11y — cellNavigation focus model', () => {
+  it('starts with the first cell of the first row focused', () => {
+    const { result } = renderCellNav()
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 0, columnIndex: 0 })
+  })
+
+  it('gives exactly one cell tabIndex=0 across the whole grid', () => {
+    const { result } = renderCellNav()
+    const rows = result.current.table.getRowModel().rows
+
+    const tabbable = rows.flatMap((r, ri) =>
+      [0, 1]
+        .map((ci) => ({ ri, ci, props: result.current.a11y.getCellProps(ci, r.id) }))
+        .filter((c) => c.props.tabIndex === 0)
+    )
+
+    expect(tabbable).toHaveLength(1)
+    expect({ ri: tabbable[0].ri, ci: tabbable[0].ci }).toEqual({ ri: 0, ci: 0 })
+  })
+
+  it('ArrowRight moves to the next column and clamps at the last', () => {
+    const { result } = renderCellNav()
+
+    press(result, 'ArrowRight')
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 0, columnIndex: 1 })
+
+    press(result, 'ArrowRight')
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 0, columnIndex: 1 })
+  })
+
+  it('ArrowLeft moves to the previous column and clamps at zero', () => {
+    const { result } = renderCellNav()
+
+    press(result, 'ArrowRight')
+    press(result, 'ArrowLeft')
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 0, columnIndex: 0 })
+
+    press(result, 'ArrowLeft')
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 0, columnIndex: 0 })
+  })
+
+  it('ArrowDown keeps the column while changing the row', () => {
+    const { result } = renderCellNav()
+
+    press(result, 'ArrowRight')
+    press(result, 'ArrowDown')
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 1, columnIndex: 1 })
+  })
+
+  it('ArrowUp clamps at the first row', () => {
+    const { result } = renderCellNav()
+
+    press(result, 'ArrowUp')
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 0, columnIndex: 0 })
+  })
+})
+
+describe('useTableA11y — Home and End follow the ARIA grid pattern', () => {
+  it('Home moves to the first cell of the current row, not the first row', () => {
+    const { result } = renderCellNav()
+
+    press(result, 'ArrowDown')
+    press(result, 'ArrowRight')
+    press(result, 'Home')
+
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 1, columnIndex: 0 })
+  })
+
+  it('End moves to the last cell of the current row', () => {
+    const { result } = renderCellNav()
+
+    press(result, 'ArrowDown')
+    press(result, 'End')
+
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 1, columnIndex: 1 })
+  })
+
+  it('Ctrl+Home moves to the first cell of the grid', () => {
+    const { result } = renderCellNav()
+
+    press(result, 'ArrowDown')
+    press(result, 'ArrowRight')
+    press(result, 'Home', { ctrlKey: true })
+
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 0, columnIndex: 0 })
+  })
+
+  it('Ctrl+End moves to the last cell of the grid', () => {
+    const { result } = renderCellNav()
+
+    press(result, 'End', { ctrlKey: true })
+
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 4, columnIndex: 1 })
+  })
+})
+
+describe('useTableA11y — row handler does not double-handle in cell mode', () => {
+  it('leaves ArrowDown to the cell handler when cellNavigation is on', () => {
+    const { result } = renderCellNav()
+    const rows = result.current.table.getRowModel().rows
+
+    // Simulate the real DOM path: the cell handles it, then it bubbles to the row.
+    const cell = result.current.a11y.getCellProps(0, rows[0].id)
+    const row = result.current.a11y.getRowProps(rows[0].id)
+    act(() => {
+      const e = { key: 'ArrowDown', preventDefault: () => {} } as React.KeyboardEvent
+      cell.onKeyDown!(e)
+      row.onKeyDown(e)
+    })
+
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 1, columnIndex: 0 })
+  })
+})
+
+// ─── PageUp / PageDown ────────────────────────────────────
+
+describe('useTableA11y — PageDown and PageUp jump by a block of rows', () => {
+  const many: User[] = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    name: `User ${i}`,
+    role: 'Member',
+  }))
+
+  it('PageDown moves down ten rows, keeping the column', () => {
+    const { result } = renderCellNav(many)
+
+    press(result, 'ArrowRight')
+    press(result, 'PageDown')
+
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 10, columnIndex: 1 })
+  })
+
+  it('PageUp moves back up ten rows', () => {
+    const { result } = renderCellNav(many)
+
+    press(result, 'PageDown')
+    press(result, 'PageDown')
+    press(result, 'PageUp')
+
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 10, columnIndex: 0 })
+  })
+
+  it('clamps at the last row rather than overshooting', () => {
+    const { result } = renderCellNav(many)
+
+    for (let i = 0; i < 5; i++) press(result, 'PageDown')
+
+    expect(result.current.a11y.focusedCell).toEqual({ rowIndex: 29, columnIndex: 0 })
+  })
+})
+
+// ─── Selection from a focused cell ────────────────────────
+
+describe('useTableA11y — Enter and Space select the focused row in cell mode', () => {
+  function renderSelectable() {
+    return renderHook(() => {
+      const tableReturn = useTable({ data: users, columns, rowSelection: true, pagination: false })
+      const a11y = useTableA11y(tableReturn.table, {
+        cellNavigation: true,
+        selectionEnabled: true,
+      })
+      return { ...tableReturn, a11y }
+    })
+  }
+
+  it('Enter toggles the row the focused cell belongs to, not the first row', () => {
+    const { result } = renderSelectable()
+
+    press(result, 'ArrowDown')
+    press(result, 'ArrowRight')
+    press(result, 'Enter')
+
+    const rows = result.current.table.getRowModel().rows
+    expect(rows[1].getIsSelected()).toBe(true)
+    expect(rows[0].getIsSelected()).toBe(false)
+  })
+
+  it('Space toggles selection off again', () => {
+    const { result } = renderSelectable()
+
+    press(result, 'Enter')
+    expect(result.current.table.getRowModel().rows[0].getIsSelected()).toBe(true)
+
+    press(result, ' ')
+    expect(result.current.table.getRowModel().rows[0].getIsSelected()).toBe(false)
+  })
+
+  it('does nothing when selectionEnabled is not set', () => {
+    const { result } = renderCellNav()
+
+    press(result, 'Enter')
+
+    expect(result.current.table.getRowModel().rows[0].getIsSelected()).toBe(false)
+  })
+})
