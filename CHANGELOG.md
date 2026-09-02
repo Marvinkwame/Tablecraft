@@ -14,6 +14,8 @@ All notable changes to tablecraft are documented here.
 
 ### Added
 
+- **`useTableExport`** — export any table to CSV or JSON. Returns `toRows`, `toCSV`, and `toJSON` so the data can be uploaded, copied, or asserted on in tests, plus a `download()` helper for the common case. Respects the active filters, sort order, and column visibility; `rows: 'selected'` exports just the selected rows. Columns that render JSX export their underlying value, overridable per column via `meta.exportValue`. CSV output is RFC 4180 compliant, and `download('csv')` prepends a UTF-8 BOM so Excel reads accented characters correctly. No new dependency.
+
 - **`cellNavigation` option for `useTableA11y`, providing the 2D keyboard navigation that `role="grid"` advertises.** Off by default, so existing row-level behaviour is unchanged.
 
   ```tsx
@@ -27,14 +29,6 @@ All notable changes to tablecraft are documented here.
 - **`focusedCell`** on the `useTableA11y` return — `{ rowIndex, columnIndex }` when `cellNavigation` is on, otherwise `null`.
 
 - `getCellProps` accepts an optional second `rowId` argument. Calling it with one argument behaves exactly as before.
-
----
-
-## [3.1.0] — unreleased
-
-### Added
-
-- **`useTableExport`** — export any table to CSV or JSON. Returns `toRows`, `toCSV`, and `toJSON` so the data can be uploaded, copied, or asserted on in tests, plus a `download()` helper for the common case. Respects the active filters, sort order, and column visibility; `rows: 'selected'` exports just the selected rows. Columns that render JSX export their underlying value, overridable per column via `meta.exportValue`. CSV output is RFC 4180 compliant, and `download('csv')` prepends a UTF-8 BOM so Excel reads accented characters correctly. No new dependency.
 
 ---
 
