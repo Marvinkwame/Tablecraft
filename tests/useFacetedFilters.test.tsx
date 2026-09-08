@@ -276,4 +276,22 @@ describe('useFacetedFilters — range facets', () => {
 
     expect(result.current.facets.getRangeFacet('status').value).toBeUndefined()
   })
+
+  it('does not report a range for a numeric column configured for value lists', () => {
+    const listColumns = createColumns<Product>([
+      { accessorKey: 'name', header: 'Name' },
+      { accessorKey: 'price', header: 'Price', filterFn: facetedFilterFn },
+    ])
+    const { result } = renderHook(() => {
+      const tableReturn = useTable({ data: products, columns: listColumns, pagination: false })
+      return { ...tableReturn, facets: useFacetedFilters(tableReturn.table) }
+    })
+
+    // Two discrete numeric selections are not a range, even though both
+    // elements are numbers and the shape matches.
+    act(() => result.current.facets.getFacet('price').toggle(10))
+    act(() => result.current.facets.getFacet('price').toggle(60))
+
+    expect(result.current.facets.getRangeFacet('price').value).toBeUndefined()
+  })
 })
