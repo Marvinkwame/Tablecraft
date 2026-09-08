@@ -107,6 +107,19 @@ describe('useFacetedFilters — filterFn warnings', () => {
     expect(warn).toHaveBeenCalledTimes(1)
     expect(String(warn.mock.calls[0][0])).toContain('inNumberRange')
   })
+
+  it('warns when setting a range on a column declared with facetedFilterFn', () => {
+    const columns = createColumns<Row>([
+      { accessorKey: 'status', header: 'Status' },
+      { accessorKey: 'price', header: 'Price', filterFn: facetedFilterFn },
+    ])
+    const { result } = renderWith(columns)
+
+    act(() => result.current.facets.getRangeFacet('price').setRange([10, 50]))
+
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('inNumberRange')
+  })
 })
 
 describe('useFacetedFilters — structural warnings', () => {

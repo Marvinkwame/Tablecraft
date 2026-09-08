@@ -6,6 +6,7 @@ import {
   toggleValue,
   needsArrayFilterFn,
   needsRangeFilterFn,
+  isRangeFilterFn,
   facetedFilterFn,
 } from '../src/utils/facets'
 
@@ -150,6 +151,28 @@ describe('needsRangeFilterFn', () => {
 
   it('never warns for a custom function', () => {
     expect(needsRangeFilterFn(() => true)).toBe(false)
+  })
+})
+
+describe('isRangeFilterFn', () => {
+  it('is true for inNumberRange', () => {
+    expect(isRangeFilterFn('inNumberRange')).toBe(true)
+  })
+
+  it('is false for facetedFilterFn', () => {
+    expect(isRangeFilterFn(facetedFilterFn)).toBe(false)
+  })
+
+  it('is true for another custom function', () => {
+    expect(isRangeFilterFn(() => true)).toBe(true)
+  })
+
+  it('is false for undefined', () => {
+    expect(isRangeFilterFn(undefined)).toBe(false)
+  })
+
+  it('is false for arrIncludesSome', () => {
+    expect(isRangeFilterFn('arrIncludesSome')).toBe(false)
   })
 })
 

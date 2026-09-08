@@ -5,9 +5,8 @@ import type { RowData, Table } from '@tanstack/react-table'
 import type { ColumnFacet, FacetedFiltersReturn, RangeFacet } from '../types'
 import {
   buildFacetOptions,
-  facetedFilterFn,
+  isRangeFilterFn,
   needsArrayFilterFn,
-  needsRangeFilterFn,
   normalizeSelected,
   toggleValue,
 } from '../utils/facets'
@@ -149,15 +148,11 @@ export function useFacetedFilters<TData extends RowData>(
     // so without both checks a categorical selection of two numbers would be
     // reported here as an applied range.
     //
-    // needsRangeFilterFn alone is not enough: it returns false for ANY
-    // function, so it would classify facetedFilterFn as a range handler.
-    // Identity against our own exported fn is the discriminator. A caller's
+    // isRangeFilterFn is the single source of truth for this: a caller's
     // bespoke value-list filterFn is still indistinguishable from a bespoke
     // range one — a documented limitation, not solvable without provenance on
     // the filter value itself.
-    const filterFn = column.columnDef.filterFn
-    const isRangeColumn =
-      filterFn !== facetedFilterFn && !needsRangeFilterFn(filterFn)
+    const isRangeColumn = isRangeFilterFn(column.columnDef.filterFn)
     const value =
       isRangeColumn &&
       Array.isArray(current) &&
@@ -172,7 +167,7 @@ export function useFacetedFilters<TData extends RowData>(
       max: bounds?.[1],
       value,
       setRange: (range) => {
-        if (needsRangeFilterFn(column.columnDef.filterFn)) {
+        if (!isRangeFilterFn(column.columnDef.filterFn)) {
           warnOnce(
             `rangeFn:${columnId}`,
             `useFacetedFilters: column "${columnId}" writes a [min, max] range, ` +

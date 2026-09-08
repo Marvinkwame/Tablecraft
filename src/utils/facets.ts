@@ -83,6 +83,18 @@ export function needsRangeFilterFn(filterFn: unknown): boolean {
 }
 
 /**
+ * True when `filterFn` is configured to receive a `[min, max]` range.
+ * `needsRangeFilterFn` alone is not enough — it returns false for ANY function,
+ * which would classify facetedFilterFn as a range handler. This is the single
+ * source of truth for "is this a range column"; both the read path (which
+ * decides whether to report a range) and the write path (which decides whether
+ * to warn) must use it, or they drift.
+ */
+export function isRangeFilterFn(filterFn: unknown): boolean {
+  return filterFn !== facetedFilterFn && !needsRangeFilterFn(filterFn)
+}
+
+/**
  * The `filterFn` a faceted column must declare. `getFacet` writes an array of
  * selected values to `columnFilters`, and this checks the cell value for
  * membership in that array by equality.
