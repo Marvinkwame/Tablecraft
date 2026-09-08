@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react'
 import { useTable } from '../src/hooks/useTable'
 import { useFacetedFilters } from '../src/hooks/useFacetedFilters'
 import { createColumns } from '../src/helpers/createColumns'
+import { facetedFilterFn } from '../src/utils/facets'
 
 type Product = {
   id: number
@@ -23,8 +24,8 @@ const products: Product[] = [
 
 const productColumns = createColumns<Product>([
   { accessorKey: 'name', header: 'Name' },
-  { accessorKey: 'status', header: 'Status', filterFn: 'arrIncludesSome' },
-  { accessorKey: 'category', header: 'Category', filterFn: 'arrIncludesSome' },
+  { accessorKey: 'status', header: 'Status', filterFn: facetedFilterFn },
+  { accessorKey: 'category', header: 'Category', filterFn: facetedFilterFn },
   { accessorKey: 'price', header: 'Price', filterFn: 'inNumberRange' },
 ])
 

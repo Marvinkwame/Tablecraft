@@ -1,3 +1,4 @@
+import type { FilterFn } from '@tanstack/react-table'
 import type { FacetOption } from '../types'
 
 /**
@@ -80,3 +81,26 @@ export function needsRangeFilterFn(filterFn: unknown): boolean {
   if (typeof filterFn === 'function') return false
   return filterFn !== 'inNumberRange'
 }
+
+/**
+ * The `filterFn` a faceted column must declare. `getFacet` writes an array of
+ * selected values to `columnFilters`, and this checks the cell value for
+ * membership in that array by equality.
+ *
+ * TanStack's built-in `arrIncludesSome` looks similar but is not this:
+ *
+ * ```js
+ * const arrIncludesSome = (row, columnId, filterValue) =>
+ *   filterValue.some(val => row.getValue(columnId)?.includes(val))
+ * ```
+ *
+ * It calls `.includes()` on the *cell value*, so it is built for a column
+ * whose cell value is itself an array (a `tags` field), not for a scalar
+ * column being faceted against a list of selected values. Used on a scalar
+ * column it either throws (`row.getValue(columnId).includes` is not a
+ * function on a number) or substring-matches (a string's `.includes` matches
+ * `'Admin'` inside `'Super Admin'`). Do not swap this back for
+ * `arrIncludesSome` — that is the exact bug this function exists to fix.
+ */
+export const facetedFilterFn: FilterFn<any> = (row, columnId, filterValue) =>
+  Array.isArray(filterValue) && filterValue.includes(row.getValue(columnId))

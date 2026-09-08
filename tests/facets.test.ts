@@ -6,6 +6,7 @@ import {
   toggleValue,
   needsArrayFilterFn,
   needsRangeFilterFn,
+  facetedFilterFn,
 } from '../src/utils/facets'
 
 describe('buildFacetOptions', () => {
@@ -149,5 +150,34 @@ describe('needsRangeFilterFn', () => {
 
   it('never warns for a custom function', () => {
     expect(needsRangeFilterFn(() => true)).toBe(false)
+  })
+})
+
+describe('facetedFilterFn', () => {
+  const row = (value: unknown) => ({ getValue: () => value }) as any
+  // The FilterFn call signature requires an addMeta callback as its 4th
+  // argument; facetedFilterFn never calls it, so a no-op stands in.
+  const addMeta = () => {}
+
+  it('matches a value present in the selection', () => {
+    expect(facetedFilterFn(row('Active'), 'status', ['Active', 'Pending'], addMeta)).toBe(true)
+  })
+
+  it('does not match a value absent from the selection', () => {
+    expect(facetedFilterFn(row('Archived'), 'status', ['Active', 'Pending'], addMeta)).toBe(false)
+  })
+
+  it('does not substring-match — the bug arrIncludesSome had', () => {
+    expect(facetedFilterFn(row('Super Admin'), 'role', ['Admin'], addMeta)).toBe(false)
+  })
+
+  it('matches numeric cell values — the case arrIncludesSome throws on', () => {
+    expect(facetedFilterFn(row(30), 'price', [10, 20, 30], addMeta)).toBe(true)
+    expect(facetedFilterFn(row(40), 'price', [10, 20, 30], addMeta)).toBe(false)
+  })
+
+  it('returns false for a non-array filter value, without throwing', () => {
+    expect(() => facetedFilterFn(row('Active'), 'status', 'Active', addMeta)).not.toThrow()
+    expect(facetedFilterFn(row('Active'), 'status', 'Active', addMeta)).toBe(false)
   })
 })
