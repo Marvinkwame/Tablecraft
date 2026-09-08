@@ -1,0 +1,140 @@
+---
+title: useFacetedFilters
+description: Per-column facet options with row counts, selection handlers, and numeric range bounds.
+---
+
+Builds the data behind a faceted filter UI — the "Status: Active (24),
+Archived (7)" checkbox list — from the table itself, so the option list never
+drifts from the data.
+
+Works with any table from `useTable`; the required row models are wired in
+automatically.
+
+## Signature
+
+```ts
+function useFacetedFilters<TData extends RowData>(
+  table: Table<TData>
+): FacetedFiltersReturn
+```
+
+## Return
+
+| Property | Type | Description |
+|---|---|---|
+| `getFacet` | `(columnId: string) => ColumnFacet` | Categorical facet: distinct values with counts, plus selection handlers |
+| `getRangeFacet` | `(columnId: string) => RangeFacet` | Numeric facet: true min/max bounds, plus a range setter |
+
+### `ColumnFacet`
+
+| Property | Type | Description |
+|---|---|---|
+| `options` | `{ value, count, selected }[]` | Distinct values, sorted count-descending |
+| `selected` | `unknown[]` | Currently selected values |
+| `toggle` | `(value: unknown) => void` | Adds or removes a value |
+| `isSelected` | `(value: unknown) => boolean` | Whether a value is selected |
+| `clear` | `() => void` | Removes the column's filter |
+
+### `RangeFacet`
+
+| Property | Type | Description |
+|---|---|---|
+| `min` / `max` | `number \| undefined` | Column bounds, ignoring this column's own filter |
+| `value` | `[number, number] \| undefined` | Currently applied range |
+| `setRange` | `(range: [number, number] \| undefined) => void` | Applies a range; `undefined` clears |
+| `clear` | `() => void` | Removes the column's filter |
+
+## Required column setup
+
+Faceted columns must declare a filter function matching the value shape the
+hook writes. Without it, filtering silently returns wrong rows — the hook warns
+in development.
+
+```ts
+const columns = createColumns<Product>([
+  { accessorKey: 'status', header: 'Status', filterFn: facetedFilterFn },
+  { accessorKey: 'price',  header: 'Price',  filterFn: 'inNumberRange' },
+])
+```
+
+## Usage
+
+```tsx
+import { useTable, useFacetedFilters } from '@marvinackerman/tablecraft'
+
+const { table } = useTable({ data, columns })
+const { getFacet, getRangeFacet } = useFacetedFilters(table)
+
+const status = getFacet('status')
+
+return (
+  <fieldset>
+    <legend>Status</legend>
+    {status.options.map(({ value, count, selected }) => (
+      <label key={String(value)}>
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={() => status.toggle(value)}
+        />
+        {String(value)} ({count})
+      </label>
+    ))}
+    {status.selected.length > 0 && (
+      <button onClick={status.clear}>Clear</button>
+    )}
+  </fieldset>
+)
+```
+
+Range facets bound a slider with the column's real values:
+
+```tsx
+const price = getRangeFacet('price')
+
+<input
+  type="range"
+  min={price.min ?? 0}
+  max={price.max ?? 100}
+  onChange={(e) => price.setRange([price.min ?? 0, Number(e.target.value)])}
+/>
+```
+
+## Counts ignore the column's own filter
+
+This is the behaviour that makes multi-select usable. When "Active" is checked,
+the count beside "Archived" still reports how many rows you would gain by also
+checking it — rather than 0, which would make every other option unclickable.
+
+A useful side effect: clicking a value never reorders that facet's own option
+list, because its counts cannot change. Only filters on *other* columns
+reorder it.
+
+## Limitations
+
+**Server-side tables.** `useServerTable` and `useQueryTable` hold one page, not
+the dataset, so counts computed from them would describe the current page —
+plausible and wrong. On a `manualPagination` table the facets are empty and the
+hook warns. Compute facets server-side and render them yourself if you need
+them there.
+
+**Array-valued columns.** Counts come from `row.getUniqueValues()`, which by
+default returns the cell value as a single entry — so a `tags: string[]` column
+yields one option per distinct *array* rather than one per tag. Set a
+`getUniqueValues` option on the column def to split them:
+
+```ts
+{ accessorKey: 'tags', header: 'Tags', filterFn: 'arrIncludesSome',
+  getUniqueValues: (row) => row.tags }
+```
+
+(`arrIncludesSome` *is* correct here — an array-valued cell is exactly what it
+was designed for. It is only wrong on the scalar columns faceting normally
+targets.)
+
+```ts
+```
+
+**Empty values are dropped.** `null`, `undefined` and `''` never appear as
+options — a checkbox labelled "" is not useful. Those rows are still counted in
+the row model; they are simply not offered as a choice.

@@ -11,6 +11,7 @@
     "use-virtual-rows",
     "use-table-a11y",
     "use-table-export",
+    "use-faceted-filters",
     "columns",
     "provider",
     "persistence-url",
