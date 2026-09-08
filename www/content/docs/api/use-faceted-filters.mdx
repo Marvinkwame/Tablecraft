@@ -51,16 +51,24 @@ hook writes. Without it, filtering silently returns wrong rows — the hook warn
 in development.
 
 ```ts
+import { createColumns, facetedFilterFn } from '@marvinackerman/tablecraft'
+
 const columns = createColumns<Product>([
   { accessorKey: 'status', header: 'Status', filterFn: facetedFilterFn },
   { accessorKey: 'price',  header: 'Price',  filterFn: 'inNumberRange' },
 ])
 ```
 
+`facetedFilterFn` is a root-entry export — the filter function categorical
+facet columns must declare. It checks the cell value for membership in the
+array of selected values that `toggle` writes; TanStack's built-in
+`arrIncludesSome` looks similar but is built for array-valued cells, not for
+faceting a scalar column, so it is not a substitute.
+
 ## Usage
 
 ```tsx
-import { useTable, useFacetedFilters } from '@marvinackerman/tablecraft'
+import { useTable, useFacetedFilters, facetedFilterFn } from '@marvinackerman/tablecraft'
 
 const { table } = useTable({ data, columns })
 const { getFacet, getRangeFacet } = useFacetedFilters(table)
@@ -135,3 +143,15 @@ targets.)
 **Empty values are dropped.** `null`, `undefined` and `''` never appear as
 options — a checkbox labelled "" is not useful. Those rows are still counted in
 the row model; they are simply not offered as a choice.
+
+**Facet values must be JSON-round-trippable primitives.** Selections work with
+URL sync and persistence, but only for values that survive a JSON round trip.
+Strings, numbers and booleans come back unchanged; a `Date` does not — URL
+persistence JSON-encodes the filter array, and `JSON.parse` hands back the ISO
+string rather than a `Date` instance, so `facetedFilterFn`'s equality check
+will never match it again. Facet a derived string field instead of a `Date`
+value if you need URL sync or persistence.
+
+**`useTable({ columnFilters: false })` makes facets inert.** With column
+filters disabled, `getFilteredRowModel` is not available, so `toggle` writes
+filter state that never actually filters any rows — silently, with no warning.
