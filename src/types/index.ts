@@ -470,3 +470,14 @@ export interface TableExportReturn {
   toJSON: (overrides?: UseTableExportOptions) => string
   download: (format: 'csv' | 'json', filename?: string, overrides?: DownloadOptions) => void
 }
+
+// ─── Faceted Filters ─────────────────────────────────────
+
+export interface FacetOption {
+  /** The distinct cell value for this option. */
+  value: unknown
+  /** Number of rows with this value, ignoring this column's own filter. */
+  count: number
+  /** Whether this value is currently part of the column's filter. */
+  selected: boolean
+}
