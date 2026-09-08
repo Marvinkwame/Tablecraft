@@ -1,7 +1,7 @@
 'use client'
 
 import type { RowData, Table } from '@tanstack/react-table'
-import type { ColumnFacet, FacetedFiltersReturn } from '../types'
+import type { ColumnFacet, FacetedFiltersReturn, RangeFacet } from '../types'
 import {
   buildFacetOptions,
   normalizeSelected,
@@ -30,6 +30,17 @@ function emptyFacet(): ColumnFacet {
     selected: [],
     toggle: () => {},
     isSelected: () => false,
+    clear: () => {},
+  }
+}
+
+/** A range facet with no bounds and inert handlers. */
+function emptyRangeFacet(): RangeFacet {
+  return {
+    min: undefined,
+    max: undefined,
+    value: undefined,
+    setRange: () => {},
     clear: () => {},
   }
 }
@@ -70,5 +81,26 @@ export function useFacetedFilters<TData extends RowData>(
     }
   }
 
-  return { getFacet }
+  const getRangeFacet = (columnId: string): RangeFacet => {
+    const column = findColumn(table, columnId)
+    if (!column || isServerTable) return emptyRangeFacet()
+
+    // undefined when the column holds no numeric values.
+    const bounds = column.getFacetedMinMaxValues()
+    const current = column.getFilterValue()
+    const value =
+      Array.isArray(current) && current.length === 2
+        ? ([current[0], current[1]] as [number, number])
+        : undefined
+
+    return {
+      min: bounds?.[0],
+      max: bounds?.[1],
+      value,
+      setRange: (range) => column.setFilterValue(range ?? undefined),
+      clear: () => column.setFilterValue(undefined),
+    }
+  }
+
+  return { getFacet, getRangeFacet }
 }

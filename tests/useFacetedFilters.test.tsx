@@ -187,3 +187,82 @@ describe('useFacetedFilters — server tables', () => {
     expect(result.current.facets.getFacet('status').options).toEqual([])
   })
 })
+
+describe('useFacetedFilters — range facets', () => {
+  it('reports the true min and max of the column', () => {
+    const { result } = renderFacets()
+    const price = result.current.facets.getRangeFacet('price')
+
+    expect([price.min, price.max]).toEqual([10, 60])
+  })
+
+  it('reports no applied range initially', () => {
+    const { result } = renderFacets()
+    expect(result.current.facets.getRangeFacet('price').value).toBeUndefined()
+  })
+
+  it('setRange applies the range and narrows the table', () => {
+    const { result } = renderFacets()
+
+    act(() => result.current.facets.getRangeFacet('price').setRange([20, 40]))
+
+    expect(result.current.facets.getRangeFacet('price').value).toEqual([20, 40])
+    expect(
+      result.current.table.getRowModel().rows.map((r) => r.original.price)
+    ).toEqual([20, 30, 40])
+  })
+
+  it('setRange(undefined) removes the filter entry', () => {
+    const { result } = renderFacets()
+
+    act(() => result.current.facets.getRangeFacet('price').setRange([20, 40]))
+    act(() => result.current.facets.getRangeFacet('price').setRange(undefined))
+
+    expect(result.current.table.getState().columnFilters).toEqual([])
+    expect(result.current.table.getRowModel().rows).toHaveLength(6)
+  })
+
+  it('clear removes the filter entry', () => {
+    const { result } = renderFacets()
+
+    act(() => result.current.facets.getRangeFacet('price').setRange([20, 40]))
+    act(() => result.current.facets.getRangeFacet('price').clear())
+
+    expect(result.current.table.getState().columnFilters).toEqual([])
+  })
+
+  it('min and max ignore the column own range filter', () => {
+    const { result } = renderFacets()
+
+    act(() => result.current.facets.getRangeFacet('price').setRange([20, 40]))
+
+    // Bounds must stay stable or a slider would collapse onto its own selection.
+    const price = result.current.facets.getRangeFacet('price')
+    expect([price.min, price.max]).toEqual([10, 60])
+  })
+
+  it('returns undefined bounds for a non-numeric column', () => {
+    const { result } = renderFacets()
+    const status = result.current.facets.getRangeFacet('status')
+
+    expect([status.min, status.max]).toEqual([undefined, undefined])
+  })
+
+  it('getFacet on a numeric column yields one option per distinct number', () => {
+    const { result } = renderFacets()
+
+    // The two accessors are independent; mismatching them is inert, not an error.
+    expect(
+      result.current.facets.getFacet('price').options.map((o) => o.value)
+    ).toEqual([10, 20, 30, 40, 50, 60])
+  })
+
+  it('returns undefined bounds for an unknown column and does not throw', () => {
+    const { result } = renderFacets()
+    const facet = result.current.facets.getRangeFacet('nope')
+
+    expect([facet.min, facet.max]).toEqual([undefined, undefined])
+    act(() => facet.setRange([1, 2]))
+    expect(result.current.table.getState().columnFilters).toEqual([])
+  })
+})

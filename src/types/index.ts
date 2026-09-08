@@ -494,6 +494,19 @@ export interface ColumnFacet {
   clear: () => void
 }
 
+export interface RangeFacet {
+  /** Lowest value in the column, or undefined when there are no numeric values. */
+  min: number | undefined
+  /** Highest value in the column, or undefined when there are no numeric values. */
+  max: number | undefined
+  /** The currently applied range, if any. */
+  value: [number, number] | undefined
+  /** Applies a range, or removes the filter when passed undefined. */
+  setRange: (range: [number, number] | undefined) => void
+  clear: () => void
+}
+
 export interface FacetedFiltersReturn {
   getFacet: (columnId: string) => ColumnFacet
+  getRangeFacet: (columnId: string) => RangeFacet
 }
