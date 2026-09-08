@@ -46,6 +46,21 @@ describe('useFacetedFilters — options', () => {
     ).toEqual([['Active', 3], ['Archived', 2], ['Pending', 1]])
   })
 
+  it('reports full-dataset counts even when the table is paginated', () => {
+    const { result } = renderHook(() => {
+      const tableReturn = useTable({
+        data: products,
+        columns: productColumns,
+        pagination: { pageSize: 2 },
+      })
+      return { ...tableReturn, facets: useFacetedFilters(tableReturn.table) }
+    })
+
+    expect(
+      result.current.facets.getFacet('status').options.map((o) => [o.value, o.count])
+    ).toEqual([['Active', 3], ['Archived', 2], ['Pending', 1]])
+  })
+
   it('reports nothing selected initially', () => {
     const { result } = renderFacets()
     const facet = result.current.facets.getFacet('status')
