@@ -9,6 +9,17 @@ import {
 } from '../utils/facets'
 
 /**
+ * Looks up a leaf column without provoking TanStack's own existence check.
+ * `table.getColumn(id)` console.errors for an unknown id whenever
+ * NODE_ENV !== 'production', which would fire on every render for a consumer
+ * whose facet config carries a stale column id. Only leaf columns hold values,
+ * so they are the only ones that can be faceted.
+ */
+function findColumn<TData extends RowData>(table: Table<TData>, columnId: string) {
+  return table.getAllLeafColumns().find((c) => c.id === columnId)
+}
+
+/**
  * A facet with nothing in it and inert handlers. Returned for an unknown column
  * id and for server-backed tables. Built fresh each time so a consumer mutating
  * `options` cannot corrupt a shared constant.
@@ -37,7 +48,7 @@ export function useFacetedFilters<TData extends RowData>(
   // have to include columnFilters and would therefore change on every filter
   // change anyway, buying no referential stability.
   const getFacet = (columnId: string): ColumnFacet => {
-    const column = table.getColumn(columnId)
+    const column = findColumn(table, columnId)
     if (!column || isServerTable) return emptyFacet()
 
     const selected = normalizeSelected(column.getFilterValue())
