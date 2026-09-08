@@ -88,8 +88,15 @@ export function useFacetedFilters<TData extends RowData>(
     // undefined when the column holds no numeric values.
     const bounds = column.getFacetedMinMaxValues()
     const current = column.getFilterValue()
+    // Guard the element types, not just the shape. columnFilters is shared
+    // per-column state and getFacet writes an array of selected values to it,
+    // so a categorical facet with exactly two values selected would otherwise
+    // be reported here as a numeric range.
     const value =
-      Array.isArray(current) && current.length === 2
+      Array.isArray(current) &&
+      current.length === 2 &&
+      typeof current[0] === 'number' &&
+      typeof current[1] === 'number'
         ? ([current[0], current[1]] as [number, number])
         : undefined
 

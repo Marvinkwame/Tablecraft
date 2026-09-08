@@ -265,4 +265,14 @@ describe('useFacetedFilters — range facets', () => {
     act(() => facet.setRange([1, 2]))
     expect(result.current.table.getState().columnFilters).toEqual([])
   })
+
+  it('ignores a two-element non-numeric filter rather than reporting it as a range', () => {
+    const { result } = renderFacets()
+
+    // Two selected string values leave a 2-element array on the column.
+    act(() => result.current.facets.getFacet('status').toggle('Active'))
+    act(() => result.current.facets.getFacet('status').toggle('Pending'))
+
+    expect(result.current.facets.getRangeFacet('status').value).toBeUndefined()
+  })
 })
