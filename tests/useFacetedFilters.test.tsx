@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import type { MockInstance } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useTable } from '../src/hooks/useTable'
 import { useFacetedFilters } from '../src/hooks/useFacetedFilters'
@@ -153,6 +154,16 @@ describe('useFacetedFilters — the faceted row model', () => {
 })
 
 describe('useFacetedFilters — unknown column', () => {
+  let warn: MockInstance<Parameters<typeof console.warn>, void>
+
+  beforeEach(() => {
+    warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    warn.mockRestore()
+  })
+
   it('returns an empty facet rather than throwing', () => {
     const { result } = renderFacets()
     const facet = result.current.facets.getFacet('nope')
@@ -160,6 +171,8 @@ describe('useFacetedFilters — unknown column', () => {
     expect(facet.options).toEqual([])
     expect(facet.selected).toEqual([])
     expect(facet.isSelected('anything')).toBe(false)
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('nope')
   })
 
   it('has no-op handlers that do not touch the filters', () => {
@@ -173,6 +186,16 @@ describe('useFacetedFilters — unknown column', () => {
 })
 
 describe('useFacetedFilters — server tables', () => {
+  let warn: MockInstance<Parameters<typeof console.warn>, void>
+
+  beforeEach(() => {
+    warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    warn.mockRestore()
+  })
+
   it('returns empty facets when the table holds one page', () => {
     const { result } = renderHook(() => {
       const tableReturn = useTable({
@@ -186,10 +209,22 @@ describe('useFacetedFilters — server tables', () => {
 
     // Page-scoped counts would look plausible and be wrong, so return nothing.
     expect(result.current.facets.getFacet('status').options).toEqual([])
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('full dataset')
   })
 })
 
 describe('useFacetedFilters — range facets', () => {
+  let warn: MockInstance<Parameters<typeof console.warn>, void>
+
+  beforeEach(() => {
+    warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    warn.mockRestore()
+  })
+
   it('reports the true min and max of the column', () => {
     const { result } = renderFacets()
     const price = result.current.facets.getRangeFacet('price')
@@ -265,6 +300,8 @@ describe('useFacetedFilters — range facets', () => {
     expect([facet.min, facet.max]).toEqual([undefined, undefined])
     act(() => facet.setRange([1, 2]))
     expect(result.current.table.getState().columnFilters).toEqual([])
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('nope')
   })
 
   it('ignores a two-element non-numeric filter rather than reporting it as a range', () => {
