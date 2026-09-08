@@ -85,6 +85,13 @@ describe('normalizeSelected', () => {
   it('wraps a falsy-but-real scalar', () => {
     expect(normalizeSelected(0)).toEqual([0])
   })
+
+  it('returns a copy, not the same array reference, for an array filter', () => {
+    const filterValue = ['a', 'b']
+    const selected = normalizeSelected(filterValue)
+    expect(selected).not.toBe(filterValue)
+    expect(selected).toEqual(filterValue)
+  })
 })
 
 describe('toggleValue', () => {

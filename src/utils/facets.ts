@@ -59,7 +59,7 @@ export function buildFacetOptions(
  */
 export function normalizeSelected(filterValue: unknown): unknown[] {
   if (filterValue === undefined || filterValue === null) return []
-  return Array.isArray(filterValue) ? filterValue : [filterValue]
+  return Array.isArray(filterValue) ? [...filterValue] : [filterValue]
 }
 
 /** Adds or removes a value, returning a new array. */
