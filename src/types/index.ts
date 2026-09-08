@@ -481,3 +481,19 @@ export interface FacetOption {
   /** Whether this value is currently part of the column's filter. */
   selected: boolean
 }
+
+export interface ColumnFacet {
+  /** Distinct values with counts, sorted count-descending. */
+  options: FacetOption[]
+  /** Currently selected values, read from the column's filter. */
+  selected: unknown[]
+  /** Adds or removes a value from the column's filter. */
+  toggle: (value: unknown) => void
+  isSelected: (value: unknown) => boolean
+  /** Removes the column's filter entirely. */
+  clear: () => void
+}
+
+export interface FacetedFiltersReturn {
+  getFacet: (columnId: string) => ColumnFacet
+}
