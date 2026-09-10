@@ -1,4 +1,5 @@
 import { Hero } from './Hero'
+import { TABLECRAFT_VERSION } from './version'
 import { WhySection } from './sections/WhySection'
 import { CoreSection } from './sections/CoreSection'
 import { EditingSection } from './sections/EditingSection'
@@ -17,7 +18,9 @@ export default function App() {
             tablecraft<span className="text-accent">.</span>
           </span>
           <div className="flex items-center gap-4 text-sm">
-            <span className="hidden font-mono text-xs text-faint sm:inline">v2.5.0 · MIT</span>
+            <span className="hidden font-mono text-xs text-faint sm:inline">
+              v{TABLECRAFT_VERSION} · MIT
+            </span>
             <a
               className="text-muted transition-colors hover:text-ink"
               href="https://github.com/Marvinkwame/Tablecraft"

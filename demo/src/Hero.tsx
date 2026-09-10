@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { buttonClasses } from './ui/Button'
+import { TABLECRAFT_VERSION } from './version'
 
 const INSTALL = 'npm i @marvinackerman/tablecraft @tanstack/react-table'
 
@@ -30,7 +31,7 @@ export function Hero() {
         >
           <span className="size-1.5 rounded-full bg-emerald-400" />
           @marvinackerman/tablecraft
-          <span className="text-faint">v2.5.0</span>
+          <span className="text-faint">v{TABLECRAFT_VERSION}</span>
         </p>
 
         <h1
