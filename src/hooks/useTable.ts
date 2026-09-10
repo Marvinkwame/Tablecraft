@@ -12,6 +12,9 @@ import {
   getFilteredRowModel,
   getExpandedRowModel,
   getGroupedRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFacetedMinMaxValues,
 } from '@tanstack/react-table'
 import type { FilterFn, RowData } from '@tanstack/react-table'
 
@@ -255,6 +258,14 @@ export function useTable<TData extends RowData>(
     getFilteredRowModel:
       globalFilterEnabled || columnFiltersEnabled ? getFilteredRowModel() : undefined,
     globalFilterFn: fuzzyFilterFn ?? 'includesString',
+
+    // Faceting — unconditional. TanStack creates one memoized closure per
+    // column but only computes on access, so this costs nothing until a facet
+    // is read. Making it opt-in would mean useFacetedFilters silently returns
+    // empty facets whenever the flag is forgotten.
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
 
     // Row selection
     ...(rowSelectionEnabled && {

@@ -470,3 +470,43 @@ export interface TableExportReturn {
   toJSON: (overrides?: UseTableExportOptions) => string
   download: (format: 'csv' | 'json', filename?: string, overrides?: DownloadOptions) => void
 }
+
+// ─── Faceted Filters ─────────────────────────────────────
+
+export interface FacetOption {
+  /** The distinct cell value for this option. */
+  value: unknown
+  /** Number of rows with this value, ignoring this column's own filter. */
+  count: number
+  /** Whether this value is currently part of the column's filter. */
+  selected: boolean
+}
+
+export interface ColumnFacet {
+  /** Distinct values with counts, sorted count-descending. */
+  options: FacetOption[]
+  /** Currently selected values, read from the column's filter. */
+  selected: unknown[]
+  /** Adds or removes a value from the column's filter. */
+  toggle: (value: unknown) => void
+  isSelected: (value: unknown) => boolean
+  /** Removes the column's filter entirely. */
+  clear: () => void
+}
+
+export interface RangeFacet {
+  /** Lowest value in the column, or undefined when there are no numeric values. */
+  min: number | undefined
+  /** Highest value in the column, or undefined when there are no numeric values. */
+  max: number | undefined
+  /** The currently applied range, if any. */
+  value: [number, number] | undefined
+  /** Applies a range, or removes the filter when passed undefined. */
+  setRange: (range: [number, number] | undefined) => void
+  clear: () => void
+}
+
+export interface FacetedFiltersReturn {
+  getFacet: (columnId: string) => ColumnFacet
+  getRangeFacet: (columnId: string) => RangeFacet
+}

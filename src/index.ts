@@ -22,6 +22,7 @@ export { useMultiRowEditing } from './hooks/useMultiRowEditing'
 export { useInfiniteScroll } from './hooks/useInfiniteScroll'
 export type { UseInfiniteScrollOptions } from './hooks/useInfiniteScroll'
 export { useTableExport } from './hooks/useTableExport'
+export { useFacetedFilters } from './hooks/useFacetedFilters'
 
 // Context
 export { TableKitProvider, useTableKitDefaults } from './context/TableKitContext'
@@ -34,6 +35,7 @@ export { inferColumns } from './helpers/inferColumns'
 // Utilities
 export { loadPersistedState, savePersistedState, clearPersistedState } from './utils/persist'
 export { parseURLState, writeURLState, resolveURLKeys } from './utils/url'
+export { facetedFilterFn } from './utils/facets'
 
 // Types
 export type {
@@ -66,6 +68,10 @@ export type {
   UseTableExportOptions,
   DownloadOptions,
   TableExportReturn,
+  FacetOption,
+  ColumnFacet,
+  RangeFacet,
+  FacetedFiltersReturn,
 } from './types'
 
 export type { InferColumnsOptions } from './helpers/inferColumns'

@@ -4,6 +4,16 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **`useFacetedFilters`** — builds the data behind a faceted filter UI. `getFacet(columnId)` returns each distinct value in a column with its row count, whether it is selected, and `toggle`/`isSelected`/`clear` handlers; `getRangeFacet(columnId)` returns the column's true `min`/`max` plus a `setRange` setter for numeric sliders. Counts come from TanStack's faceted row model, which excludes the column's own filter, so checking one value leaves the other counts meaningful instead of collapsing them to zero. Selections are written straight to `columnFilters`, so URL sync and persistence keep working. `useTable` now wires the three faceted row models unconditionally; they compute only on access. No new dependency.
+
+  Faceted columns need a matching `filterFn` — the exported `facetedFilterFn` for value lists, `'inNumberRange'` for ranges — and the hook warns in development when one is missing. Facets are unavailable on `manualPagination` tables, which hold a page rather than the dataset.
+
+---
+
 ## [3.1.0] — 2026-09-02
 
 ### Fixed
