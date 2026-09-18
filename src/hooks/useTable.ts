@@ -235,7 +235,11 @@ export function useTable<TData extends RowData>(
 
     // Pagination
     onPaginationChange: externalOnPaginationChange ?? paginationState.onPaginationChange,
-    manualPagination,
+    // `pagination: false` used to omit the row model entirely. v9 has no
+    // enablePagination, and the factory is always registered in
+    // tablecraftFeatures, so the only way to express "off" is manualPagination
+    // — which short-circuits the registered factory and renders every row.
+    manualPagination: manualPagination || !paginationEnabled,
     rowCount,
 
     // Sorting
@@ -245,6 +249,11 @@ export function useTable<TData extends RowData>(
     // Filters
     onGlobalFilterChange: externalOnGlobalFilterChange ?? filterState.onGlobalFilterChange,
     onColumnFiltersChange: externalOnColumnFiltersChange ?? columnFilterState.onColumnFiltersChange,
+    // Likewise for filtering: v8 omitted the filtered row model when neither
+    // filter feature was enabled. enableFilters/enableColumnFilters do NOT do
+    // this — they gate whether a column can be filtered, not whether existing
+    // filter state is applied. Verified by probe.
+    manualFiltering: !(globalFilterEnabled || columnFiltersEnabled),
     globalFilterFn: fuzzyFilterFn ?? 'includesString',
 
     // Faceting, row models and every other factory now live in
