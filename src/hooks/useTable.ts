@@ -4,18 +4,10 @@
 declare const require: (id: string) => any
 
 import { useMemo, useEffect, useRef } from 'react'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  getExpandedRowModel,
-  getGroupedRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFacetedMinMaxValues,
-} from '@tanstack/react-table'
+// v9's hook is also named `useTable`, which collides with tablecraft's own
+// export in this file. Aliasing keeps the call sites below unchanged.
+import { useTable as useReactTable } from '@tanstack/react-table'
+import { tablecraftFeatures } from '../features'
 import type { FilterFn, RowData } from '@tanstack/react-table'
 
 import type {
@@ -226,6 +218,7 @@ export function useTable<TData extends RowData>(
 
   // ─── Build table ─────────────────────────────────────────
   const table = useReactTable({
+    features: tablecraftFeatures,
     data,
     columns,
     state: {
@@ -244,28 +237,20 @@ export function useTable<TData extends RowData>(
     onPaginationChange: externalOnPaginationChange ?? paginationState.onPaginationChange,
     manualPagination,
     rowCount,
-    getPaginationRowModel:
-      paginationEnabled && !manualPagination ? getPaginationRowModel() : undefined,
 
     // Sorting
     onSortingChange: externalOnSortingChange ?? sortState.onSortingChange,
     manualSorting,
-    getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
 
     // Filters
     onGlobalFilterChange: externalOnGlobalFilterChange ?? filterState.onGlobalFilterChange,
     onColumnFiltersChange: externalOnColumnFiltersChange ?? columnFilterState.onColumnFiltersChange,
-    getFilteredRowModel:
-      globalFilterEnabled || columnFiltersEnabled ? getFilteredRowModel() : undefined,
     globalFilterFn: fuzzyFilterFn ?? 'includesString',
 
-    // Faceting — unconditional. TanStack creates one memoized closure per
-    // column but only computes on access, so this costs nothing until a facet
-    // is read. Making it opt-in would mean useFacetedFilters silently returns
-    // empty facets whenever the flag is forgotten.
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    // Faceting, row models and every other factory now live in
+    // `tablecraftFeatures`. A registered factory is short-circuited by its
+    // matching `manual*` option, so the conditional wiring that used to live
+    // here is preserved by the flags below rather than lost.
 
     // Row selection
     ...(rowSelectionEnabled && {
@@ -281,7 +266,6 @@ export function useTable<TData extends RowData>(
     // Row expansion
     ...(rowExpansionEnabled && {
       onExpandedChange: rowExpansionState.onExpandedChange,
-      getExpandedRowModel: getExpandedRowModel(),
       paginateExpandedRows: rowExpansionConfig.paginateExpandedRows,
     }),
     ...(rowExpansionEnabled && rowExpansionConfig.getSubRows && {
@@ -291,7 +275,6 @@ export function useTable<TData extends RowData>(
     // Grouping
     ...(groupingEnabled && {
       onGroupingChange: groupingState.onGroupingChange,
-      getGroupedRowModel: getGroupedRowModel(),
       manualGrouping: groupingConfig.manualGrouping,
       groupedColumnMode: groupingConfig.groupedColumnMode,
     }),
@@ -300,8 +283,6 @@ export function useTable<TData extends RowData>(
     ...(columnPinningEnabled && {
       onColumnPinningChange: columnPinningState.setState,
     }),
-
-    getCoreRowModel: getCoreRowModel(),
   })
 
   // ─── Persistence: save state on change ───────────────────
