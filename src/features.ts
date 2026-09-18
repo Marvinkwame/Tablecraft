@@ -24,6 +24,7 @@ import {
   createFacetedMinMaxValues,
   filterFns,
   sortFns,
+  aggregationFns,
 } from '@tanstack/react-table'
 import type { RowData, Table } from '@tanstack/react-table'
 
@@ -40,8 +41,9 @@ import type { RowData, Table } from '@tanstack/react-table'
  * regression. Preset-bound entries (a `/core` with a smaller set) are the
  * escape hatch if anyone asks; they are additive and need not ship here.
  *
- * Defined at module scope deliberately: TanStack's migration guide requires
- * this object to be stable across renders.
+ * Defined at module scope deliberately: TanStack's migration guide calls for
+ * defining it statically outside render work, and a fresh object each render
+ * would rebuild the table's feature registry every time.
  */
 export const tablecraftFeatures = tableFeatures({
   // Features first, then their row-model slots — prerequisites before
@@ -76,6 +78,11 @@ export const tablecraftFeatures = tableFeatures({
   // narrowing this would break them silently.
   filterFns,
   sortFns,
+  // Pairs with rowAggregationFeature the same way filterFns pairs with
+  // columnFilteringFeature: without it, a column's aggregationFn: 'sum'
+  // would not resolve. tablecraft wraps grouping, and aggregation is what
+  // grouped columns use.
+  aggregationFns,
 })
 
 export type TablecraftFeatures = typeof tablecraftFeatures
