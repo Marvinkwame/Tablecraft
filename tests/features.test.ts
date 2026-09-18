@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { tablecraftFeatures } from '../src/features'
+import { filterFns, sortFns, aggregationFns } from '@tanstack/react-table'
 
 describe('tablecraftFeatures', () => {
   it('registers every feature tablecraft wraps', () => {
@@ -38,17 +39,17 @@ describe('tablecraftFeatures', () => {
     }
   })
 
-  it('registers the full filter and sort registries, not a subset', () => {
-    // A slot's keys are the only valid string names in column defs. A subset
-    // would silently break consumers using e.g. filterFn: 'equalsString'.
-    const filterFns = tablecraftFeatures.filterFns as Record<string, unknown>
-    const sortFns = tablecraftFeatures.sortFns as Record<string, unknown>
-
-    expect(Object.keys(filterFns)).toContain('includesString')
-    expect(Object.keys(filterFns)).toContain('equalsString')
-    expect(Object.keys(filterFns)).toContain('inNumberRange')
-    expect(Object.keys(filterFns)).toContain('arrIncludesSome')
-    expect(Object.keys(sortFns)).toContain('alphanumeric')
-    expect(Object.keys(sortFns)).toContain('datetime')
+  it('registers the FULL filter, sort and aggregation registries, not a subset', () => {
+    // A slot's keys are the only valid string names in a column definition,
+    // and tablecraft's consumers write their own columns. Under v8 every
+    // built-in name resolved, so narrowing these would silently break anyone
+    // using filterFn: 'equalsString' or sortingFn: 'datetime'.
+    //
+    // Identity assertions, deliberately: checking a handful of keys with
+    // toContain would pass against a hand-picked subset containing exactly
+    // those keys — which is the regression this test exists to catch.
+    expect(tablecraftFeatures.filterFns).toBe(filterFns)
+    expect(tablecraftFeatures.sortFns).toBe(sortFns)
+    expect(tablecraftFeatures.aggregationFns).toBe(aggregationFns)
   })
 })
