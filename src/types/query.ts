@@ -5,8 +5,8 @@ import type {
   GroupingState,
   RowData,
   SortingState,
-  Table,
 } from '@tanstack/react-table'
+import type { TablecraftFeatures, TablecraftTable } from '../features'
 import type {
   PaginationOptions,
   SortingOptions,
@@ -54,7 +54,7 @@ export interface UseQueryTableOptions<TData extends RowData> {
   queryFn: (context: QueryTableFnContext) => Promise<QueryTableResult<TData>>
 
   // Required — Table
-  columns: ColumnDef<TData, any>[]
+  columns: ColumnDef<TablecraftFeatures, TData, any>[]
 
   // Table options (optional)
   pagination?: PaginationOptions | boolean
@@ -71,7 +71,7 @@ export interface UseQueryTableOptions<TData extends RowData> {
    * In ESM-only environments (Vite, browsers), pass a `FilterFn` instead; it is used
    * directly as the global filter function.
    */
-  fuzzy?: boolean | FilterFn<TData>
+  fuzzy?: boolean | FilterFn<TablecraftFeatures, TData>
   persist?: PersistStorage | false
   persistKey?: string
   persistOptions?: PersistOptions
@@ -138,7 +138,7 @@ export interface UseInfiniteTableOptions<TData extends RowData, TCursor = unknow
   // Required
   queryKey: unknown[]
   queryFn: (context: InfiniteTableFnContext<TCursor>) => Promise<InfiniteTableResult<TData, TCursor>>
-  columns: ColumnDef<TData, any>[]
+  columns: ColumnDef<TablecraftFeatures, TData, any>[]
 
   // Infinite-specific
   initialPageParam?: TCursor          // infers TCursor automatically
@@ -161,7 +161,7 @@ export interface UseInfiniteTableOptions<TData extends RowData, TCursor = unknow
 // ─── useInfiniteTable Return ──────────────────────────────
 
 export interface UseInfiniteTableReturn<TData extends RowData> {
-  table: Table<TData>
+  table: TablecraftTable<TData>
 
   // State accessors
   sorting: SortingReturn

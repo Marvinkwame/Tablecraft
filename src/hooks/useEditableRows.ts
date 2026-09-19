@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import type { RowData, Table } from '@tanstack/react-table'
+import type { RowData } from '@tanstack/react-table'
 import type { EditableOptions, EditableReturn } from '../types'
+import type { TablecraftTable } from '../features'
 
 export function useEditableRows<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options: EditableOptions<TData> = {}
 ): EditableReturn<TData> {
   const { onSave } = options

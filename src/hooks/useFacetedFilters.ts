@@ -1,8 +1,9 @@
 'use client'
 
 import { useRef } from 'react'
-import type { RowData, Table } from '@tanstack/react-table'
+import type { RowData } from '@tanstack/react-table'
 import type { ColumnFacet, FacetedFiltersReturn, RangeFacet } from '../types'
+import type { TablecraftTable } from '../features'
 import {
   buildFacetOptions,
   isRangeFilterFn,
@@ -18,7 +19,7 @@ import {
  * whose facet config carries a stale column id. Only leaf columns hold values,
  * so they are the only ones that can be faceted.
  */
-function findColumn<TData extends RowData>(table: Table<TData>, columnId: string) {
+function findColumn<TData extends RowData>(table: TablecraftTable<TData>, columnId: string) {
   return table.getAllLeafColumns().find((c) => c.id === columnId)
 }
 
@@ -56,7 +57,7 @@ function emptyRangeFacet(): RangeFacet {
 }
 
 export function useFacetedFilters<TData extends RowData>(
-  table: Table<TData>
+  table: TablecraftTable<TData>
 ): FacetedFiltersReturn {
   // Facets need the whole dataset. A table with manualPagination holds one
   // page, so counts computed from it would describe the page rather than the

@@ -8,6 +8,7 @@ import { useMemo, useEffect, useRef } from 'react'
 // export elsewhere. Aliasing keeps the call site below unchanged.
 import { useTable as useReactTable } from '@tanstack/react-table'
 import { tablecraftFeatures } from '../features'
+import type { TablecraftFeatures } from '../features'
 import type { FilterFn, RowData } from '@tanstack/react-table'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 
@@ -256,7 +257,7 @@ export function useQueryTable<TData extends RowData>(
   const rowCount = query.data?.rowCount ?? 0
 
   // ─── Fuzzy filter ────────────────────────────────────────
-  const fuzzyFilterFn = useMemo<FilterFn<TData> | undefined>(() => {
+  const fuzzyFilterFn = useMemo<FilterFn<TablecraftFeatures, TData> | undefined>(() => {
     if (!fuzzy) return undefined
     if (typeof fuzzy === 'function') return fuzzy
     try {
@@ -264,7 +265,7 @@ export function useQueryTable<TData extends RowData>(
       const matchSorter = matchSorterLib.matchSorter
       const rankings = matchSorterLib.rankings
 
-      const fn: FilterFn<TData> = (row, columnId, filterValue) => {
+      const fn: FilterFn<TablecraftFeatures, TData> = (row, columnId, filterValue) => {
         if (!filterValue || String(filterValue).trim() === '') return true
         const cellValue = row.getValue(columnId)
         const items = [{ value: cellValue }]
@@ -288,7 +289,7 @@ export function useQueryTable<TData extends RowData>(
   }, [fuzzy])
 
   // ─── Build table ─────────────────────────────────────────
-  const table = useReactTable({
+  const table = useReactTable<TablecraftFeatures, TData>({
     features: tablecraftFeatures,
     data,
     columns,

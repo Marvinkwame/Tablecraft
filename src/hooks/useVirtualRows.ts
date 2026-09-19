@@ -2,11 +2,12 @@
 
 import { useCallback, useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import type { RowData, Table } from '@tanstack/react-table'
+import type { RowData } from '@tanstack/react-table'
 import type { VirtualRowsOptions, VirtualRowsReturn } from '../types'
+import type { TablecraftTable } from '../features'
 
 export function useVirtualRows<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options: VirtualRowsOptions
 ): VirtualRowsReturn<TData> {
   const { rowHeight, overscan = 5 } = options
