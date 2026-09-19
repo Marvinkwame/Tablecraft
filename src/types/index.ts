@@ -243,18 +243,18 @@ export interface GroupingReturn {
 // ─── Column Pinning ──────────────────────────────────────
 
 export interface ColumnPinningOptions {
-  defaultPinning?: ColumnPinningState   // { left?: string[], right?: string[] }
+  defaultPinning?: ColumnPinningState   // { start?: string[], end?: string[] }
 }
 
 export interface ColumnPinningReturn {
   state: ColumnPinningState
-  pinLeft: (columnId: string) => void
-  pinRight: (columnId: string) => void
+  pinStart: (columnId: string) => void
+  pinEnd: (columnId: string) => void
   unpin: (columnId: string) => void
   clearPinning: () => void
-  isPinned: (columnId: string) => 'left' | 'right' | false
-  leftColumns: string[]
-  rightColumns: string[]
+  isPinned: (columnId: string) => 'start' | 'end' | false
+  startColumns: string[]
+  endColumns: string[]
 }
 
 // ─── Empty State ─────────────────────────────────────────────

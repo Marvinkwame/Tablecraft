@@ -6,47 +6,53 @@ import type { ColumnPinningOptions } from '../types'
 
 export type { ColumnPinningOptions as UseColumnPinningOptions } from '../types'
 
+/**
+ * Column pinning, using v9's logical start/end vocabulary rather than v8's
+ * physical left/right. The rename is a correctness fix, not churn: "left" is
+ * simply wrong in an RTL layout, which is why TanStack made the change.
+ * Consumers get `inset-inline-start`-shaped semantics for free.
+ */
 export function useColumnPinningState(options: ColumnPinningOptions = {}) {
   const [state, setState] = useState<ColumnPinningState>(
-    options.defaultPinning ?? { left: [], right: [] }
+    options.defaultPinning ?? { start: [], end: [] }
   )
 
-  const pinLeft = useCallback((id: string) =>
+  const pinStart = useCallback((id: string) =>
     setState(prev => ({
-      left: [...(prev.left ?? []).filter(c => c !== id), id],
-      right: (prev.right ?? []).filter(c => c !== id),
+      start: [...(prev.start ?? []).filter(c => c !== id), id],
+      end: (prev.end ?? []).filter(c => c !== id),
     })), [])
 
-  const pinRight = useCallback((id: string) =>
+  const pinEnd = useCallback((id: string) =>
     setState(prev => ({
-      left: (prev.left ?? []).filter(c => c !== id),
-      right: [...(prev.right ?? []).filter(c => c !== id), id],
+      start: (prev.start ?? []).filter(c => c !== id),
+      end: [...(prev.end ?? []).filter(c => c !== id), id],
     })), [])
 
   const unpin = useCallback((id: string) =>
     setState(prev => ({
-      left: (prev.left ?? []).filter(c => c !== id),
-      right: (prev.right ?? []).filter(c => c !== id),
+      start: (prev.start ?? []).filter(c => c !== id),
+      end: (prev.end ?? []).filter(c => c !== id),
     })), [])
 
   const clearPinning = useCallback(() =>
-    setState({ left: [], right: [] }), [])
+    setState({ start: [], end: [] }), [])
 
-  const isPinned = useCallback((id: string): 'left' | 'right' | false => {
-    if ((state.left ?? []).includes(id)) return 'left'
-    if ((state.right ?? []).includes(id)) return 'right'
+  const isPinned = useCallback((id: string): 'start' | 'end' | false => {
+    if ((state.start ?? []).includes(id)) return 'start'
+    if ((state.end ?? []).includes(id)) return 'end'
     return false
   }, [state])
 
   return {
     state,
     setState,
-    pinLeft,
-    pinRight,
+    pinStart,
+    pinEnd,
     unpin,
     clearPinning,
     isPinned,
-    leftColumns: state.left ?? [],
-    rightColumns: state.right ?? [],
+    startColumns: state.start ?? [],
+    endColumns: state.end ?? [],
   }
 }

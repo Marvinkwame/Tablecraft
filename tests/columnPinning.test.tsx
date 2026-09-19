@@ -37,77 +37,131 @@ function createQueryWrapper() {
 describe('useColumnPinningState', () => {
   it('starts with empty pinning state by default', () => {
     const { result } = renderHook(() => useColumnPinningState())
-    expect(result.current.state).toEqual({ left: [], right: [] })
-    expect(result.current.leftColumns).toEqual([])
-    expect(result.current.rightColumns).toEqual([])
+    expect(result.current.state).toEqual({ start: [], end: [] })
+    expect(result.current.startColumns).toEqual([])
+    expect(result.current.endColumns).toEqual([])
   })
 
-  it('pinLeft adds column to left group', () => {
+  it('pinStart adds column to start group', () => {
     const { result } = renderHook(() => useColumnPinningState())
-    act(() => result.current.pinLeft('name'))
-    expect(result.current.leftColumns).toContain('name')
-    expect(result.current.rightColumns).not.toContain('name')
+    act(() => result.current.pinStart('name'))
+    expect(result.current.startColumns).toContain('name')
+    expect(result.current.endColumns).not.toContain('name')
   })
 
-  it('pinRight adds column to right group', () => {
+  it('pinEnd adds column to end group', () => {
     const { result } = renderHook(() => useColumnPinningState())
-    act(() => result.current.pinRight('email'))
-    expect(result.current.rightColumns).toContain('email')
-    expect(result.current.leftColumns).not.toContain('email')
+    act(() => result.current.pinEnd('email'))
+    expect(result.current.endColumns).toContain('email')
+    expect(result.current.startColumns).not.toContain('email')
   })
 
-  it('unpin removes column from left group', () => {
+  it('unpin removes column from start group', () => {
     const { result } = renderHook(() =>
-      useColumnPinningState({ defaultPinning: { left: ['name'], right: [] } })
+      useColumnPinningState({ defaultPinning: { start: ['name'], end: [] } })
     )
     act(() => result.current.unpin('name'))
-    expect(result.current.leftColumns).not.toContain('name')
+    expect(result.current.startColumns).not.toContain('name')
   })
 
   it('clearPinning removes all pins', () => {
     const { result } = renderHook(() =>
-      useColumnPinningState({ defaultPinning: { left: ['id'], right: ['email'] } })
+      useColumnPinningState({ defaultPinning: { start: ['id'], end: ['email'] } })
     )
     act(() => result.current.clearPinning())
-    expect(result.current.leftColumns).toHaveLength(0)
-    expect(result.current.rightColumns).toHaveLength(0)
+    expect(result.current.startColumns).toHaveLength(0)
+    expect(result.current.endColumns).toHaveLength(0)
   })
 
   it('isPinned returns correct position', () => {
     const { result } = renderHook(() =>
-      useColumnPinningState({ defaultPinning: { left: ['id'], right: ['email'] } })
+      useColumnPinningState({ defaultPinning: { start: ['id'], end: ['email'] } })
     )
-    expect(result.current.isPinned('id')).toBe('left')
-    expect(result.current.isPinned('email')).toBe('right')
+    expect(result.current.isPinned('id')).toBe('start')
+    expect(result.current.isPinned('email')).toBe('end')
     expect(result.current.isPinned('name')).toBe(false)
   })
 
-  it('leftColumns and rightColumns reflect state', () => {
+  it('startColumns and endColumns reflect state', () => {
     const { result } = renderHook(() => useColumnPinningState())
     act(() => {
-      result.current.pinLeft('id')
-      result.current.pinRight('email')
+      result.current.pinStart('id')
+      result.current.pinEnd('email')
     })
-    expect(result.current.leftColumns).toEqual(['id'])
-    expect(result.current.rightColumns).toEqual(['email'])
+    expect(result.current.startColumns).toEqual(['id'])
+    expect(result.current.endColumns).toEqual(['email'])
   })
 
   it('defaultPinning option seeds initial state', () => {
     const { result } = renderHook(() =>
-      useColumnPinningState({ defaultPinning: { left: ['id'], right: ['email'] } })
+      useColumnPinningState({ defaultPinning: { start: ['id'], end: ['email'] } })
     )
-    expect(result.current.leftColumns).toEqual(['id'])
-    expect(result.current.rightColumns).toEqual(['email'])
+    expect(result.current.startColumns).toEqual(['id'])
+    expect(result.current.endColumns).toEqual(['email'])
   })
 
-  it('pinLeft removes column from right group when moving sides', () => {
+  it('pinStart removes column from end group when moving sides', () => {
     const { result } = renderHook(() =>
-      useColumnPinningState({ defaultPinning: { left: [], right: ['name'] } })
+      useColumnPinningState({ defaultPinning: { start: [], end: ['name'] } })
     )
-    expect(result.current.rightColumns).toContain('name')
-    act(() => result.current.pinLeft('name'))
-    expect(result.current.leftColumns).toContain('name')
-    expect(result.current.rightColumns).not.toContain('name')
+    expect(result.current.endColumns).toContain('name')
+    act(() => result.current.pinStart('name'))
+    expect(result.current.startColumns).toContain('name')
+    expect(result.current.endColumns).not.toContain('name')
+  })
+})
+
+// ─── useColumnPinningState — logical start/end pinning ────
+
+describe('useColumnPinningState — logical start/end pinning', () => {
+  it('pins a column to the start', () => {
+    const { result } = renderHook(() => useColumnPinningState())
+
+    act(() => result.current.pinStart('name'))
+
+    expect(result.current.startColumns).toEqual(['name'])
+    expect(result.current.endColumns).toEqual([])
+    expect(result.current.isPinned('name')).toBe('start')
+  })
+
+  it('pins a column to the end', () => {
+    const { result } = renderHook(() => useColumnPinningState())
+
+    act(() => result.current.pinEnd('actions'))
+
+    expect(result.current.endColumns).toEqual(['actions'])
+    expect(result.current.isPinned('actions')).toBe('end')
+  })
+
+  it('moves a column from start to end without duplicating it', () => {
+    const { result } = renderHook(() => useColumnPinningState())
+
+    act(() => result.current.pinStart('name'))
+    act(() => result.current.pinEnd('name'))
+
+    expect(result.current.startColumns).toEqual([])
+    expect(result.current.endColumns).toEqual(['name'])
+  })
+
+  it('unpins a column', () => {
+    const { result } = renderHook(() => useColumnPinningState())
+
+    act(() => result.current.pinStart('name'))
+    act(() => result.current.unpin('name'))
+
+    expect(result.current.startColumns).toEqual([])
+    expect(result.current.isPinned('name')).toBe(false)
+  })
+
+  it('clears all pinning', () => {
+    const { result } = renderHook(() => useColumnPinningState())
+
+    act(() => result.current.pinStart('name'))
+    act(() => result.current.pinEnd('actions'))
+    act(() => result.current.clearPinning())
+
+    expect(result.current.startColumns).toEqual([])
+    expect(result.current.endColumns).toEqual([])
   })
 })
 
@@ -118,17 +172,17 @@ describe('useTable column pinning integration', () => {
     const { result } = renderHook(() =>
       useTable({ data: testData, columns })
     )
-    expect(result.current.columnPinning.state).toEqual({ left: [], right: [] })
-    expect(result.current.columnPinning.leftColumns).toEqual([])
+    expect(result.current.columnPinning.state).toEqual({ start: [], end: [] })
+    expect(result.current.columnPinning.startColumns).toEqual([])
   })
 
-  it('pinLeft wires through to TanStack table state', () => {
+  it('pinStart wires through to TanStack table state', () => {
     const { result } = renderHook(() =>
       useTable({ data: testData, columns, columnPinning: true })
     )
-    act(() => result.current.columnPinning.pinLeft('name'))
-    expect(result.current.columnPinning.leftColumns).toContain('name')
-    expect(result.current.table.getState().columnPinning.left).toContain('name')
+    act(() => result.current.columnPinning.pinStart('name'))
+    expect(result.current.columnPinning.startColumns).toContain('name')
+    expect(result.current.table.getState().columnPinning.start).toContain('name')
   })
 })
 
@@ -146,8 +200,8 @@ describe('useQueryTable column pinning smoke test', () => {
       }),
       { wrapper: createQueryWrapper() }
     )
-    act(() => result.current.columnPinning.pinRight('email'))
-    expect(result.current.columnPinning.rightColumns).toContain('email')
+    act(() => result.current.columnPinning.pinEnd('email'))
+    expect(result.current.columnPinning.endColumns).toContain('email')
   })
 })
 
@@ -165,7 +219,7 @@ describe('useInfiniteTable column pinning smoke test', () => {
       }),
       { wrapper: createQueryWrapper() }
     )
-    act(() => result.current.columnPinning.pinLeft('id'))
-    expect(result.current.columnPinning.leftColumns).toContain('id')
+    act(() => result.current.columnPinning.pinStart('id'))
+    expect(result.current.columnPinning.startColumns).toContain('id')
   })
 })
