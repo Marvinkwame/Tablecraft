@@ -4,13 +4,10 @@
 declare const require: (id: string) => any
 
 import { useMemo, useEffect, useRef } from 'react'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getExpandedRowModel,
-  getGroupedRowModel,
-} from '@tanstack/react-table'
+// v9's hook is also named `useTable`, which collides with tablecraft's own
+// export elsewhere. Aliasing keeps the call site below unchanged.
+import { useTable as useReactTable } from '@tanstack/react-table'
+import { tablecraftFeatures } from '../features'
 import type { FilterFn, RowData } from '@tanstack/react-table'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 
@@ -292,6 +289,7 @@ export function useQueryTable<TData extends RowData>(
 
   // ─── Build table ─────────────────────────────────────────
   const table = useReactTable({
+    features: tablecraftFeatures,
     data,
     columns,
     state: {
@@ -318,8 +316,11 @@ export function useQueryTable<TData extends RowData>(
     // Client-side filtering (for local filter UI state — actual filtering done server-side)
     onGlobalFilterChange: filterState.onGlobalFilterChange,
     onColumnFiltersChange: columnFilterState.onColumnFiltersChange,
-    getFilteredRowModel:
-      globalFilterEnabled || columnFiltersEnabled ? getFilteredRowModel() : undefined,
+    // Likewise for filtering: v8 omitted the filtered row model when neither
+    // filter feature was enabled. enableFilters/enableColumnFilters do NOT do
+    // this — they gate whether a column can be filtered, not whether existing
+    // filter state is applied. Verified by probe.
+    manualFiltering: !(globalFilterEnabled || columnFiltersEnabled),
     globalFilterFn: fuzzyFilterFn ?? 'includesString',
 
     // Row selection
@@ -336,7 +337,6 @@ export function useQueryTable<TData extends RowData>(
     // Row expansion
     ...(rowExpansionEnabled && {
       onExpandedChange: rowExpansionState.onExpandedChange,
-      getExpandedRowModel: getExpandedRowModel(),
       paginateExpandedRows: rowExpansionConfig.paginateExpandedRows,
     }),
     ...(rowExpansionEnabled && rowExpansionConfig.getSubRows && {
@@ -346,7 +346,6 @@ export function useQueryTable<TData extends RowData>(
     // Grouping
     ...(groupingEnabled && {
       onGroupingChange: groupingState.onGroupingChange,
-      getGroupedRowModel: getGroupedRowModel(),
       manualGrouping: groupingConfig.manualGrouping,
       groupedColumnMode: groupingConfig.groupedColumnMode,
     }),
@@ -355,8 +354,6 @@ export function useQueryTable<TData extends RowData>(
     ...(columnPinningEnabled && {
       onColumnPinningChange: columnPinningState.setState,
     }),
-
-    getCoreRowModel: getCoreRowModel(),
   })
 
   // ─── Persistence: save state on change ───────────────────
