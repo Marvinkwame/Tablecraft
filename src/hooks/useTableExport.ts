@@ -1,9 +1,10 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import type { RowData, Table } from '@tanstack/react-table'
+import type { RowData } from '@tanstack/react-table'
 
 import type { UseTableExportOptions, DownloadOptions, TableExportReturn } from '../types'
+import type { TablecraftTable } from '../features'
 import { extractRows, toCSVString } from '../utils/exportRows'
 
 /** UTF-8 byte order mark. Written as an escape so it survives copy/paste and re-encoding. */
@@ -16,7 +17,7 @@ const BOM = '\uFEFF'
  * consumer asks — a table whose export button is never clicked pays nothing.
  */
 export function useTableExport<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options: UseTableExportOptions = {}
 ): TableExportReturn {
   const base = useMemo(
