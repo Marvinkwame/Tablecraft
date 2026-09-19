@@ -1,12 +1,10 @@
 'use client'
 
 import { useMemo } from 'react'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getGroupedRowModel,
-} from '@tanstack/react-table'
+// v9's hook is also named `useTable`, which collides with tablecraft's own
+// export elsewhere. Aliasing keeps the call site below unchanged.
+import { useTable as useReactTable } from '@tanstack/react-table'
+import { tablecraftFeatures } from '../features'
 import type { RowData } from '@tanstack/react-table'
 import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query'
 
@@ -132,6 +130,7 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
 
   // ─── Build table ──────────────────────────────────────────
   const table = useReactTable({
+    features: tablecraftFeatures,
     data: flatData,
     columns,
     manualSorting: true,
@@ -147,9 +146,11 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     onSortingChange: sortState.onSortingChange,
     onGlobalFilterChange: filterState.onGlobalFilterChange,
     onColumnFiltersChange: columnFilterState.onColumnFiltersChange,
-    ...(globalFilterEnabled || columnFiltersEnabled
-      ? { getFilteredRowModel: getFilteredRowModel() }
-      : {}),
+    // Likewise for filtering: v8 omitted the filtered row model when neither
+    // filter feature was enabled. enableFilters/enableColumnFilters do NOT do
+    // this — they gate whether a column can be filtered, not whether existing
+    // filter state is applied. Verified by probe.
+    manualFiltering: !(globalFilterEnabled || columnFiltersEnabled),
     globalFilterFn: 'includesString',
     ...(rowSelectionEnabled && {
       onRowSelectionChange: rowSelectionState.onRowSelectionChange,
@@ -160,7 +161,6 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     }),
     ...(groupingEnabled && {
       onGroupingChange: groupingState.onGroupingChange,
-      getGroupedRowModel: getGroupedRowModel(),
       manualGrouping: groupingConfig.manualGrouping,
       groupedColumnMode: groupingConfig.groupedColumnMode,
     }),
@@ -168,7 +168,6 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     ...(columnPinningEnabled && {
       onColumnPinningChange: columnPinningState.setState,
     }),
-    getCoreRowModel: getCoreRowModel(),
   })
 
   // ─── Build named return objects ───────────────────────────
