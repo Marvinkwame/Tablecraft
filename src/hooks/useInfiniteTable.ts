@@ -252,13 +252,13 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
   const columnPinning: ColumnPinningReturn = useMemo(
     () => ({
       state: columnPinningState.state,
-      pinLeft: columnPinningState.pinLeft,
-      pinRight: columnPinningState.pinRight,
+      pinStart: columnPinningState.pinStart,
+      pinEnd: columnPinningState.pinEnd,
       unpin: columnPinningState.unpin,
       clearPinning: columnPinningState.clearPinning,
       isPinned: columnPinningState.isPinned,
-      leftColumns: columnPinningState.leftColumns,
-      rightColumns: columnPinningState.rightColumns,
+      startColumns: columnPinningState.startColumns,
+      endColumns: columnPinningState.endColumns,
     }),
     [columnPinningState]
   )
