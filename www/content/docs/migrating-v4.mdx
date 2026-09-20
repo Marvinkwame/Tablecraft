@@ -3,7 +3,7 @@ title: Migrating to v4
 description: What changes when you upgrade tablecraft to v4 and TanStack Table v9.
 ---
 
-tablecraft v4 targets **TanStack Table v9**. There are three changes to make.
+tablecraft v4 targets **TanStack Table v9**. There are four changes to make.
 
 ## 1. Upgrade the peer dependency
 
@@ -36,6 +36,29 @@ the vocabulary.
 
 v9's `Table` takes a feature set as its first type parameter. tablecraft binds
 that set for you, so you keep writing a single type argument.
+
+## 4. `columnsFromZod` requires an object or array schema
+
+v9 tightened `RowData` from `unknown` to `Record<string, any> | Array<any>`, and
+`columnsFromZod` follows: its schema parameter is now `z.ZodType<RowData>`.
+
+A normal object schema is unaffected — this is the overwhelmingly common case:
+
+```ts
+// still fine
+columnsFromZod(z.object({ id: z.number(), name: z.string() }))
+```
+
+A schema whose output is a primitive is now rejected at compile time:
+
+```ts
+// was: type-checked, then threw at runtime
+// now: fails to compile
+columnsFromZod(z.string())
+```
+
+Nothing that worked before stops working. The change converts a runtime failure
+into a compile-time one.
 
 ## What does not change
 
