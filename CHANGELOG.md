@@ -38,7 +38,7 @@ All notable changes to tablecraft are documented here.
 
 ### Note on bundle size
 
-tablecraft binds every v9 feature rather than leaving the set open, because v9 resolves a table's methods conditionally on registered features — a wrapper cannot both be generic over features and promise `pagination` in its return type. This means no tree-shaking, which is parity with v8 (which also bundled everything) rather than a regression. Preset-bound entries with smaller feature sets are the escape hatch if there is demand.
+The v9 root entry is **26.2 KB** (v8 was 13 KB) — roughly 2× growth. This is because tablecraft binds every v9 feature rather than leaving the set open. v9 resolves a table's methods conditionally on registered features, so a wrapper cannot both be generic over features and promise `pagination` in its return type. The bound feature set means no tree-shaking, which matches v8's tree-shaking model (v8 also bundled everything) rather than a regression — but the magnitude is worth knowing for bundle-budget planning. Preset-bound entries with smaller feature sets are available as an escape hatch if the growth matters for your use case and demand justifies the maintenance.
 
 ---
 
