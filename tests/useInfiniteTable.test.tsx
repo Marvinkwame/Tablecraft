@@ -3,6 +3,7 @@ import React from 'react'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useInfiniteTable } from '../src/hooks/useInfiniteTable'
+import { useFacetedFilters } from '../src/hooks/useFacetedFilters'
 import { createColumns } from '../src/helpers/createColumns'
 import type { InfiniteTableResult } from '../query'
 
@@ -264,6 +265,74 @@ describe('useInfiniteTable', () => {
     await waitFor(() =>
       expect(result.current.table.getRowModel().rows).toHaveLength(2)
     )
+  })
+
+  // ─── Row count beyond the default page size ──────────────
+
+  it('renders all accumulated rows once they exceed v9s default pageSize of 10', async () => {
+    const bigPage1: User[] = Array.from({ length: 10 }, (_, i) => ({
+      id: i + 1,
+      name: `User ${i + 1}`,
+    }))
+    const bigPage2: User[] = Array.from({ length: 10 }, (_, i) => ({
+      id: i + 11,
+      name: `User ${i + 11}`,
+    }))
+    const bigPage3: User[] = Array.from({ length: 5 }, (_, i) => ({
+      id: i + 21,
+      name: `User ${i + 21}`,
+    }))
+    const queryFn = createPaginatedQueryFn(
+      [bigPage1, bigPage2, bigPage3],
+      [1, 2, undefined]
+    )
+
+    const { result } = renderHook(
+      () => useInfiniteTable({ queryKey: ['users-25-rows'], queryFn, columns }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(result.current.table.getRowModel().rows).toHaveLength(10)
+
+    act(() => result.current.loadMore())
+    await waitFor(() =>
+      expect(result.current.table.getRowModel().rows).toHaveLength(20)
+    )
+
+    act(() => result.current.loadMore())
+    await waitFor(() =>
+      expect(result.current.table.getRowModel().rows).toHaveLength(25)
+    )
+  })
+
+  // ─── Faceting on a server-backed infinite table ──────────
+
+  it('returns empty facets and warns once for the server-backed infinite table', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const queryFn = createPaginatedQueryFn([page1], [undefined])
+
+    const { result } = renderHook(
+      () => {
+        const infinite = useInfiniteTable({
+          queryKey: ['users-facets'],
+          queryFn,
+          columns,
+        })
+        return { ...infinite, facets: useFacetedFilters(infinite.table) }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    const facet = result.current.facets.getFacet('name')
+
+    expect(facet.options).toEqual([])
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('name')
+
+    warn.mockRestore()
   })
 
   // ─── Error state ────────────────────────────────────────
