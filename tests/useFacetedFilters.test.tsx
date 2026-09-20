@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { MockInstance } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import React from 'react'
+import { renderHook, act, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTable } from '../src/hooks/useTable'
+import { useQueryTable } from '../src/hooks/useQueryTable'
 import { useFacetedFilters } from '../src/hooks/useFacetedFilters'
 import { createColumns } from '../src/helpers/createColumns'
 import { facetedFilterFn } from '../src/utils/facets'
@@ -226,6 +229,45 @@ describe('useFacetedFilters — server tables', () => {
     expect(result.current.facets.getFacet('status').options).toEqual([])
     expect(warn).toHaveBeenCalledTimes(1)
     expect(String(warn.mock.calls[0][0])).toContain('full dataset')
+  })
+
+  it('returns empty facets and warns for a useQueryTable table, which holds only one remote page', async () => {
+    function createWrapper() {
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      })
+      return function Wrapper({ children }: { children: React.ReactNode }) {
+        return (
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        )
+      }
+    }
+
+    const queryFn = vi.fn().mockResolvedValue({ data: products, rowCount: 100 })
+
+    const { result } = renderHook(
+      () => {
+        const tableReturn = useQueryTable({
+          queryKey: ['products-facets'],
+          queryFn,
+          columns: productColumns,
+        })
+        return { ...tableReturn, facets: useFacetedFilters(tableReturn.table) }
+      },
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => {
+      expect(result.current.query.isLoading).toBe(false)
+    })
+
+    // useQueryTable builds its table directly with useReactTable rather than
+    // through useTable, so nothing but table.options.meta can tell
+    // useFacetedFilters that this table's rows are one remote page rather
+    // than the full dataset.
+    expect(result.current.facets.getFacet('status').options).toEqual([])
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('status')
   })
 })
 

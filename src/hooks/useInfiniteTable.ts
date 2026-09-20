@@ -134,6 +134,13 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     data: flatData,
     columns,
     manualSorting: true,
+    // This table always holds one remote page (or accumulated pages, never
+    // the full dataset). See the TableMeta augmentation in types/index.ts
+    // and useFacetedFilters, which reads this to decide whether the full
+    // dataset is available to facet.
+    meta: {
+      tablecraftServerBacked: true,
+    },
     state: {
       sorting: sortState.state,
       globalFilter: filterState.state,
