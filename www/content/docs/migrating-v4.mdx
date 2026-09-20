@@ -3,7 +3,7 @@ title: Migrating to v4
 description: What changes when you upgrade tablecraft to v4 and TanStack Table v9.
 ---
 
-tablecraft v4 targets **TanStack Table v9**. There are four changes to make.
+tablecraft v4 targets **TanStack Table v9**. There are five changes to make.
 
 ## 1. Upgrade the peer dependency
 
@@ -37,7 +37,33 @@ the vocabulary.
 v9's `Table` takes a feature set as its first type parameter. tablecraft binds
 that set for you, so you keep writing a single type argument.
 
-## 4. `columnsFromZod` requires an object or array schema
+## 4. Explicit `ColumnDef`/`FilterFn` annotations need `TablecraftFeatures`
+
+v9's `ColumnDef` and `FilterFn` take a feature set as their first type
+parameter, the same way `Table` does above. tablecraft's own hooks already
+bind that parameter internally, so this only matters if you write the
+annotation out yourself instead of letting it be inferred:
+
+```diff
+- const columns: ColumnDef<User, any>[] = [...]
++ import type { TablecraftFeatures } from '@marvinackerman/tablecraft'
++ const columns: ColumnDef<TablecraftFeatures, User, any>[] = [...]
+```
+
+The same applies to a hand-written `fuzzy` filter function:
+
+```diff
+- const exactMatch: FilterFn<User> = (row, columnId, filterValue) => ...
++ import type { TablecraftFeatures } from '@marvinackerman/tablecraft'
++ const exactMatch: FilterFn<TablecraftFeatures, User> = (row, columnId, filterValue) => ...
+```
+
+Most consumers rely on inference — `createColumns<User>([...])` or
+`useTable<User>({...})` — and never write either annotation, so this change
+does not touch them. It hits only code that spelled out `ColumnDef<User, ...>`
+or `FilterFn<User>` explicitly.
+
+## 5. `columnsFromZod` requires an object or array schema
 
 v9 tightened `RowData` from `unknown` to `Record<string, any> | Array<any>`, and
 `columnsFromZod` follows: its schema parameter is now `z.ZodType<RowData>`.
@@ -64,7 +90,9 @@ into a compile-time one.
 
 Every hook name, every option and every return shape. `useTable`,
 `useServerTable`, `useQueryTable`, the ten granular state hooks, editing,
-export, faceting and accessibility are all called exactly as before.
+export, faceting and accessibility are all called exactly as before. The one
+exception is change 4 above: if you annotate `ColumnDef` or `FilterFn`
+explicitly rather than relying on inference, that annotation's type changes.
 
 ## One thing from v9 itself
 
