@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useReactTable, getCoreRowModel, getSortedRowModel } from '@tanstack/react-table'
 import { useTableA11y } from '../src/hooks/useTableA11y'
 import { useTable } from '../src/hooks/useTable'
 import { createColumns } from '../src/helpers/createColumns'

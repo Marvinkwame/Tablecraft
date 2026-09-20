@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { FilterFn } from '@tanstack/react-table'
 import { useQueryTable } from '../src/hooks/useQueryTable'
 import { createColumns } from '../src/helpers/createColumns'
+import type { TablecraftFeatures } from '../src/features'
 
 type User = { id: number; name: string }
 
@@ -45,7 +46,7 @@ describe('useQueryTable', () => {
   it('uses a custom filter function passed as fuzzy', async () => {
     const queryFn = createMockQueryFn()
     // Exact-match filter: a cell passes only when it strictly equals the search value
-    const exactMatch: FilterFn<User> = (row, columnId, filterValue) =>
+    const exactMatch: FilterFn<TablecraftFeatures, User> = (row, columnId, filterValue) =>
       row.getValue(columnId) === filterValue
 
     const { result } = renderHook(

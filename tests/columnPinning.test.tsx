@@ -182,7 +182,7 @@ describe('useTable column pinning integration', () => {
     )
     act(() => result.current.columnPinning.pinStart('name'))
     expect(result.current.columnPinning.startColumns).toContain('name')
-    expect(result.current.table.getState().columnPinning.start).toContain('name')
+    expect(result.current.table.store.state.columnPinning.start).toContain('name')
   })
 })
 

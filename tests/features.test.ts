@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest'
+import { act, renderHook } from '@testing-library/react'
 import { tablecraftFeatures } from '../src/features'
 import { filterFns, sortFns, aggregationFns } from '@tanstack/react-table'
+import { useTable } from '../src/hooks/useTable'
+import { useTableA11y } from '../src/hooks/useTableA11y'
+import { createColumns } from '../src/helpers/createColumns'
+import type { TablecraftTable } from '../src/features'
+
+type Row = { id: number; name: string }
 
 describe('tablecraftFeatures', () => {
   it('registers every feature tablecraft wraps', () => {
@@ -51,5 +58,34 @@ describe('tablecraftFeatures', () => {
     expect(tablecraftFeatures.filterFns).toBe(filterFns)
     expect(tablecraftFeatures.sortFns).toBe(sortFns)
     expect(tablecraftFeatures.aggregationFns).toBe(aggregationFns)
+  })
+})
+
+describe('TablecraftTable', () => {
+  it('types a table built by useTable, with one type argument', () => {
+    const columns = createColumns<Row>([{ accessorKey: 'name', header: 'Name' }])
+    const { result } = renderHook(() =>
+      useTable({ data: [{ id: 1, name: 'Ada' }], columns })
+    )
+
+    // The point of the alias: consumers write one parameter, as in v8.
+    const table: TablecraftTable<Row> = result.current.table
+
+    expect(table.getRowModel().rows).toHaveLength(1)
+  })
+})
+
+describe('v9 state access', () => {
+  it('reads sorting through table.store.state, which replaced getState()', () => {
+    const columns = createColumns<Row>([{ accessorKey: 'name', header: 'Name' }])
+    const { result } = renderHook(() => {
+      const t = useTable({ data: [{ id: 1, name: 'Ada' }], columns, sorting: true })
+      return { ...t, a11y: useTableA11y(t.table) }
+    })
+
+    act(() => result.current.sorting.setSorting([{ id: 'name', desc: true }]))
+
+    const header = result.current.table.getFlatHeaders().find((h) => h.id === 'name')!
+    expect(result.current.a11y.getHeaderProps(header.id)['aria-sort']).toBe('descending')
   })
 })
