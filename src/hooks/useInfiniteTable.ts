@@ -134,6 +134,15 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     data: flatData,
     columns,
     manualSorting: true,
+    // tablecraftFeatures always registers rowPaginationFeature and
+    // createPaginatedRowModel(), and v9 only skips that row model when
+    // manualPagination is true — there is no way to opt a registered feature
+    // out per-table otherwise. Without this, an infinite list with no
+    // `pagination` state slice still gets sliced to v9's uncontrolled default
+    // pageSize of 10, so accumulated rows past the first page silently
+    // vanish from getRowModel(). This table must always render everything
+    // it has accumulated.
+    manualPagination: true,
     // This table always holds one remote page (or accumulated pages, never
     // the full dataset). See the TableMeta augmentation in types/index.ts
     // and useFacetedFilters, which reads this to decide whether the full
