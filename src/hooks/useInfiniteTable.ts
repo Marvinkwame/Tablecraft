@@ -162,10 +162,10 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     onSortingChange: sortState.onSortingChange,
     onGlobalFilterChange: filterState.onGlobalFilterChange,
     onColumnFiltersChange: columnFilterState.onColumnFiltersChange,
-    // Likewise for filtering: v8 omitted the filtered row model when neither
-    // filter feature was enabled. enableFilters/enableColumnFilters do NOT do
-    // this — they gate whether a column can be filtered, not whether existing
-    // filter state is applied. Verified by probe.
+    // v8 omitted the filtered row model when neither filter feature was
+    // enabled. enableFilters/enableColumnFilters do NOT do this — they gate
+    // whether a column can be filtered, not whether existing filter state is
+    // applied. Verified by probe.
     manualFiltering: !(globalFilterEnabled || columnFiltersEnabled),
     globalFilterFn: 'includesString',
     ...(rowSelectionEnabled && {

@@ -324,10 +324,10 @@ export function useQueryTable<TData extends RowData>(
     // Client-side filtering (for local filter UI state — actual filtering done server-side)
     onGlobalFilterChange: filterState.onGlobalFilterChange,
     onColumnFiltersChange: columnFilterState.onColumnFiltersChange,
-    // Likewise for filtering: v8 omitted the filtered row model when neither
-    // filter feature was enabled. enableFilters/enableColumnFilters do NOT do
-    // this — they gate whether a column can be filtered, not whether existing
-    // filter state is applied. Verified by probe.
+    // v8 omitted the filtered row model when neither filter feature was
+    // enabled. enableFilters/enableColumnFilters do NOT do this — they gate
+    // whether a column can be filtered, not whether existing filter state is
+    // applied. Verified by probe.
     manualFiltering: !(globalFilterEnabled || columnFiltersEnabled),
     globalFilterFn: fuzzyFilterFn ?? 'includesString',
 

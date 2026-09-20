@@ -44,6 +44,13 @@ import type { RowData, Table } from '@tanstack/react-table'
  * Defined at module scope deliberately: TanStack's migration guide calls for
  * defining it statically outside render work, and a fresh object each render
  * would rebuild the table's feature registry every time.
+ *
+ * A feature left out of this object does not fail to compile — its methods
+ * are simply absent from the table instance at runtime, so calling one
+ * throws (or reads as `undefined`) with no compile-time signal. Any future
+ * tablecraft capability that leans on a v9 feature (column resizing, cell
+ * selection, and so on) must be registered here too, or its methods will be
+ * silently missing rather than caught by the type checker.
  */
 export const tablecraftFeatures = tableFeatures({
   // Features first, then their row-model slots — prerequisites before

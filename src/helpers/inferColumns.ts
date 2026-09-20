@@ -17,7 +17,7 @@ export interface InferColumnsOptions<TData extends RowData> {
  *
  * @param data - Array of data objects (needs at least one row to infer shape)
  * @param options - Include/exclude/override options
- * @returns ColumnDef<TData>[]
+ * @returns ColumnDef<TablecraftFeatures, TData, any>[]
  */
 export function inferColumns<TData extends RowData>(
   data: TData[],
