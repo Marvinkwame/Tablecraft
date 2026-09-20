@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
+import * as tablecraft from '../src/index'
 import { tablecraftFeatures } from '../src/features'
 import { filterFns, sortFns, aggregationFns } from '@tanstack/react-table'
 import { useTable } from '../src/hooks/useTable'
@@ -87,5 +88,11 @@ describe('v9 state access', () => {
 
     const header = result.current.table.getFlatHeaders().find((h) => h.id === 'name')!
     expect(result.current.a11y.getHeaderProps(header.id)['aria-sort']).toBe('descending')
+  })
+})
+
+describe('root entry', () => {
+  it('exports the feature set for consumers building their own tables', () => {
+    expect(tablecraft.tablecraftFeatures).toBe(tablecraftFeatures)
   })
 })

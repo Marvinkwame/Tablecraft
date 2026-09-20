@@ -1,3 +1,3 @@
 {
-  "pages": ["index", "installation", "guides", "api"]
+  "pages": ["index", "installation", "migrating-v4", "guides", "api"]
 }

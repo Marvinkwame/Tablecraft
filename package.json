@@ -57,7 +57,7 @@
   ],
   "sideEffects": false,
   "peerDependencies": {
-    "@tanstack/react-table": "^8",
+    "@tanstack/react-table": "^9",
     "react": ">=18",
     "@tanstack/react-query": ">=5",
     "@tanstack/react-virtual": ">=3",

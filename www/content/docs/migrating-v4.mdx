@@ -1,0 +1,49 @@
+---
+title: Migrating to v4
+description: What changes when you upgrade tablecraft to v4 and TanStack Table v9.
+---
+
+tablecraft v4 targets **TanStack Table v9**. There are three changes to make.
+
+## 1. Upgrade the peer dependency
+
+```bash
+npm install @marvinackerman/tablecraft@^4 @tanstack/react-table@^9
+```
+
+Staying on v8 is supported: tablecraft 3.x remains published and installable.
+
+## 2. Column pinning uses start/end
+
+```diff
+- const { pinLeft, pinRight, leftColumns, rightColumns } = columnPinning
++ const { pinStart, pinEnd, startColumns, endColumns } = columnPinning
+```
+
+`isPinned` returns `'start' | 'end' | false`. The rename comes from v9 and is a
+correctness fix — "left" is wrong in a right-to-left layout. If you position
+pinned columns with CSS, `inset-inline-start` and `inset-inline-end` now match
+the vocabulary.
+
+## 3. Type instances with `TablecraftTable`
+
+```diff
+- import type { Table } from '@tanstack/react-table'
+- const table: Table<User> = useTable({ data, columns }).table
++ import type { TablecraftTable } from '@marvinackerman/tablecraft'
++ const table: TablecraftTable<User> = useTable({ data, columns }).table
+```
+
+v9's `Table` takes a feature set as its first type parameter. tablecraft binds
+that set for you, so you keep writing a single type argument.
+
+## What does not change
+
+Every hook name, every option and every return shape. `useTable`,
+`useServerTable`, `useQueryTable`, the ten granular state hooks, editing,
+export, faceting and accessibility are all called exactly as before.
+
+## One thing from v9 itself
+
+v9 tightened `RowData` from `unknown` to `Record<string, any> | Array<any>`. If
+your row type is a primitive, wrap it in an object.

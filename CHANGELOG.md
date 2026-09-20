@@ -4,6 +4,44 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [Unreleased]
+
+### Breaking
+
+- **`@tanstack/react-table` v9 is now required** (`^9`). tablecraft 3.x remains published for v8 users and is the supported path if you are not ready to upgrade.
+
+- **Column pinning uses logical start/end instead of left/right.** v9 made this change because "left" is wrong in RTL layouts.
+
+  ```diff
+  - const { pinLeft, pinRight, leftColumns, rightColumns } = columnPinning
+  + const { pinStart, pinEnd, startColumns, endColumns } = columnPinning
+  ```
+
+  `isPinned` now returns `'start' | 'end' | false`.
+
+- **Type a table instance with `TablecraftTable<T>`, not `Table<T>`.** v9's `Table` takes a feature set as its first type parameter; the exported alias binds it so you keep writing one type argument.
+
+  ```diff
+  - import type { Table } from '@tanstack/react-table'
+  - const table: Table<User> = useTable({ data, columns }).table
+  + import type { TablecraftTable } from '@marvinackerman/tablecraft'
+  + const table: TablecraftTable<User> = useTable({ data, columns }).table
+  ```
+
+**Every hook name, option and return shape is otherwise unchanged.** Binding a fixed feature set internally is what makes that possible.
+
+- **`columnsFromZod` now requires a schema whose output is an object or array.** Its generic bound tightened from `z.ZodType` to `z.ZodType<RowData>`, following v9's stricter `RowData`. A normal `z.object({...})` schema is unaffected. A schema like `z.string()` is now rejected at compile time — it previously type-checked and then threw at runtime, so this converts a runtime failure into a compile-time one rather than removing any working usage.
+
+### Added
+
+- **`tablecraftFeatures`** and the types `TablecraftFeatures` / `TablecraftTable` are exported from the root entry.
+
+### Note on bundle size
+
+tablecraft binds every v9 feature rather than leaving the set open, because v9 resolves a table's methods conditionally on registered features — a wrapper cannot both be generic over features and promise `pagination` in its return type. This means no tree-shaking, which is parity with v8 (which also bundled everything) rather than a regression. Preset-bound entries with smaller feature sets are the escape hatch if there is demand.
+
+---
+
 ## [3.2.0] — 2026-09-10
 
 ### Added
