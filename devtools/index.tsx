@@ -134,7 +134,7 @@ export function TablecraftDevtools<TData extends RowData>({
   const { table, pagination, sorting, globalFilter, columnFilters, rowSelection, columnVisibility, emptyState } = tableReturn
 
   const posStyles = getPositionStyles(position)
-  const totalRows = table.getPrePaginationRowModel().rows.length
+  const totalRows = table.getPrePaginatedRowModel().rows.length
   const visibleRows = table.getRowModel().rows.length
   const columnCount = table.getAllColumns().length
   const visibleColumnCount = table.getVisibleLeafColumns().length
