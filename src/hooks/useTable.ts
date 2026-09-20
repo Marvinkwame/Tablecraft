@@ -37,6 +37,7 @@ import { useColumnPinningState } from './useColumnPinningState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
+import { setServerTableFlag } from '../utils/serverTableRegistry'
 
 export function useTable<TData extends RowData>(
   options: UseTableOptions<TData>
@@ -294,6 +295,12 @@ export function useTable<TData extends RowData>(
       onColumnPinningChange: columnPinningState.setState,
     }),
   })
+
+  // Record the caller's actual manualPagination intent, separately from the
+  // `manualPagination || !paginationEnabled` value handed to TanStack above.
+  // See serverTableRegistry.ts for why table.options.manualPagination alone
+  // can no longer answer "is this table's data remote?".
+  setServerTableFlag(table, manualPagination)
 
   // ─── Persistence: save state on change ───────────────────
   useEffect(() => {

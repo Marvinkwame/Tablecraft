@@ -11,6 +11,7 @@ import {
   normalizeSelected,
   toggleValue,
 } from '../utils/facets'
+import { isServerBackedTable } from '../utils/serverTableRegistry'
 
 /**
  * Looks up a leaf column without provoking TanStack's own existence check.
@@ -59,11 +60,15 @@ function emptyRangeFacet(): RangeFacet {
 export function useFacetedFilters<TData extends RowData>(
   table: TablecraftTable<TData>
 ): FacetedFiltersReturn {
-  // Facets need the whole dataset. A table with manualPagination holds one
-  // page, so counts computed from it would describe the page rather than the
-  // data - plausible and wrong. There is no `manualFiltering` flag in this
-  // codebase; manualPagination is the signal that the data is remote.
-  const isServerTable = table.options.manualPagination === true
+  // Facets need the whole dataset. A genuinely server-backed table (useServerTable,
+  // useQueryTable, or manualPagination: true) holds one page, so counts computed
+  // from it would describe the page rather than the data - plausible and wrong.
+  // table.options.manualPagination is NOT the right signal under v9: useTable
+  // also forces it to true to short-circuit the always-registered pagination
+  // row model when the caller merely passes `pagination: false`, which has
+  // nothing to do with the data being remote. isServerBackedTable reads the
+  // caller's actual intent instead. See serverTableRegistry.ts.
+  const isServerTable = isServerBackedTable(table)
 
   // One warning per column per hook instance. Keyed by reason so a column can
   // report two distinct problems without one silencing the other. A ref, not
