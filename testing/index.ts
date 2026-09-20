@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import type { RenderHookResult } from '@testing-library/react'
-import type { RowData, Table, Row } from '@tanstack/react-table'
+import type { RowData, Row } from '@tanstack/react-table'
+import type { TablecraftFeatures, TablecraftTable } from '../src/features'
 import { useTable } from '../src/hooks/useTable'
 import type {
   UseTableOptions,
@@ -26,9 +27,9 @@ export interface RenderTableOptions<TData extends RowData>
 
 export interface RenderTableResult<TData extends RowData> {
   /** Current TanStack Table instance */
-  table: () => Table<TData>
+  table: () => TablecraftTable<TData>
   /** Current visible rows (respects pagination, sorting, filters) */
-  rows: () => Row<TData>[]
+  rows: () => Row<TablecraftFeatures, TData>[]
   /** Current pagination state and helpers */
   pagination: () => PaginationReturn
   /** Current sorting state and helpers */
