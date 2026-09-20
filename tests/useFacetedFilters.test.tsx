@@ -117,7 +117,7 @@ describe('useFacetedFilters — selection', () => {
     act(() => result.current.facets.getFacet('status').toggle('Active'))
     act(() => result.current.facets.getFacet('status').toggle('Active'))
 
-    expect(result.current.table.getState().columnFilters).toEqual([])
+    expect(result.current.table.store.state.columnFilters).toEqual([])
   })
 
   it('clear removes the filter and restores every row', () => {
@@ -126,7 +126,7 @@ describe('useFacetedFilters — selection', () => {
     act(() => result.current.facets.getFacet('status').toggle('Active'))
     act(() => result.current.facets.getFacet('status').clear())
 
-    expect(result.current.table.getState().columnFilters).toEqual([])
+    expect(result.current.table.store.state.columnFilters).toEqual([])
     expect(result.current.table.getRowModel().rows).toHaveLength(6)
   })
 
@@ -196,7 +196,7 @@ describe('useFacetedFilters — unknown column', () => {
     act(() => result.current.facets.getFacet('nope').toggle('x'))
     act(() => result.current.facets.getFacet('nope').clear())
 
-    expect(result.current.table.getState().columnFilters).toEqual([])
+    expect(result.current.table.store.state.columnFilters).toEqual([])
   })
 })
 
@@ -269,7 +269,7 @@ describe('useFacetedFilters — range facets', () => {
     act(() => result.current.facets.getRangeFacet('price').setRange([20, 40]))
     act(() => result.current.facets.getRangeFacet('price').setRange(undefined))
 
-    expect(result.current.table.getState().columnFilters).toEqual([])
+    expect(result.current.table.store.state.columnFilters).toEqual([])
     expect(result.current.table.getRowModel().rows).toHaveLength(6)
   })
 
@@ -279,7 +279,7 @@ describe('useFacetedFilters — range facets', () => {
     act(() => result.current.facets.getRangeFacet('price').setRange([20, 40]))
     act(() => result.current.facets.getRangeFacet('price').clear())
 
-    expect(result.current.table.getState().columnFilters).toEqual([])
+    expect(result.current.table.store.state.columnFilters).toEqual([])
   })
 
   it('min and max ignore the column own range filter', () => {
@@ -314,7 +314,7 @@ describe('useFacetedFilters — range facets', () => {
 
     expect([facet.min, facet.max]).toEqual([undefined, undefined])
     act(() => facet.setRange([1, 2]))
-    expect(result.current.table.getState().columnFilters).toEqual([])
+    expect(result.current.table.store.state.columnFilters).toEqual([])
     expect(warn).toHaveBeenCalledTimes(1)
     expect(String(warn.mock.calls[0][0])).toContain('nope')
   })
