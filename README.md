@@ -15,7 +15,7 @@ tablecraft collapses the 80–150 lines of `useState`/`useMemo` boilerplate that
 npm i @marvinackerman/tablecraft
 ```
 
-`@tanstack/react-table` (`^8`) and `react` (`>=18`) are the only required peers, and npm installs them for you. Everything else is optional and lives behind its own entry point, so you install it only when you reach for the feature it backs:
+`@tanstack/react-table` (`^9`) and `react` (`>=18`) are the only required peers, and npm installs them for you. Everything else is optional and lives behind its own entry point, so you install it only when you reach for the feature it backs:
 
 | Optional peer | Entry it backs |
 |---|---|
