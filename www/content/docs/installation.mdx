@@ -15,12 +15,12 @@ tablecraft's core entry (`useTable`, `createColumns`, and friends) is built on
 top of TanStack Table and needs React itself. Install these alongside it:
 
 ```bash
-npm install @tanstack/react-table@"^8" react@">=18"
+npm install @tanstack/react-table@"^9" react@">=18"
 ```
 
 | Package | Range | Why |
 |---|---|---|
-| `@tanstack/react-table` | `^8` | tablecraft wraps its row model, column, and state APIs. TanStack Table v9 renamed these (`getCoreRowModel` → `createCoreRowModel`) and is **not** supported. |
+| `@tanstack/react-table` | `^9` | tablecraft wraps its row model, column, and state APIs. TanStack Table v8 is no longer supported — see the [v4 migration guide](/docs/migrating-v4) if you are upgrading from a v8-based tablecraft 3.x. |
 | `react` | `>=18` | hooks-based, requires a React 18+ runtime |
 
 That is the whole list. Every other dependency is optional and confined to its
