@@ -37,7 +37,6 @@ import { useColumnPinningState } from './useColumnPinningState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
-import { setServerTableFlag } from '../utils/serverTableRegistry'
 
 export function useTable<TData extends RowData>(
   options: UseTableOptions<TData>
@@ -244,6 +243,15 @@ export function useTable<TData extends RowData>(
     manualPagination: manualPagination || !paginationEnabled,
     rowCount,
 
+    // Carries the caller's actual manualPagination intent, separately from
+    // the `manualPagination || !paginationEnabled` value above. A client-side
+    // table that merely passed `pagination: false` is NOT server-backed.
+    // See the TableMeta augmentation in types/index.ts and useFacetedFilters,
+    // which reads this to decide whether the full dataset is available.
+    meta: {
+      tablecraftServerBacked: manualPagination,
+    },
+
     // Sorting
     onSortingChange: externalOnSortingChange ?? sortState.onSortingChange,
     manualSorting,
@@ -295,12 +303,6 @@ export function useTable<TData extends RowData>(
       onColumnPinningChange: columnPinningState.setState,
     }),
   })
-
-  // Record the caller's actual manualPagination intent, separately from the
-  // `manualPagination || !paginationEnabled` value handed to TanStack above.
-  // See serverTableRegistry.ts for why table.options.manualPagination alone
-  // can no longer answer "is this table's data remote?".
-  setServerTableFlag(table, manualPagination)
 
   // ─── Persistence: save state on change ───────────────────
   useEffect(() => {

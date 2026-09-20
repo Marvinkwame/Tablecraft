@@ -310,6 +310,13 @@ export function useQueryTable<TData extends RowData>(
     manualPagination: true,
     rowCount,
 
+    // This table always holds one remote page. See the TableMeta
+    // augmentation in types/index.ts and useFacetedFilters, which reads
+    // this to decide whether the full dataset is available to facet.
+    meta: {
+      tablecraftServerBacked: true,
+    },
+
     // Server-side sorting
     onSortingChange: sortState.onSortingChange,
     manualSorting: true,

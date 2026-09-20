@@ -442,6 +442,20 @@ declare module '@tanstack/react-table' {
      */
     exportValue?: (row: Row<TFeatures, TData>) => unknown
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface TableMeta<TFeatures extends TableFeatures, TData extends RowData> {
+    /**
+     * True when this table's data lives on a server and only one page is
+     * ever present client-side (useQueryTable, useInfiniteTable, or useTable
+     * with the caller's own `manualPagination: true`). Read by
+     * `useFacetedFilters` to decide whether the full dataset is even
+     * available to facet — computing facet counts from a single page would
+     * be plausible and wrong. Internal to tablecraft; a table built outside
+     * tablecraft simply won't carry this flag.
+     */
+    tablecraftServerBacked?: boolean
+  }
 }
 
 export interface UseTableExportOptions {
