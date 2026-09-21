@@ -1,4 +1,5 @@
 import type { ColumnDef, RowData } from '@tanstack/react-table'
+import type { TablecraftFeatures } from '../features'
 import { humanizeKey } from '../utils/humanizeKey'
 
 export interface InferColumnsOptions<TData extends RowData> {
@@ -7,7 +8,7 @@ export interface InferColumnsOptions<TData extends RowData> {
   /** Blacklist — exclude these keys from columns */
   exclude?: (keyof TData)[]
   /** Override specific column definitions while keeping the rest inferred */
-  overrides?: Partial<Record<keyof TData, Partial<ColumnDef<TData, any>>>>
+  overrides?: Partial<Record<keyof TData, Partial<ColumnDef<TablecraftFeatures, TData, any>>>>
 }
 
 /**
@@ -16,12 +17,12 @@ export interface InferColumnsOptions<TData extends RowData> {
  *
  * @param data - Array of data objects (needs at least one row to infer shape)
  * @param options - Include/exclude/override options
- * @returns ColumnDef<TData>[]
+ * @returns ColumnDef<TablecraftFeatures, TData, any>[]
  */
 export function inferColumns<TData extends RowData>(
   data: TData[],
   options: InferColumnsOptions<TData> = {}
-): ColumnDef<TData, any>[] {
+): ColumnDef<TablecraftFeatures, TData, any>[] {
   const { include, exclude = [], overrides = {} } = options
 
   if (data.length === 0) return []
@@ -50,7 +51,7 @@ export function inferColumns<TData extends RowData>(
       return true
     })
     .map((key) => {
-      const override = (overrides as Record<string, Partial<ColumnDef<TData, any>> | undefined>)[key] ?? {}
+      const override = (overrides as Record<string, Partial<ColumnDef<TablecraftFeatures, TData, any>> | undefined>)[key] ?? {}
 
       const header = (override.header as string) ?? humanizeKey(String(key))
 
@@ -58,6 +59,6 @@ export function inferColumns<TData extends RowData>(
         accessorKey: key,
         header,
         ...override,
-      } as ColumnDef<TData, any>
+      } as ColumnDef<TablecraftFeatures, TData, any>
     })
 }

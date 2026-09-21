@@ -1,16 +1,16 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import type { VisibilityState } from '@tanstack/react-table'
+import type { ColumnVisibilityState } from '@tanstack/react-table'
 
 export interface UseColumnVisibilityOptions {
-  defaultVisibility?: VisibilityState
+  defaultVisibility?: ColumnVisibilityState
 }
 
 export function useColumnVisibilityState(options: UseColumnVisibilityOptions = {}) {
   const { defaultVisibility = {} } = options
 
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(defaultVisibility)
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>(defaultVisibility)
 
   const toggleColumn = useCallback((columnId: string) => {
     setColumnVisibility((prev) => ({

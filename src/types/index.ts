@@ -12,9 +12,10 @@ import type {
   RowData,
   RowSelectionState,
   SortingState,
-  Table,
-  VisibilityState,
+  TableFeatures,
+  ColumnVisibilityState,
 } from '@tanstack/react-table'
+import type { TablecraftFeatures, TablecraftTable } from '../features'
 
 // ─── Pagination ───────────────────────────────────────────────
 
@@ -84,11 +85,11 @@ export interface RowSelectionReturn {
 // ─── Column Visibility ──────────────────────────────────
 
 export interface ColumnVisibilityOptions {
-  defaultVisibility?: VisibilityState
+  defaultVisibility?: ColumnVisibilityState
 }
 
 export interface ColumnVisibilityReturn {
-  state: VisibilityState
+  state: ColumnVisibilityState
   toggleColumn: (columnId: string) => void
   showColumn: (columnId: string) => void
   hideColumn: (columnId: string) => void
@@ -243,18 +244,18 @@ export interface GroupingReturn {
 // ─── Column Pinning ──────────────────────────────────────
 
 export interface ColumnPinningOptions {
-  defaultPinning?: ColumnPinningState   // { left?: string[], right?: string[] }
+  defaultPinning?: ColumnPinningState   // { start?: string[], end?: string[] }
 }
 
 export interface ColumnPinningReturn {
   state: ColumnPinningState
-  pinLeft: (columnId: string) => void
-  pinRight: (columnId: string) => void
+  pinStart: (columnId: string) => void
+  pinEnd: (columnId: string) => void
   unpin: (columnId: string) => void
   clearPinning: () => void
-  isPinned: (columnId: string) => 'left' | 'right' | false
-  leftColumns: string[]
-  rightColumns: string[]
+  isPinned: (columnId: string) => 'start' | 'end' | false
+  startColumns: string[]
+  endColumns: string[]
 }
 
 // ─── Empty State ─────────────────────────────────────────────
@@ -332,7 +333,7 @@ export interface TableKitDefaults {
 
 export interface UseTableOptions<TData extends RowData> {
   data: TData[]
-  columns: ColumnDef<TData, any>[]
+  columns: ColumnDef<TablecraftFeatures, TData, any>[]
 
   // Pagination
   pagination?: PaginationOptions | boolean
@@ -372,7 +373,7 @@ export interface UseTableOptions<TData extends RowData> {
    * In ESM-only environments (Vite, browsers), pass a `FilterFn` instead; it is used
    * directly as the global filter function.
    */
-  fuzzy?: boolean | FilterFn<TData>
+  fuzzy?: boolean | FilterFn<TablecraftFeatures, TData>
 
   // v1.x — State persistence
   persist?: PersistStorage | false
@@ -386,7 +387,7 @@ export interface UseTableOptions<TData extends RowData> {
 // ─── useTable Return ──────────────────────────────────────────
 
 export interface UseTableReturn<TData extends RowData> {
-  table: Table<TData>
+  table: TablecraftTable<TData>
   pagination: PaginationReturn
   sorting: SortingReturn
   globalFilter: GlobalFilterReturn
@@ -416,14 +417,14 @@ export interface VirtualRowsOptions {
   overscan?: number  // extra rows rendered beyond the visible area, default: 5
 }
 
-export interface VirtualRow<TData> {
-  row:   Row<TData>  // full TanStack Row object
+export interface VirtualRow<TData extends RowData> {
+  row:   Row<TablecraftFeatures, TData>  // full TanStack Row object
   index: number      // position in the full rows array
   start: number      // px offset from top — use as `top` in absolute positioning
   size:  number      // row height in px (always === rowHeight in fixed mode)
 }
 
-export interface VirtualRowsReturn<TData> {
+export interface VirtualRowsReturn<TData extends RowData> {
   virtualRows:   VirtualRow<TData>[]
   totalHeight:   number
   containerRef:  React.RefObject<HTMLDivElement>
@@ -434,12 +435,26 @@ export interface VirtualRowsReturn<TData> {
 
 declare module '@tanstack/react-table' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
+  interface ColumnMeta<TFeatures extends TableFeatures, TData extends RowData, TValue> {
     /**
      * Value to use for this column when exporting. Receives the row.
      * Falls back to `row.getValue(columnId)` when omitted.
      */
-    exportValue?: (row: Row<TData>) => unknown
+    exportValue?: (row: Row<TFeatures, TData>) => unknown
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface TableMeta<TFeatures extends TableFeatures, TData extends RowData> {
+    /**
+     * True when this table's data lives on a server and only one page is
+     * ever present client-side (useQueryTable, useInfiniteTable, or useTable
+     * with the caller's own `manualPagination: true`). Read by
+     * `useFacetedFilters` to decide whether the full dataset is even
+     * available to facet — computing facet counts from a single page would
+     * be plausible and wrong. Internal to tablecraft; a table built outside
+     * tablecraft simply won't carry this flag.
+     */
+    tablecraftServerBacked?: boolean
   }
 }
 

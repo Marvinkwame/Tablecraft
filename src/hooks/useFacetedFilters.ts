@@ -1,8 +1,9 @@
 'use client'
 
 import { useRef } from 'react'
-import type { RowData, Table } from '@tanstack/react-table'
+import type { RowData } from '@tanstack/react-table'
 import type { ColumnFacet, FacetedFiltersReturn, RangeFacet } from '../types'
+import type { TablecraftTable } from '../features'
 import {
   buildFacetOptions,
   isRangeFilterFn,
@@ -18,7 +19,7 @@ import {
  * whose facet config carries a stale column id. Only leaf columns hold values,
  * so they are the only ones that can be faceted.
  */
-function findColumn<TData extends RowData>(table: Table<TData>, columnId: string) {
+function findColumn<TData extends RowData>(table: TablecraftTable<TData>, columnId: string) {
   return table.getAllLeafColumns().find((c) => c.id === columnId)
 }
 
@@ -56,13 +57,23 @@ function emptyRangeFacet(): RangeFacet {
 }
 
 export function useFacetedFilters<TData extends RowData>(
-  table: Table<TData>
+  table: TablecraftTable<TData>
 ): FacetedFiltersReturn {
-  // Facets need the whole dataset. A table with manualPagination holds one
-  // page, so counts computed from it would describe the page rather than the
-  // data - plausible and wrong. There is no `manualFiltering` flag in this
-  // codebase; manualPagination is the signal that the data is remote.
-  const isServerTable = table.options.manualPagination === true
+  // Facets need the whole dataset. A genuinely server-backed table (useQueryTable,
+  // useInfiniteTable, or useTable with manualPagination: true) holds one page, so
+  // counts computed from it would describe the page rather than the data -
+  // plausible and wrong. table.options.manualPagination is NOT a reliable signal
+  // under v9 on its own: useTable also forces it to true to short-circuit the
+  // always-registered pagination row model when the caller merely passes
+  // `pagination: false`, which has nothing to do with the data being remote.
+  // table.options.meta.tablecraftServerBacked carries the caller's actual intent
+  // instead (see the TableMeta augmentation in types/index.ts and how each
+  // table-building hook sets it). The manualPagination fallback below only
+  // applies when that meta flag is absent - i.e. for a table built outside
+  // tablecraft and handed to this public hook - so such a table keeps behaving
+  // as it did before this branch rather than silently failing open.
+  const isServerTable =
+    table.options.meta?.tablecraftServerBacked ?? table.options.manualPagination === true
 
   // One warning per column per hook instance. Keyed by reason so a column can
   // report two distinct problems without one silencing the other. A ref, not
@@ -94,7 +105,7 @@ export function useFacetedFilters<TData extends RowData>(
       warnOnce(
         `server:${columnId}`,
         `useFacetedFilters: facets for "${columnId}" need the full dataset, ` +
-          `which a manualPagination table does not have. Facets are empty.`
+          `which a server-backed table only holds one page of. Facets are empty.`
       )
       return undefined
     }

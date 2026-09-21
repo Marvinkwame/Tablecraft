@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import type { RowData, Table } from '@tanstack/react-table'
+import type { RowData } from '@tanstack/react-table'
 import type { MultiRowEditingOptions, MultiRowEditingReturn } from '../types'
+import type { TablecraftTable } from '../features'
 
 export function useMultiRowEditing<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options: MultiRowEditingOptions<TData> = {}
 ): MultiRowEditingReturn<TData> {
   const { onSave, onSaveAll } = options

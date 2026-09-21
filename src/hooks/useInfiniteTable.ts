@@ -1,12 +1,10 @@
 'use client'
 
 import { useMemo } from 'react'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getGroupedRowModel,
-} from '@tanstack/react-table'
+// v9's hook is also named `useTable`, which collides with tablecraft's own
+// export elsewhere. Aliasing keeps the call site below unchanged.
+import { useTable as useReactTable } from '@tanstack/react-table'
+import { tablecraftFeatures } from '../features'
 import type { RowData } from '@tanstack/react-table'
 import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query'
 
@@ -132,9 +130,26 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
 
   // ─── Build table ──────────────────────────────────────────
   const table = useReactTable({
+    features: tablecraftFeatures,
     data: flatData,
     columns,
     manualSorting: true,
+    // tablecraftFeatures always registers rowPaginationFeature and
+    // createPaginatedRowModel(), and v9 only skips that row model when
+    // manualPagination is true — there is no way to opt a registered feature
+    // out per-table otherwise. Without this, an infinite list with no
+    // `pagination` state slice still gets sliced to v9's uncontrolled default
+    // pageSize of 10, so accumulated rows past the first page silently
+    // vanish from getRowModel(). This table must always render everything
+    // it has accumulated.
+    manualPagination: true,
+    // This table always holds one remote page (or accumulated pages, never
+    // the full dataset). See the TableMeta augmentation in types/index.ts
+    // and useFacetedFilters, which reads this to decide whether the full
+    // dataset is available to facet.
+    meta: {
+      tablecraftServerBacked: true,
+    },
     state: {
       sorting: sortState.state,
       globalFilter: filterState.state,
@@ -147,9 +162,11 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     onSortingChange: sortState.onSortingChange,
     onGlobalFilterChange: filterState.onGlobalFilterChange,
     onColumnFiltersChange: columnFilterState.onColumnFiltersChange,
-    ...(globalFilterEnabled || columnFiltersEnabled
-      ? { getFilteredRowModel: getFilteredRowModel() }
-      : {}),
+    // v8 omitted the filtered row model when neither filter feature was
+    // enabled. enableFilters/enableColumnFilters do NOT do this — they gate
+    // whether a column can be filtered, not whether existing filter state is
+    // applied. Verified by probe.
+    manualFiltering: !(globalFilterEnabled || columnFiltersEnabled),
     globalFilterFn: 'includesString',
     ...(rowSelectionEnabled && {
       onRowSelectionChange: rowSelectionState.onRowSelectionChange,
@@ -160,7 +177,6 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     }),
     ...(groupingEnabled && {
       onGroupingChange: groupingState.onGroupingChange,
-      getGroupedRowModel: getGroupedRowModel(),
       manualGrouping: groupingConfig.manualGrouping,
       groupedColumnMode: groupingConfig.groupedColumnMode,
     }),
@@ -168,7 +184,6 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
     ...(columnPinningEnabled && {
       onColumnPinningChange: columnPinningState.setState,
     }),
-    getCoreRowModel: getCoreRowModel(),
   })
 
   // ─── Build named return objects ───────────────────────────
@@ -253,13 +268,13 @@ export function useInfiniteTable<TData extends RowData, TCursor = unknown>(
   const columnPinning: ColumnPinningReturn = useMemo(
     () => ({
       state: columnPinningState.state,
-      pinLeft: columnPinningState.pinLeft,
-      pinRight: columnPinningState.pinRight,
+      pinStart: columnPinningState.pinStart,
+      pinEnd: columnPinningState.pinEnd,
       unpin: columnPinningState.unpin,
       clearPinning: columnPinningState.clearPinning,
       isPinned: columnPinningState.isPinned,
-      leftColumns: columnPinningState.leftColumns,
-      rightColumns: columnPinningState.rightColumns,
+      startColumns: columnPinningState.startColumns,
+      endColumns: columnPinningState.endColumns,
     }),
     [columnPinningState]
   )

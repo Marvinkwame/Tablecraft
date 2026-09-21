@@ -4,18 +4,11 @@
 declare const require: (id: string) => any
 
 import { useMemo, useEffect, useRef } from 'react'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  getExpandedRowModel,
-  getGroupedRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFacetedMinMaxValues,
-} from '@tanstack/react-table'
+// v9's hook is also named `useTable`, which collides with tablecraft's own
+// export in this file. Aliasing keeps the call sites below unchanged.
+import { useTable as useReactTable } from '@tanstack/react-table'
+import { tablecraftFeatures } from '../features'
+import type { TablecraftFeatures } from '../features'
 import type { FilterFn, RowData } from '@tanstack/react-table'
 
 import type {
@@ -192,7 +185,7 @@ export function useTable<TData extends RowData>(
   const columnPinningState = useColumnPinningState(columnPinningConfig)
 
   // ─── Fuzzy filter ────────────────────────────────────────
-  const fuzzyFilterFn = useMemo<FilterFn<TData> | undefined>(() => {
+  const fuzzyFilterFn = useMemo<FilterFn<TablecraftFeatures, TData> | undefined>(() => {
     if (!fuzzy) return undefined
     if (typeof fuzzy === 'function') return fuzzy
     try {
@@ -201,7 +194,7 @@ export function useTable<TData extends RowData>(
         matchSorterLib.matchSorter
       const rankings = matchSorterLib.rankings
 
-      const fn: FilterFn<TData> = (row, columnId, filterValue) => {
+      const fn: FilterFn<TablecraftFeatures, TData> = (row, columnId, filterValue) => {
         if (!filterValue || String(filterValue).trim() === '') return true
         const cellValue = row.getValue(columnId)
         const items = [{ value: cellValue }]
@@ -225,7 +218,8 @@ export function useTable<TData extends RowData>(
   }, [fuzzy])
 
   // ─── Build table ─────────────────────────────────────────
-  const table = useReactTable({
+  const table = useReactTable<TablecraftFeatures, TData>({
+    features: tablecraftFeatures,
     data,
     columns,
     state: {
@@ -242,30 +236,40 @@ export function useTable<TData extends RowData>(
 
     // Pagination
     onPaginationChange: externalOnPaginationChange ?? paginationState.onPaginationChange,
-    manualPagination,
+    // `pagination: false` used to omit the row model entirely. v9 has no
+    // enablePagination, and the factory is always registered in
+    // tablecraftFeatures, so the only way to express "off" is manualPagination
+    // — which short-circuits the registered factory and renders every row.
+    manualPagination: manualPagination || !paginationEnabled,
     rowCount,
-    getPaginationRowModel:
-      paginationEnabled && !manualPagination ? getPaginationRowModel() : undefined,
+
+    // Carries the caller's actual manualPagination intent, separately from
+    // the `manualPagination || !paginationEnabled` value above. A client-side
+    // table that merely passed `pagination: false` is NOT server-backed.
+    // See the TableMeta augmentation in types/index.ts and useFacetedFilters,
+    // which reads this to decide whether the full dataset is available.
+    meta: {
+      tablecraftServerBacked: manualPagination,
+    },
 
     // Sorting
     onSortingChange: externalOnSortingChange ?? sortState.onSortingChange,
     manualSorting,
-    getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
 
     // Filters
     onGlobalFilterChange: externalOnGlobalFilterChange ?? filterState.onGlobalFilterChange,
     onColumnFiltersChange: externalOnColumnFiltersChange ?? columnFilterState.onColumnFiltersChange,
-    getFilteredRowModel:
-      globalFilterEnabled || columnFiltersEnabled ? getFilteredRowModel() : undefined,
+    // Likewise for filtering: v8 omitted the filtered row model when neither
+    // filter feature was enabled. enableFilters/enableColumnFilters do NOT do
+    // this — they gate whether a column can be filtered, not whether existing
+    // filter state is applied. Verified by probe.
+    manualFiltering: !(globalFilterEnabled || columnFiltersEnabled),
     globalFilterFn: fuzzyFilterFn ?? 'includesString',
 
-    // Faceting — unconditional. TanStack creates one memoized closure per
-    // column but only computes on access, so this costs nothing until a facet
-    // is read. Making it opt-in would mean useFacetedFilters silently returns
-    // empty facets whenever the flag is forgotten.
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    // Faceting, row models and every other factory now live in
+    // `tablecraftFeatures`. A registered factory is short-circuited by its
+    // matching `manual*` option, so the conditional wiring that used to live
+    // here is preserved by the flags below rather than lost.
 
     // Row selection
     ...(rowSelectionEnabled && {
@@ -281,7 +285,6 @@ export function useTable<TData extends RowData>(
     // Row expansion
     ...(rowExpansionEnabled && {
       onExpandedChange: rowExpansionState.onExpandedChange,
-      getExpandedRowModel: getExpandedRowModel(),
       paginateExpandedRows: rowExpansionConfig.paginateExpandedRows,
     }),
     ...(rowExpansionEnabled && rowExpansionConfig.getSubRows && {
@@ -291,7 +294,6 @@ export function useTable<TData extends RowData>(
     // Grouping
     ...(groupingEnabled && {
       onGroupingChange: groupingState.onGroupingChange,
-      getGroupedRowModel: getGroupedRowModel(),
       manualGrouping: groupingConfig.manualGrouping,
       groupedColumnMode: groupingConfig.groupedColumnMode,
     }),
@@ -300,8 +302,6 @@ export function useTable<TData extends RowData>(
     ...(columnPinningEnabled && {
       onColumnPinningChange: columnPinningState.setState,
     }),
-
-    getCoreRowModel: getCoreRowModel(),
   })
 
   // ─── Persistence: save state on change ───────────────────
@@ -452,13 +452,13 @@ export function useTable<TData extends RowData>(
   const columnPinning: ColumnPinningReturn = useMemo(
     () => ({
       state: columnPinningState.state,
-      pinLeft: columnPinningState.pinLeft,
-      pinRight: columnPinningState.pinRight,
+      pinStart: columnPinningState.pinStart,
+      pinEnd: columnPinningState.pinEnd,
       unpin: columnPinningState.unpin,
       clearPinning: columnPinningState.clearPinning,
       isPinned: columnPinningState.isPinned,
-      leftColumns: columnPinningState.leftColumns,
-      rightColumns: columnPinningState.rightColumns,
+      startColumns: columnPinningState.startColumns,
+      endColumns: columnPinningState.endColumns,
     }),
     [columnPinningState]
   )

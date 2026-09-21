@@ -1,5 +1,6 @@
 import type { FilterFn } from '@tanstack/react-table'
 import type { FacetOption } from '../types'
+import type { TablecraftFeatures } from '../features'
 
 /**
  * Values that make no sense as a facet checkbox. Note this deliberately does
@@ -114,5 +115,5 @@ export function isRangeFilterFn(filterFn: unknown): boolean {
  * `'Admin'` inside `'Super Admin'`). Do not swap this back for
  * `arrIncludesSome` — that is the exact bug this function exists to fix.
  */
-export const facetedFilterFn: FilterFn<any> = (row, columnId, filterValue) =>
+export const facetedFilterFn: FilterFn<TablecraftFeatures, any> = (row, columnId, filterValue) =>
   Array.isArray(filterValue) && filterValue.includes(row.getValue(columnId))

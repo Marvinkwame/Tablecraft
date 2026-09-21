@@ -3,6 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { z } from 'zod'
 import { columnsFromZod } from '../zod/columnsFromZod'
 import { zodValidator } from '../zod/zodValidator'
+import type { TablecraftFeatures } from '../src/features'
 
 const userSchema = z.object({ name: z.string(), age: z.number() })
 type User = z.infer<typeof userSchema>
@@ -10,7 +11,7 @@ type User = z.infer<typeof userSchema>
 describe('zod entry — public generics', () => {
   it('columnsFromZod infers ColumnDef<User>[] from the schema', () => {
     const cols = columnsFromZod(userSchema)
-    expectTypeOf(cols).toMatchTypeOf<ColumnDef<User, any>[]>()
+    expectTypeOf(cols).toMatchTypeOf<ColumnDef<TablecraftFeatures, User, any>[]>()
   })
 
   it('zodValidator infers an error map keyed by the schema fields', () => {

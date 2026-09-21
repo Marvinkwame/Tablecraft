@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import type { RowData, Table } from '@tanstack/react-table'
+import type { RowData } from '@tanstack/react-table'
 import type { TableA11yReturn } from '../types'
+import type { TablecraftTable } from '../features'
 import {
   getAriaSortValue,
   getAriaRowCount,
@@ -29,7 +30,7 @@ export interface UseTableA11yOptions {
 }
 
 export function useTableA11y<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options: UseTableA11yOptions = {}
 ): TableA11yReturn {
   const { selectionEnabled = false, cellNavigation = false } = options
@@ -74,7 +75,8 @@ export function useTableA11y<TData extends RowData>(
   // ─── getHeaderProps ───────────────────────────────────────
   const getHeaderProps = useCallback((headerId: string) => ({
     role: 'columnheader' as const,
-    'aria-sort': getAriaSortValue(headerId, table.getState().sorting),
+    // v9 removed table.getState(); the whole snapshot lives on the store.
+    'aria-sort': getAriaSortValue(headerId, table.store.state.sorting),
   }), [table])
 
   // ─── Shared movement ──────────────────────────────────────
@@ -95,7 +97,7 @@ export function useTableA11y<TData extends RowData>(
     // page — that is the whole reason it exists alongside aria-rowcount. Use
     // the pre-pagination model so the index survives pagination and, unlike
     // getFilteredRowModel(), reflects the user's sort rather than data order.
-    const indexRows = table.getPrePaginationRowModel().rows
+    const indexRows = table.getPrePaginatedRowModel().rows
     const row = rows.find((r) => r.id === rowId) ?? indexRows.find((r) => r.id === rowId)
     const rowIndex = getAriaRowIndex(rowId, indexRows)
 

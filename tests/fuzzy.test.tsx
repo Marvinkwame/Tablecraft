@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react'
 import type { FilterFn } from '@tanstack/react-table'
 import { useTable } from '../src/hooks/useTable'
 import { createColumns } from '../src/helpers/createColumns'
+import type { TablecraftFeatures } from '../src/features'
 
 type User = { id: number; name: string; role: string }
 
@@ -72,7 +73,7 @@ describe('fuzzy search', () => {
 
   it('uses a custom filter function passed as fuzzy', () => {
     // Exact-match filter: a cell passes only when it strictly equals the search value
-    const exactMatch: FilterFn<User> = (row, columnId, filterValue) =>
+    const exactMatch: FilterFn<TablecraftFeatures, User> = (row, columnId, filterValue) =>
       row.getValue(columnId) === filterValue
 
     const { result } = renderHook(() =>

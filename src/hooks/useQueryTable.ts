@@ -4,13 +4,11 @@
 declare const require: (id: string) => any
 
 import { useMemo, useEffect, useRef } from 'react'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getExpandedRowModel,
-  getGroupedRowModel,
-} from '@tanstack/react-table'
+// v9's hook is also named `useTable`, which collides with tablecraft's own
+// export elsewhere. Aliasing keeps the call site below unchanged.
+import { useTable as useReactTable } from '@tanstack/react-table'
+import { tablecraftFeatures } from '../features'
+import type { TablecraftFeatures } from '../features'
 import type { FilterFn, RowData } from '@tanstack/react-table'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 
@@ -259,7 +257,7 @@ export function useQueryTable<TData extends RowData>(
   const rowCount = query.data?.rowCount ?? 0
 
   // ─── Fuzzy filter ────────────────────────────────────────
-  const fuzzyFilterFn = useMemo<FilterFn<TData> | undefined>(() => {
+  const fuzzyFilterFn = useMemo<FilterFn<TablecraftFeatures, TData> | undefined>(() => {
     if (!fuzzy) return undefined
     if (typeof fuzzy === 'function') return fuzzy
     try {
@@ -267,7 +265,7 @@ export function useQueryTable<TData extends RowData>(
       const matchSorter = matchSorterLib.matchSorter
       const rankings = matchSorterLib.rankings
 
-      const fn: FilterFn<TData> = (row, columnId, filterValue) => {
+      const fn: FilterFn<TablecraftFeatures, TData> = (row, columnId, filterValue) => {
         if (!filterValue || String(filterValue).trim() === '') return true
         const cellValue = row.getValue(columnId)
         const items = [{ value: cellValue }]
@@ -291,7 +289,8 @@ export function useQueryTable<TData extends RowData>(
   }, [fuzzy])
 
   // ─── Build table ─────────────────────────────────────────
-  const table = useReactTable({
+  const table = useReactTable<TablecraftFeatures, TData>({
+    features: tablecraftFeatures,
     data,
     columns,
     state: {
@@ -311,6 +310,13 @@ export function useQueryTable<TData extends RowData>(
     manualPagination: true,
     rowCount,
 
+    // This table always holds one remote page. See the TableMeta
+    // augmentation in types/index.ts and useFacetedFilters, which reads
+    // this to decide whether the full dataset is available to facet.
+    meta: {
+      tablecraftServerBacked: true,
+    },
+
     // Server-side sorting
     onSortingChange: sortState.onSortingChange,
     manualSorting: true,
@@ -318,8 +324,11 @@ export function useQueryTable<TData extends RowData>(
     // Client-side filtering (for local filter UI state — actual filtering done server-side)
     onGlobalFilterChange: filterState.onGlobalFilterChange,
     onColumnFiltersChange: columnFilterState.onColumnFiltersChange,
-    getFilteredRowModel:
-      globalFilterEnabled || columnFiltersEnabled ? getFilteredRowModel() : undefined,
+    // v8 omitted the filtered row model when neither filter feature was
+    // enabled. enableFilters/enableColumnFilters do NOT do this — they gate
+    // whether a column can be filtered, not whether existing filter state is
+    // applied. Verified by probe.
+    manualFiltering: !(globalFilterEnabled || columnFiltersEnabled),
     globalFilterFn: fuzzyFilterFn ?? 'includesString',
 
     // Row selection
@@ -336,7 +345,6 @@ export function useQueryTable<TData extends RowData>(
     // Row expansion
     ...(rowExpansionEnabled && {
       onExpandedChange: rowExpansionState.onExpandedChange,
-      getExpandedRowModel: getExpandedRowModel(),
       paginateExpandedRows: rowExpansionConfig.paginateExpandedRows,
     }),
     ...(rowExpansionEnabled && rowExpansionConfig.getSubRows && {
@@ -346,7 +354,6 @@ export function useQueryTable<TData extends RowData>(
     // Grouping
     ...(groupingEnabled && {
       onGroupingChange: groupingState.onGroupingChange,
-      getGroupedRowModel: getGroupedRowModel(),
       manualGrouping: groupingConfig.manualGrouping,
       groupedColumnMode: groupingConfig.groupedColumnMode,
     }),
@@ -355,8 +362,6 @@ export function useQueryTable<TData extends RowData>(
     ...(columnPinningEnabled && {
       onColumnPinningChange: columnPinningState.setState,
     }),
-
-    getCoreRowModel: getCoreRowModel(),
   })
 
   // ─── Persistence: save state on change ───────────────────
@@ -507,13 +512,13 @@ export function useQueryTable<TData extends RowData>(
   const columnPinning: ColumnPinningReturn = useMemo(
     () => ({
       state: columnPinningState.state,
-      pinLeft: columnPinningState.pinLeft,
-      pinRight: columnPinningState.pinRight,
+      pinStart: columnPinningState.pinStart,
+      pinEnd: columnPinningState.pinEnd,
       unpin: columnPinningState.unpin,
       clearPinning: columnPinningState.clearPinning,
       isPinned: columnPinningState.isPinned,
-      leftColumns: columnPinningState.leftColumns,
-      rightColumns: columnPinningState.rightColumns,
+      startColumns: columnPinningState.startColumns,
+      endColumns: columnPinningState.endColumns,
     }),
     [columnPinningState]
   )

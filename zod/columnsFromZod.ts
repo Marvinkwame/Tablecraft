@@ -1,15 +1,16 @@
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, RowData } from '@tanstack/react-table'
 import type { z } from 'zod'
+import type { TablecraftFeatures } from '../src/features'
 import { humanizeKey } from '../src/utils/humanizeKey'
 import { getShape, requireShape } from './introspect'
 
-export interface ColumnsFromZodOptions<TData> {
+export interface ColumnsFromZodOptions<TData extends RowData> {
   /** Whitelist — only include these keys, in the order given */
   include?: (keyof TData)[]
   /** Blacklist — exclude these keys */
   exclude?: (keyof TData)[]
   /** Override specific column definitions while keeping the rest generated */
-  overrides?: Partial<Record<keyof TData, Partial<ColumnDef<TData, any>>>>
+  overrides?: Partial<Record<keyof TData, Partial<ColumnDef<TablecraftFeatures, TData, any>>>>
 }
 
 /**
@@ -26,10 +27,10 @@ export interface ColumnsFromZodOptions<TData> {
  * wrapped schemas (`.refine()`) throw — use `zodValidator` for those, which
  * supports them fully.
  */
-export function columnsFromZod<TSchema extends z.ZodType>(
+export function columnsFromZod<TSchema extends z.ZodType<RowData>>(
   schema: TSchema,
   options: ColumnsFromZodOptions<z.infer<TSchema>> = {}
-): ColumnDef<z.infer<TSchema>, any>[] {
+): ColumnDef<TablecraftFeatures, z.infer<TSchema>, any>[] {
   type TData = z.infer<TSchema>
   const { include, exclude = [], overrides = {} } = options
 
@@ -47,8 +48,10 @@ export function columnsFromZod<TSchema extends z.ZodType>(
 
   return keys.map((key) => {
     const override =
-      (overrides as Record<string, Partial<ColumnDef<TData, any>> | undefined>)[key] ?? {}
+      (overrides as Record<string, Partial<ColumnDef<TablecraftFeatures, TData, any>> | undefined>)[
+        key
+      ] ?? {}
     const header = (override.header as string) ?? humanizeKey(String(key))
-    return { accessorKey: key, header, ...override } as ColumnDef<TData, any>
+    return { accessorKey: key, header, ...override } as ColumnDef<TablecraftFeatures, TData, any>
   })
 }

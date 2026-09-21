@@ -4,6 +4,56 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [Unreleased]
+
+### Breaking
+
+- **`@tanstack/react-table` v9 is now required** (`^9`). tablecraft 3.x remains published for v8 users and is the supported path if you are not ready to upgrade.
+
+- **Column pinning uses logical start/end instead of left/right.** v9 made this change because "left" is wrong in RTL layouts.
+
+  ```diff
+  - const { pinLeft, pinRight, leftColumns, rightColumns } = columnPinning
+  + const { pinStart, pinEnd, startColumns, endColumns } = columnPinning
+  ```
+
+  `isPinned` now returns `'start' | 'end' | false`.
+
+- **Type a table instance with `TablecraftTable<T>`, not `Table<T>`.** v9's `Table` takes a feature set as its first type parameter; the exported alias binds it so you keep writing one type argument.
+
+  ```diff
+  - import type { Table } from '@tanstack/react-table'
+  - const table: Table<User> = useTable({ data, columns }).table
+  + import type { TablecraftTable } from '@marvinackerman/tablecraft'
+  + const table: TablecraftTable<User> = useTable({ data, columns }).table
+  ```
+
+- **An explicit `ColumnDef` or `FilterFn` annotation needs `TablecraftFeatures`.** `UseTableOptions.columns` is now `ColumnDef<TablecraftFeatures, TData, any>[]` and `fuzzy` is `FilterFn<TablecraftFeatures, TData>` — the same "feature set is the first type parameter" change as `Table` above, just surfacing wherever a consumer writes the type out by hand. Most consumers infer their columns (`createColumns<User>([...])`, `useTable<User>({...})`) and never write this annotation, so this hits only those who did.
+
+  ```diff
+  - const columns: ColumnDef<User, any>[] = [...]
+  + import type { TablecraftFeatures } from '@marvinackerman/tablecraft'
+  + const columns: ColumnDef<TablecraftFeatures, User, any>[] = [...]
+  ```
+
+**Hook names, options and return shapes are otherwise unchanged** for the common case of columns inferred through `createColumns`/`useTable`'s own type parameter. Binding a fixed feature set internally is what makes that possible — the `ColumnDef`/`FilterFn` break just above is the one place that internal binding surfaces in a type a consumer writes themselves.
+
+- **`columnsFromZod` now requires a schema whose output is an object or array.** Its generic bound tightened from `z.ZodType` to `z.ZodType<RowData>`, following v9's stricter `RowData`. A normal `z.object({...})` schema is unaffected. A schema like `z.string()` is now rejected at compile time — it previously type-checked and then threw at runtime, so this converts a runtime failure into a compile-time one rather than removing any working usage.
+
+### Added
+
+- **`tablecraftFeatures`** and the types `TablecraftFeatures` / `TablecraftTable` are exported from the root entry.
+
+### Note on bundle size
+
+The unreleased root entry (`dist/src/index.mjs`) measures **26,788 bytes**, up from v8's roughly 13 KB. `@tanstack/react-table` is marked `external` in `tsup.config.ts`, so that file contains only tablecraft's own emitted code — `src/features.ts`, where the feature set is bound, is not even part of it; it compiles into its own chunk of roughly 1.4 KB including comments. Feature binding cannot account for the delta: the measured build is unminified, and an unminified byte count is not evidence about what binding the feature set costs.
+
+The real cost of binding one fixed feature set is downstream, not in tablecraft's own file size: a consumer's bundler can no longer tree-shake unused v9 features out of `@tanstack/react-table`, because tablecraft's import graph always touches the full set. That is the same position v8 shipped in — v8 also bundled every feature unconditionally — so this is bundle parity with v8, not a regression, and it is a different claim than the headline byte count above, which speaks to tablecraft's own output rather than to `@tanstack/react-table`'s.
+
+The feature set is bound because v9 resolves a table's methods conditionally on which features are registered, so a wrapper cannot stay generic over features and still promise `pagination` in its return type; binding one concrete set is what keeps `useTable().pagination` typed. Preset-bound entries with a smaller feature set (e.g. a `/core` import) are a **planned** escape hatch, deferred to 4.1 — they do not exist yet, so there is no smaller entry to reach for today.
+
+---
+
 ## [3.2.0] — 2026-09-10
 
 ### Added

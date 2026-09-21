@@ -1,4 +1,5 @@
-import type { Row, SortingState, Table } from '@tanstack/react-table'
+import type { Row, RowData, SortingState } from '@tanstack/react-table'
+import type { TablecraftFeatures, TablecraftTable } from '../features'
 
 /**
  * Returns the aria-sort value for a header cell.
@@ -16,14 +17,14 @@ export function getAriaSortValue(
 /**
  * Total number of filtered rows — used for aria-rowcount.
  */
-export function getAriaRowCount<TData>(table: Table<TData>): number {
+export function getAriaRowCount<TData extends RowData>(table: TablecraftTable<TData>): number {
   return table.getFilteredRowModel().rows.length
 }
 
 /**
  * Number of visible leaf columns — used for aria-colcount.
  */
-export function getAriaColCount<TData>(table: Table<TData>): number {
+export function getAriaColCount<TData extends RowData>(table: TablecraftTable<TData>): number {
   return table.getVisibleLeafColumns().length
 }
 
@@ -31,9 +32,9 @@ export function getAriaColCount<TData>(table: Table<TData>): number {
  * 1-based row index of the given rowId within the provided rows array.
  * Returns -1 if the row is not found (should not happen in normal usage).
  */
-export function getAriaRowIndex<TData>(
+export function getAriaRowIndex<TData extends RowData>(
   rowId: string,
-  rows: Row<TData>[]
+  rows: Row<TablecraftFeatures, TData>[]
 ): number {
   const idx = rows.findIndex((r) => r.id === rowId)
   return idx === -1 ? -1 : idx + 1

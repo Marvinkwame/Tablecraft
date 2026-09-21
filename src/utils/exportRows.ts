@@ -1,5 +1,6 @@
-import type { RowData, Table } from '@tanstack/react-table'
+import type { RowData } from '@tanstack/react-table'
 import type { UseTableExportOptions } from '../types'
+import type { TablecraftTable } from '../features'
 import { humanizeKey } from './humanizeKey'
 
 /**
@@ -86,11 +87,11 @@ export interface ExtractedRows {
 /**
  * Resolve the requested rows and columns into label-keyed plain objects.
  *
- * `'filtered'` reads getPrePaginationRowModel() — getFilteredRowModel() sits
+ * `'filtered'` reads getPrePaginatedRowModel() — getFilteredRowModel() sits
  * before sorting in TanStack's pipeline and would drop the user's sort order.
  */
 export function extractRows<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options: UseTableExportOptions = {}
 ): ExtractedRows {
   const { rows: rowScope = 'filtered', columns: columnScope = 'visible', include, exclude } = options
@@ -102,7 +103,7 @@ export function extractRows<TData extends RowData>(
         ? table.getFilteredSelectedRowModel()
         : rowScope === 'all'
           ? table.getCoreRowModel()
-          : table.getPrePaginationRowModel()
+          : table.getPrePaginatedRowModel()
 
   // flatRows includes sub-rows, which is what we want for the expansion case.
   // But under grouping, TanStack lists every leaf row twice: once as a
