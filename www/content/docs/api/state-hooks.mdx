@@ -109,8 +109,8 @@ Note: `toggleAll` here takes the full array of row IDs (`(rowIds: string[]) => v
 
 ```ts
 function useColumnVisibilityState(options?: UseColumnVisibilityOptions): {
-  state: VisibilityState
-  onColumnVisibilityChange: Dispatch<SetStateAction<VisibilityState>>
+  state: ColumnVisibilityState
+  onColumnVisibilityChange: Dispatch<SetStateAction<ColumnVisibilityState>>
   toggleColumn: (columnId: string) => void
   showColumn: (columnId: string) => void
   hideColumn: (columnId: string) => void
@@ -119,7 +119,7 @@ function useColumnVisibilityState(options?: UseColumnVisibilityOptions): {
 }
 ```
 
-`UseColumnVisibilityOptions`: `{ defaultVisibility?: VisibilityState }`
+`UseColumnVisibilityOptions`: `{ defaultVisibility?: ColumnVisibilityState }`
 
 ## `useColumnPinningState`
 
@@ -127,13 +127,13 @@ function useColumnVisibilityState(options?: UseColumnVisibilityOptions): {
 function useColumnPinningState(options?: ColumnPinningOptions): {
   state: ColumnPinningState
   setState: Dispatch<SetStateAction<ColumnPinningState>>
-  pinLeft: (id: string) => void
-  pinRight: (id: string) => void
+  pinStart: (id: string) => void
+  pinEnd: (id: string) => void
   unpin: (id: string) => void
   clearPinning: () => void
-  isPinned: (id: string) => 'left' | 'right' | false
-  leftColumns: string[]
-  rightColumns: string[]
+  isPinned: (id: string) => 'start' | 'end' | false
+  startColumns: string[]
+  endColumns: string[]
 }
 ```
 
