@@ -11,7 +11,7 @@ const FEATURES: Feature[] = [
 const { columnPinning } = useTable({
   data, columns, columnPinning: true,
 })
-columnPinning.pinLeft('name')`,
+columnPinning.pinStart('name')`,
   },
   {
     title: 'Row grouping & aggregation',
