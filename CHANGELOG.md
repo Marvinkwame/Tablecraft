@@ -4,6 +4,22 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## Unreleased
+
+### Fixed
+
+- **`useFacetedFilters`: a range column no longer reports its bounds as selected values.** `columnFilters` holds one value per column, so a `[min, max]` range written by `getRangeFacet` arrived in `getFacet` looking exactly like two selected values. On a column declaring `filterFn: 'inNumberRange'`, `getFacet(...).selected` returned `[10, 50]`, `isSelected(10)` returned `true`, and a checkbox UI rendered two bogus checked boxes — toggling either one overwrote the range.
+
+  `getFacet` now withholds the selection for a column declared with the built-in range filter, mirroring the guard `getRangeFacet` already had in the other direction. Options and counts are unaffected.
+
+  The guard keys off the *declared* built-in range fn, deliberately narrower than the predicate `getRangeFacet` uses. That one counts any custom function as a range, which is safe there but would blank selections for anyone using a bespoke value-list `filterFn`.
+
+### Internal
+
+- Pinned `meta.tablecraftServerBacked` directly in the `useQueryTable` and `useInfiniteTable` suites. Both hooks also set `manualPagination: true`, so the meta write that `useFacetedFilters` actually prefers could be deleted with the whole suite still green.
+
+---
+
 ## [4.0.0] — 2026-09-21
 
 ### Breaking

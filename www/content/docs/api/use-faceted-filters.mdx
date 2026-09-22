@@ -152,6 +152,22 @@ string rather than a `Date` instance, so `facetedFilterFn`'s equality check
 will never match it again. Facet a derived string field instead of a `Date`
 value if you need URL sync or persistence.
 
+**The two accessors share one filter slot per column.** `columnFilters` holds a
+single value per column, so `getFacet` and `getRangeFacet` on the *same* column
+are reading and writing the same slot. Each refuses to interpret the other's
+value: on a column declaring `filterFn: 'inNumberRange'`, `getFacet` reports
+nothing selected rather than turning the two range bounds into two checked
+boxes, and `getRangeFacet` reports no range on a column using
+`facetedFilterFn`. Options and min/max are still listed either way — only the
+*selection* is withheld.
+
+One gap remains, and it is not solvable without provenance on the filter value
+itself: a **custom** `filterFn` is ambiguous. `getRangeFacet` treats any custom
+function as a range column, so a bespoke value-list filter's two numeric
+selections will be reported as an applied range. Declare
+`filterFn: facetedFilterFn` for value lists and `'inNumberRange'` for ranges
+and neither case arises.
+
 **`useTable({ columnFilters: false })` makes facets inert.** With column
 filters disabled, `getFilteredRowModel` is not available, so `toggle` writes
 filter state that never actually filters any rows — silently, with no warning.

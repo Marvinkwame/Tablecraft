@@ -96,6 +96,23 @@ export function isRangeFilterFn(filterFn: unknown): boolean {
 }
 
 /**
+ * True when `filterFn` is *declared* to receive a `[min, max]` range.
+ *
+ * Deliberately narrower than `isRangeFilterFn`, and the two must not be
+ * unified. `isRangeFilterFn` also counts any custom function as a range, which
+ * is right for `getRangeFacet`: its read path defaults to "not a range", so
+ * over-matching only ever costs a report it would have withheld anyway.
+ *
+ * `getFacet` defaults the other way — an unrecognised filter value is read as a
+ * selection list, which is exactly right for a caller's bespoke value-list
+ * `filterFn`. Using the broad predicate there would blank those callers'
+ * selections outright, so this guard matches only the built-in range fn.
+ */
+export function isDeclaredRangeFilterFn(filterFn: unknown): boolean {
+  return filterFn === 'inNumberRange'
+}
+
+/**
  * The `filterFn` a faceted column must declare. `getFacet` writes an array of
  * selected values to `columnFilters`, and this checks the cell value for
  * membership in that array by equality.
