@@ -335,6 +335,22 @@ describe('useInfiniteTable', () => {
     warn.mockRestore()
   })
 
+  it('declares itself server-backed through meta, not only manualPagination', async () => {
+    // The test above passes on the manualPagination fallback alone, so the
+    // meta write it actually depends on can be deleted without turning
+    // anything red. Pin the flag itself.
+    const queryFn = createPaginatedQueryFn([page1], [undefined])
+
+    const { result } = renderHook(
+      () => useInfiniteTable({ queryKey: ['users-meta'], queryFn, columns }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(result.current.table.options.meta?.tablecraftServerBacked).toBe(true)
+  })
+
   // ─── Error state ────────────────────────────────────────
 
   it('isError is true when queryFn throws', async () => {
