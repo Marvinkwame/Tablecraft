@@ -22,7 +22,7 @@ const userSchema = z.object({
 })
 type User = z.infer<typeof userSchema>
 
-const columns = columnsFromZod(userSchema)   // ColumnDef<User>[]
+const columns = columnsFromZod(userSchema)   // ColumnDef<TablecraftFeatures, User, any>[]
 const validate = zodValidator(userSchema)
 
 const { table } = useTable({ data, columns })
@@ -37,7 +37,7 @@ const editing = useMultiRowEditing(table, {
 function columnsFromZod<TSchema extends z.ZodType>(
   schema: TSchema,
   options?: ColumnsFromZodOptions<z.infer<TSchema>>
-): ColumnDef<z.infer<TSchema>, any>[]
+): ColumnDef<TablecraftFeatures, z.infer<TSchema>, any>[]
 ```
 
 Generates headless `{ accessorKey, header }` columns from the schema's
@@ -50,7 +50,7 @@ no sample data, unlike [`inferColumns`](/docs/api/columns).
 |---|---|---|
 | `include` | `(keyof TData)[]` | Whitelist — only include these keys, in the order given |
 | `exclude` | `(keyof TData)[]` | Blacklist — exclude these keys |
-| `overrides` | `Partial<Record<keyof TData, Partial<ColumnDef<TData, any>>>>` | Override specific column definitions while keeping the rest generated |
+| `overrides` | `Partial<Record<keyof TData, Partial<ColumnDef<TablecraftFeatures, TData, any>>>>` | Override specific column definitions while keeping the rest generated |
 
 ## `zodValidator`
 
