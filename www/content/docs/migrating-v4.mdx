@@ -94,7 +94,20 @@ export, faceting and accessibility are all called exactly as before. The one
 exception is change 4 above: if you annotate `ColumnDef` or `FilterFn`
 explicitly rather than relying on inference, that annotation's type changes.
 
-## One thing from v9 itself
+## Two things from v9 itself
 
-v9 tightened `RowData` from `unknown` to `Record<string, any> | Array<any>`. If
-your row type is a primitive, wrap it in an object.
+These are TanStack renames rather than tablecraft ones, but you will meet them
+on the way through.
+
+**`RowData` is narrower.** v9 tightened it from `unknown` to
+`Record<string, any> | Array<any>`. If your row type is a primitive, wrap it in
+an object.
+
+**`VisibilityState` is now `ColumnVisibilityState`.** tablecraft does not
+re-export it, so if you imported it from `@tanstack/react-table` to type a
+visibility map, rename the import:
+
+```diff
+- import type { VisibilityState } from '@tanstack/react-table'
++ import type { ColumnVisibilityState } from '@tanstack/react-table'
+```
