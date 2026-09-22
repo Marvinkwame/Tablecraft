@@ -5,13 +5,13 @@ description: createColumns for type-safe column definitions, and inferColumns fo
 
 ## `createColumns`
 
-Type-safe column definition helper. Returns a stable `ColumnDef<TData>[]`
+Type-safe column definition helper. Returns a stable `ColumnDef<TablecraftFeatures, TData, any>[]`
 without needing `useMemo` or manual type annotations.
 
 ```ts
 function createColumns<TData extends RowData>(
-  columns: ColumnDef<TData, any>[]
-): ColumnDef<TData, any>[]
+  columns: ColumnDef<TablecraftFeatures, TData, any>[]
+): ColumnDef<TablecraftFeatures, TData, any>[]
 ```
 
 ```tsx
@@ -37,7 +37,7 @@ Auto-generates typed column definitions from your data shape. Infers depth-1
 function inferColumns<TData extends RowData>(
   data: TData[],
   options?: InferColumnsOptions<TData>
-): ColumnDef<TData, any>[]
+): ColumnDef<TablecraftFeatures, TData, any>[]
 ```
 
 **Parameters**
@@ -53,7 +53,7 @@ function inferColumns<TData extends RowData>(
 |---|---|---|
 | `include` | `(keyof TData)[]` | Whitelist — only include these keys as columns |
 | `exclude` | `(keyof TData)[]` | Blacklist — exclude these keys from columns |
-| `overrides` | `Partial<Record<keyof TData, Partial<ColumnDef<TData, any>>>>` | Override specific column definitions while keeping the rest inferred |
+| `overrides` | `Partial<Record<keyof TData, Partial<ColumnDef<TablecraftFeatures, TData, any>>>>` | Override specific column definitions while keeping the rest inferred |
 
 ```tsx
 import { inferColumns } from '@marvinackerman/tablecraft'

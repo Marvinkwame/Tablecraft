@@ -14,7 +14,7 @@ Single-row inline editing.
 
 ```ts
 function useEditableRows<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options?: EditableOptions<TData>
 ): EditableReturn<TData>
 ```
@@ -97,7 +97,7 @@ save are both supported.
 
 ```ts
 function useMultiRowEditing<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options?: MultiRowEditingOptions<TData>
 ): MultiRowEditingReturn<TData>
 ```

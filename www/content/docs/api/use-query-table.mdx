@@ -26,7 +26,7 @@ function useQueryTable<TData extends RowData>(
 |---|---|---|---|
 | `queryKey` | `unknown[]` | required | TanStack Query cache key |
 | `queryFn` | `(context) => Promise<{ data: TData[], rowCount: number }>` | required | Fetcher |
-| `columns` | `ColumnDef<TData, any>[]` | required | Column definitions |
+| `columns` | `ColumnDef<TablecraftFeatures, TData, any>[]` | required | Column definitions |
 | `pagination` | `PaginationOptions \| boolean` | — | Same shape as `useTable` |
 | `sorting` | `SortingOptions \| boolean` | — | Same shape as `useTable` |
 | `globalFilter` | `boolean` | — | Enable global search |
@@ -36,7 +36,7 @@ function useQueryTable<TData extends RowData>(
 | `rowExpansion` | `RowExpansionOptions \| boolean` | — | Opt-in row expansion |
 | `grouping` | `GroupingOptions \| boolean` | — | Opt-in row grouping |
 | `columnPinning` | `ColumnPinningOptions \| boolean` | — | Opt-in column pinning |
-| `fuzzy` | `boolean \| FilterFn<TData>` | — | Same caveat as `useTable` — `true` requires CJS/Node |
+| `fuzzy` | `boolean \| FilterFn<TablecraftFeatures, TData>` | — | Same caveat as `useTable` — `true` requires CJS/Node |
 | `persist` | `PersistStorage \| false` | — | Same as `useTable` |
 | `persistKey` | `string` | — | Storage key |
 | `persistOptions` | `PersistOptions` | — | Which slices to persist |

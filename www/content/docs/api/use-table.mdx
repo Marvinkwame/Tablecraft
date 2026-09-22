@@ -4,7 +4,17 @@ description: The primary hook — covers pagination, sorting, filtering, selecti
 ---
 
 The single hook that covers most use cases. Every option is optional; the
-returned `table` is a full TanStack `Table<TData>` instance.
+returned `table` is a full TanStack Table instance with every feature bound.
+
+Because TanStack Table v9 types a table as `Table<TFeatures, TData>`, tablecraft
+exports the alias `TablecraftTable<TData>` — the instance type with tablecraft's
+feature set already filled in. Use it wherever you need to name the type:
+
+```ts
+import type { TablecraftTable } from '@marvinackerman/tablecraft'
+
+function Toolbar({ table }: { table: TablecraftTable<User> }) { /* … */ }
+```
 
 ## Signature
 
@@ -19,7 +29,7 @@ function useTable<TData extends RowData>(
 | Option | Type | Description |
 |---|---|---|
 | `data` | `TData[]` | Row data (required) |
-| `columns` | `ColumnDef<TData, any>[]` | Column definitions (required) |
+| `columns` | `ColumnDef<TablecraftFeatures, TData, any>[]` | Column definitions (required) |
 | `pagination` | `PaginationOptions \| boolean` | `{ pageSize?, pageIndex? }`, or `true` (defaults), or `false` (disabled) |
 | `manualPagination` | `boolean` | Server-driven pagination — pair with `rowCount` |
 | `rowCount` | `number` | Total row count, used with `manualPagination` |
@@ -36,7 +46,7 @@ function useTable<TData extends RowData>(
 | `rowExpansion` | `RowExpansionOptions \| boolean` | `true`, or `{ defaultExpanded?, allowMultiple?, paginateExpandedRows?, getSubRows? }` |
 | `grouping` | `GroupingOptions \| boolean` | `true`, or `{ defaultGrouping?, manualGrouping?, groupedColumnMode? }` |
 | `columnPinning` | `ColumnPinningOptions \| boolean` | `true`, or `{ defaultPinning? }` |
-| `fuzzy` | `boolean \| FilterFn<TData>` | `true` loads `match-sorter` via `require()` — CJS/Node only. In ESM-only bundlers (Vite, browsers), pass a `FilterFn` directly instead. |
+| `fuzzy` | `boolean \| FilterFn<TablecraftFeatures, TData>` | `true` loads `match-sorter` via `require()` — CJS/Node only. In ESM-only bundlers (Vite, browsers), pass a `FilterFn` directly instead. |
 | `persist` | `'localStorage' \| 'sessionStorage' \| false` | Persist state across reloads — see [Persistence & URL sync](/docs/api/persistence-url) |
 | `persistKey` | `string` | Storage key — required when `persist` is set |
 | `persistOptions` | `PersistOptions` | Which state slices to persist |
@@ -48,7 +58,7 @@ function useTable<TData extends RowData>(
 import { useTable } from '@marvinackerman/tablecraft'
 
 const {
-  table,          // Full TanStack Table<TData> instance
+  table,          // Full TanStack table instance — TablecraftTable<TData>
   pagination,
   sorting,
   globalFilter,
@@ -135,7 +145,7 @@ const {
 
 | Property | Type | Description |
 |---|---|---|
-| `state` | `VisibilityState` | Current visibility map |
+| `state` | `ColumnVisibilityState` | Current visibility map |
 | `toggleColumn` | `(columnId: string) => void` | Toggle a column |
 | `showColumn` | `(columnId: string) => void` | Show a column |
 | `hideColumn` | `(columnId: string) => void` | Hide a column |
@@ -170,13 +180,13 @@ const {
 | Property | Type | Description |
 |---|---|---|
 | `state` | `ColumnPinningState` | Raw TanStack pinning state |
-| `pinLeft` | `(columnId: string) => void` | Pin column to left edge |
-| `pinRight` | `(columnId: string) => void` | Pin column to right edge |
+| `pinStart` | `(columnId: string) => void` | Pin column to the start edge (left in LTR, right in RTL) |
+| `pinEnd` | `(columnId: string) => void` | Pin column to the end edge (right in LTR, left in RTL) |
 | `unpin` | `(columnId: string) => void` | Remove pin from column |
 | `clearPinning` | `() => void` | Unpin all columns |
-| `isPinned` | `(columnId: string) => 'left' \| 'right' \| false` | Query pin status |
-| `leftColumns` | `string[]` | Currently left-pinned column IDs |
-| `rightColumns` | `string[]` | Currently right-pinned column IDs |
+| `isPinned` | `(columnId: string) => 'start' \| 'end' \| false` | Query pin status |
+| `startColumns` | `string[]` | Currently start-pinned column IDs |
+| `endColumns` | `string[]` | Currently end-pinned column IDs |
 
 ### `emptyState`
 
@@ -187,6 +197,6 @@ const {
 
 ## Notes
 
-- `position: sticky` for pinned columns is plain CSS — tablecraft only provides state and the pixel offsets (`column.getStart('left')`, `column.getAfter('right')`). No UI lock-in.
+- `position: sticky` for pinned columns is plain CSS — tablecraft only provides state and the pixel offsets (`column.getStart('start')`, `column.getAfter('end')`). No UI lock-in.
 - `columnPinning` is also available on [`useQueryTable`](/docs/api/use-query-table) and [`useInfiniteTable`](/docs/api/use-infinite-table) with the identical option shape.
 - See [Persistence & URL sync](/docs/api/persistence-url) for `persist*` / `syncUrl` details, and [State hooks](/docs/api/state-hooks) if you're composing `useReactTable` yourself instead of using `useTable`.

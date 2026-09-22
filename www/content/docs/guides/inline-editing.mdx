@@ -53,7 +53,7 @@ const userSchema = z.object({
 })
 type User = z.infer<typeof userSchema>
 
-const columns = columnsFromZod(userSchema) // ColumnDef<User>[] — no cell renderers, headers humanized
+const columns = columnsFromZod(userSchema) // ColumnDef<TablecraftFeatures, User, any>[] — no cell renderers, headers humanized
 const validate = zodValidator(userSchema)
 
 function UsersTable({ users }: { users: User[] }) {

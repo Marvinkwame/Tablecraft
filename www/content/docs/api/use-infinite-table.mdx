@@ -28,7 +28,7 @@ function useInfiniteTable<TData extends RowData, TCursor = unknown>(
 |---|---|---|---|
 | `queryKey` | `unknown[]` | required | TanStack Query cache key |
 | `queryFn` | `(context) => Promise<{ data: TData[], nextCursor?: TCursor }>` | required | Fetcher — return `nextCursor: undefined` to signal the last page |
-| `columns` | `ColumnDef<TData, any>[]` | required | Column definitions |
+| `columns` | `ColumnDef<TablecraftFeatures, TData, any>[]` | required | Column definitions |
 | `initialPageParam` | `TCursor` | `0` | First value passed as `pageParam` |
 | `sorting` | `SortingOptions \| boolean` | `true` | Enable sorting |
 | `globalFilter` | `boolean` | `true` | Enable global search |
@@ -55,7 +55,7 @@ The `queryFn` context (`InfiniteTableFnContext<TCursor>`) receives:
 
 | Property | Type | Description |
 |---|---|---|
-| `table` | `Table<TData>` | Full TanStack Table instance with all accumulated rows |
+| `table` | `TablecraftTable<TData>` | Full TanStack Table instance with all accumulated rows |
 | `loadMore` | `() => void` | Fetch the next page |
 | `hasNextPage` | `boolean` | `true` when `nextCursor` was returned from the last page |
 | `isFetchingNextPage` | `boolean` | `true` while a `loadMore` call is in-flight |

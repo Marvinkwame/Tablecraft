@@ -11,7 +11,7 @@ elements, implementing the
 
 ```ts
 function useTableA11y<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options?: UseTableA11yOptions
 ): TableA11yReturn
 ```
@@ -119,9 +119,9 @@ a custom prop-getter or a non-hook rendering path):
 
 ```ts
 function getAriaSortValue(headerId: string, sorting: SortingState): 'ascending' | 'descending' | 'none'
-function getAriaRowCount<TData>(table: Table<TData>): number
-function getAriaColCount<TData>(table: Table<TData>): number
-function getAriaRowIndex<TData>(rowId: string, rows: Row<TData>[]): number
+function getAriaRowCount<TData extends RowData>(table: TablecraftTable<TData>): number
+function getAriaColCount<TData extends RowData>(table: TablecraftTable<TData>): number
+function getAriaRowIndex<TData extends RowData>(rowId: string, rows: Row<TablecraftFeatures, TData>[]): number
 ```
 
 | Function | Description |
@@ -129,4 +129,4 @@ function getAriaRowIndex<TData>(rowId: string, rows: Row<TData>[]): number
 | `getAriaSortValue(headerId, sorting)` | `aria-sort` value for a header cell. `'none'` when the column is not currently sorted. |
 | `getAriaRowCount(table)` | Total number of filtered rows — used for `aria-rowcount`. |
 | `getAriaColCount(table)` | Number of visible leaf columns — used for `aria-colcount`. |
-| `getAriaRowIndex(rowId, rows)` | 1-based row index of the given `rowId` within the provided `rows` array. Returns `-1` if the row is not found (should not happen in normal usage). The hook passes it `getPrePaginationRowModel().rows`, so the index covers the full sorted set rather than the current page. |
+| `getAriaRowIndex(rowId, rows)` | 1-based row index of the given `rowId` within the provided `rows` array. Returns `-1` if the row is not found (should not happen in normal usage). The hook passes it `getPrePaginatedRowModel().rows`, so the index covers the full sorted set rather than the current page. |
