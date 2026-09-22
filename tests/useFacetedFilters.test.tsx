@@ -8,6 +8,8 @@ import { useQueryTable } from '../src/hooks/useQueryTable'
 import { useFacetedFilters } from '../src/hooks/useFacetedFilters'
 import { createColumns } from '../src/helpers/createColumns'
 import { facetedFilterFn } from '../src/utils/facets'
+import type { FilterFn } from '@tanstack/react-table'
+import type { TablecraftFeatures } from '../src/features'
 
 type Product = {
   id: number
@@ -387,5 +389,54 @@ describe('useFacetedFilters — range facets', () => {
     act(() => result.current.facets.getFacet('price').toggle(60))
 
     expect(result.current.facets.getRangeFacet('price').value).toBeUndefined()
+  })
+
+  it('does not report an applied range as selected values', () => {
+    const { result } = renderFacets()
+
+    act(() => result.current.facets.getRangeFacet('price').setRange([10, 50]))
+
+    // The mirror of getRangeFacet's isRangeColumn guard. price declares
+    // inNumberRange, so its filter value is a range — reading it as a
+    // selection list turns the two bounds into two checked boxes.
+    const facet = result.current.facets.getFacet('price')
+
+    expect(facet.selected).toEqual([])
+    expect(facet.isSelected(10)).toBe(false)
+    expect(facet.isSelected(50)).toBe(false)
+  })
+
+  it('still reports selections for a column with a bespoke value-list filterFn', () => {
+    // The guard above must key off the declared built-in range fn, not off
+    // isRangeFilterFn — that one counts ANY custom function as a range, which
+    // is safe for getRangeFacet but would blank these selections entirely.
+    // This test exists to stop the two predicates being unified.
+    const bespoke: FilterFn<TablecraftFeatures, Product> = (row, columnId, filterValue) =>
+      Array.isArray(filterValue) && filterValue.includes(row.getValue(columnId))
+
+    const bespokeColumns = createColumns<Product>([
+      { accessorKey: 'name', header: 'Name' },
+      { accessorKey: 'price', header: 'Price', filterFn: bespoke },
+    ])
+    const { result } = renderHook(() => {
+      const tableReturn = useTable({ data: products, columns: bespokeColumns, pagination: false })
+      return { ...tableReturn, facets: useFacetedFilters(tableReturn.table) }
+    })
+
+    act(() => result.current.facets.getFacet('price').toggle(10))
+
+    const facet = result.current.facets.getFacet('price')
+    expect(facet.selected).toEqual([10])
+    expect(facet.isSelected(10)).toBe(true)
+  })
+
+  it('marks no option selected while a range is applied', () => {
+    const { result } = renderFacets()
+
+    act(() => result.current.facets.getRangeFacet('price').setRange([10, 50]))
+
+    expect(
+      result.current.facets.getFacet('price').options.filter((o) => o.selected)
+    ).toEqual([])
   })
 })
