@@ -16,7 +16,7 @@ npm install @tanstack/react-virtual
 
 ```ts
 function useVirtualRows<TData extends RowData>(
-  table: Table<TData>,
+  table: TablecraftTable<TData>,
   options: VirtualRowsOptions
 ): VirtualRowsReturn<TData>
 ```
@@ -41,7 +41,7 @@ Each `VirtualRow<TData>`:
 
 | Field | Type | Description |
 |---|---|---|
-| `row` | `Row<TData>` | Full TanStack Row — `row.original`, `row.id`, `row.getVisibleCells()`, etc. |
+| `row` | `Row<TablecraftFeatures, TData>` | Full TanStack Row — `row.original`, `row.id`, `row.getVisibleCells()`, etc. |
 | `index` | `number` | Position in the full rows array |
 | `start` | `number` | Pixel offset from top — use as `top` in absolute positioning |
 | `size` | `number` | Row height in px (always equals `rowHeight` in fixed mode) |
