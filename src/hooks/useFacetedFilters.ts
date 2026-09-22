@@ -6,6 +6,7 @@ import type { ColumnFacet, FacetedFiltersReturn, RangeFacet } from '../types'
 import type { TablecraftTable } from '../features'
 import {
   buildFacetOptions,
+  isDeclaredRangeFilterFn,
   isRangeFilterFn,
   needsArrayFilterFn,
   normalizeSelected,
@@ -120,7 +121,13 @@ export function useFacetedFilters<TData extends RowData>(
     const column = resolveColumn(columnId)
     if (!column) return emptyFacet()
 
-    const selected = normalizeSelected(column.getFilterValue())
+    // columnFilters is shared per-column state, so a range column's [min, max]
+    // arrives here looking exactly like two selected values. Reading it as a
+    // selection would render the two bounds as checked boxes, and toggling one
+    // would overwrite the range. Mirror of getRangeFacet's isRangeColumn guard.
+    const selected = isDeclaredRangeFilterFn(column.columnDef.filterFn)
+      ? []
+      : normalizeSelected(column.getFilterValue())
     const options = buildFacetOptions(column.getFacetedUniqueValues(), selected)
 
     // Writing undefined rather than [] removes the filter entry. An empty
@@ -159,10 +166,14 @@ export function useFacetedFilters<TData extends RowData>(
     // so without both checks a categorical selection of two numbers would be
     // reported here as an applied range.
     //
-    // isRangeFilterFn is the single source of truth for this: a caller's
-    // bespoke value-list filterFn is still indistinguishable from a bespoke
-    // range one — a documented limitation, not solvable without provenance on
-    // the filter value itself.
+    // isRangeFilterFn is the single source of truth for BOTH of this accessor's
+    // paths — the read below and the setRange warning — or the two drift. It is
+    // not the predicate getFacet uses: see isDeclaredRangeFilterFn for why the
+    // guards are deliberately asymmetric.
+    //
+    // A caller's bespoke value-list filterFn is still indistinguishable from a
+    // bespoke range one — a documented limitation, not solvable without
+    // provenance on the filter value itself.
     const isRangeColumn = isRangeFilterFn(column.columnDef.filterFn)
     const value =
       isRangeColumn &&
