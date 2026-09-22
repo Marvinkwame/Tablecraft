@@ -7,6 +7,7 @@ import {
   needsArrayFilterFn,
   needsRangeFilterFn,
   isRangeFilterFn,
+  isDeclaredRangeFilterFn,
   facetedFilterFn,
 } from '../src/utils/facets'
 
@@ -180,6 +181,32 @@ describe('isRangeFilterFn', () => {
 
   it('is false for arrIncludesSome', () => {
     expect(isRangeFilterFn('arrIncludesSome')).toBe(false)
+  })
+})
+
+describe('isDeclaredRangeFilterFn', () => {
+  it('is true for inNumberRange', () => {
+    expect(isDeclaredRangeFilterFn('inNumberRange')).toBe(true)
+  })
+
+  it('is false for a custom function — the point of divergence from isRangeFilterFn', () => {
+    // isRangeFilterFn says true here. getFacet must not, or a caller's bespoke
+    // value-list filterFn would have its selections blanked.
+    const bespoke = () => true
+    expect(isDeclaredRangeFilterFn(bespoke)).toBe(false)
+    expect(isRangeFilterFn(bespoke)).toBe(true)
+  })
+
+  it('is false for facetedFilterFn', () => {
+    expect(isDeclaredRangeFilterFn(facetedFilterFn)).toBe(false)
+  })
+
+  it('is false for undefined', () => {
+    expect(isDeclaredRangeFilterFn(undefined)).toBe(false)
+  })
+
+  it('is false for arrIncludesSome', () => {
+    expect(isDeclaredRangeFilterFn('arrIncludesSome')).toBe(false)
   })
 })
 
