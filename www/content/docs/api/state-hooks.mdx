@@ -17,6 +17,9 @@ import {
   useRowSelectionState,
   useColumnVisibilityState,
   useColumnPinningState,
+  useColumnOrderState,
+  useRowPinningState,
+  useColumnSizingState,
   useRowExpansionState,
   useGroupingState,
 } from '@marvinackerman/tablecraft'
@@ -28,6 +31,9 @@ const columnFilters = useColumnFilterState()
 const rowSelection = useRowSelectionState()
 const columnVisibility = useColumnVisibilityState({ defaultVisibility: { id: false } })
 const columnPinning = useColumnPinningState()
+const columnOrder = useColumnOrderState()
+const rowPinning = useRowPinningState()
+const columnSizing = useColumnSizingState()
 const rowExpansion = useRowExpansionState({ allowMultiple: false })
 const grouping = useGroupingState({ defaultGrouping: ['department'] })
 ```
@@ -138,6 +144,79 @@ function useColumnPinningState(options?: ColumnPinningOptions): {
 ```
 
 `ColumnPinningOptions`: `{ defaultPinning?: ColumnPinningState }`
+
+## `useColumnOrderState`
+
+```ts
+function useColumnOrderState(options?: ColumnOrderOptions): {
+  state: ColumnOrderState
+  setState: Dispatch<SetStateAction<ColumnOrderState>>
+  setOrder: (columnIds: string[]) => void
+  moveColumn: (columnId: string, toIndex: number) => void
+  resetOrder: () => void
+  order: string[]
+}
+```
+
+`ColumnOrderOptions`: `{ defaultOrder?: ColumnOrderState }`
+
+An empty order is TanStack's own sentinel for natural column order, so
+`moveColumn` has nothing to reorder until you seed `defaultOrder` — e.g.
+`table.getAllLeafColumns().map(c => c.id)`. This hook supplies state and a
+`moveColumn` helper only; it does not provide a drag interaction. That is
+deliberate: dnd-kit does drag-and-drop better than tablecraft could, and
+pulling it in as a dependency would add a heavy new peer for a capability most
+consumers don't need. Wire `moveColumn` to whatever drag library you already
+use, or to plain buttons.
+
+## `useRowPinningState`
+
+```ts
+function useRowPinningState(options?: RowPinningOptions): {
+  state: RowPinningState
+  setState: Dispatch<SetStateAction<RowPinningState>>
+  pinTop: (rowId: string) => void
+  pinBottom: (rowId: string) => void
+  unpin: (rowId: string) => void
+  clearPinning: () => void
+  isPinned: (rowId: string) => 'top' | 'bottom' | false
+  topRows: string[]
+  bottomRows: string[]
+}
+```
+
+`RowPinningOptions`: `{ defaultPinning?: RowPinningState }`
+
+Rows pin to `'top'` / `'bottom'`, not the `'start'` / `'end'` vocabulary
+`useColumnPinningState` uses. Columns pin along the row axis, where RTL layouts
+flip "left" and "right" — hence `start`/`end`. Rows pin along the vertical
+axis, which RTL doesn't affect, so TanStack keeps the plainer `top`/`bottom`
+here instead.
+
+## `useColumnSizingState`
+
+```ts
+function useColumnSizingState(options?: ColumnSizingOptions): {
+  state: ColumnSizingState
+  setState: Dispatch<SetStateAction<ColumnSizingState>>
+  setSize: (columnId: string, px: number) => void
+  resetSize: (columnId: string) => void
+  resetAll: () => void
+  getSize: (columnId: string) => number | undefined
+}
+```
+
+`ColumnSizingOptions`: `{ defaultSizing?: ColumnSizingState }`
+
+This is the committed-width half of resizing — a plain map of column id to
+pixel width. `getSize` returns `undefined`, not `0`, for a column with no
+entry in that map: an unset column isn't zero-width, it falls back to the
+columnDef's own `size`, and returning `undefined` keeps that distinction
+visible instead of papering over it with a fake `0`. The other half — the
+drag interaction that writes into this state — is
+[`useColumnResizing`](/docs/api/use-column-resizing), which needs a table
+instance and so isn't a standalone options-based hook like the others on this
+page.
 
 ## `useRowExpansionState`
 
