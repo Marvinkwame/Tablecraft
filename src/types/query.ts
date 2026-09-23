@@ -16,6 +16,8 @@ import type {
   ColumnPinningOptions,
   ColumnPinningReturn,
   ColumnResizingOptions,
+  ColumnOrderOptions,
+  RowPinningOptions,
   GroupingOptions,
   PersistStorage,
   PersistOptions,
@@ -68,6 +70,8 @@ export interface UseQueryTableOptions<TData extends RowData> {
   grouping?: GroupingOptions | boolean
   columnPinning?: ColumnPinningOptions | boolean
   columnResizing?: ColumnResizingOptions | boolean
+  columnOrder?: ColumnOrderOptions | boolean
+  rowPinning?: RowPinningOptions | boolean
   /**
    * `true` loads `match-sorter` via `require()` — works in CJS/Node environments only.
    * In ESM-only environments (Vite, browsers), pass a `FilterFn` instead; it is used

@@ -23,6 +23,8 @@ import type {
   GroupingReturn,
   ColumnPinningReturn,
   ColumnSizingReturn,
+  ColumnOrderReturn,
+  RowPinningReturn,
   EmptyStateReturn,
 } from '../types'
 import type {
@@ -39,6 +41,8 @@ import { useRowExpansionState } from './useRowExpansionState'
 import { useGroupingState } from './useGroupingState'
 import { useColumnPinningState } from './useColumnPinningState'
 import { useColumnSizingState } from './useColumnSizingState'
+import { useColumnOrderState } from './useColumnOrderState'
+import { useRowPinningState } from './useRowPinningState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
@@ -59,6 +63,8 @@ export function useQueryTable<TData extends RowData>(
     grouping: providerDefaults.grouping,
     columnPinning: providerDefaults.columnPinning,
     columnResizing: providerDefaults.columnResizing,
+    columnOrder: providerDefaults.columnOrder,
+    rowPinning: providerDefaults.rowPinning,
     globalFilter: providerDefaults.globalFilter,
     columnFilters: providerDefaults.columnFilters,
     persist: providerDefaults.persist,
@@ -99,6 +105,8 @@ export function useQueryTable<TData extends RowData>(
     grouping: groupingOpts = false,
     columnPinning: columnPinningOpts = false,
     columnResizing: columnResizingOpts = false,
+    columnOrder: columnOrderOpts = false,
+    rowPinning: rowPinningOpts = false,
     fuzzy = false,
     persist = false,
     persistKey,
@@ -202,6 +210,18 @@ export function useQueryTable<TData extends RowData>(
   const columnSizingState = useColumnSizingState({
     defaultSizing: columnResizingConfig.defaultSizing,
   })
+
+  // ─── Column order ────────────────────────────────────────
+  const columnOrderEnabled = !!columnOrderOpts
+  const columnOrderConfig =
+    typeof columnOrderOpts === 'object' ? columnOrderOpts : {}
+  const columnOrderState = useColumnOrderState(columnOrderConfig)
+
+  // ─── Row pinning ─────────────────────────────────────────
+  const rowPinningEnabled = !!rowPinningOpts
+  const rowPinningConfig =
+    typeof rowPinningOpts === 'object' ? rowPinningOpts : {}
+  const rowPinningState = useRowPinningState(rowPinningConfig)
 
   // ─── Reset page on sort/filter change ────────────────────
   const isFirstRender = useRef(true)
@@ -316,6 +336,8 @@ export function useQueryTable<TData extends RowData>(
       ...(groupingEnabled && { grouping: groupingState.state }),
       ...(columnPinningEnabled && { columnPinning: columnPinningState.state }),
       ...(columnResizingEnabled && { columnSizing: columnSizingState.state }),
+      ...(columnOrderEnabled && { columnOrder: columnOrderState.state }),
+      ...(rowPinningEnabled && { rowPinning: rowPinningState.state }),
     },
 
     // Server-side: manual pagination and sorting
@@ -382,6 +404,16 @@ export function useQueryTable<TData extends RowData>(
       // janky, and this library ships virtualization for exactly that audience.
       columnResizeMode: columnResizingConfig.mode ?? 'onEnd',
       columnResizeDirection: columnResizingConfig.direction ?? 'ltr',
+    }),
+
+    // Column order
+    ...(columnOrderEnabled && {
+      onColumnOrderChange: columnOrderState.setState,
+    }),
+
+    // Row pinning
+    ...(rowPinningEnabled && {
+      onRowPinningChange: rowPinningState.setState,
     }),
   })
 
@@ -556,6 +588,33 @@ export function useQueryTable<TData extends RowData>(
     [columnSizingState]
   )
 
+  // ─── Build column order return ───────────────────────────
+  const columnOrder: ColumnOrderReturn = useMemo(
+    () => ({
+      state: columnOrderState.state,
+      setOrder: columnOrderState.setOrder,
+      moveColumn: columnOrderState.moveColumn,
+      resetOrder: columnOrderState.resetOrder,
+      order: columnOrderState.order,
+    }),
+    [columnOrderState]
+  )
+
+  // ─── Build row pinning return ────────────────────────────
+  const rowPinning: RowPinningReturn = useMemo(
+    () => ({
+      state: rowPinningState.state,
+      pinTop: rowPinningState.pinTop,
+      pinBottom: rowPinningState.pinBottom,
+      unpin: rowPinningState.unpin,
+      clearPinning: rowPinningState.clearPinning,
+      isPinned: rowPinningState.isPinned,
+      topRows: rowPinningState.topRows,
+      bottomRows: rowPinningState.bottomRows,
+    }),
+    [rowPinningState]
+  )
+
   // ─── Build empty state return ────────────────────────────
   const emptyState: EmptyStateReturn = useMemo(
     () => ({
@@ -580,6 +639,8 @@ export function useQueryTable<TData extends RowData>(
     rowExpansion,
     columnPinning,
     columnResizing,
+    columnOrder,
+    rowPinning,
     emptyState,
     query: {
       data: query.data,
