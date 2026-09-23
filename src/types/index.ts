@@ -4,6 +4,7 @@ import type {
   ColumnFiltersState,
   ColumnPinningState,
   ColumnOrderState,
+  ColumnSizingState,
   ExpandedState,
   FilterFn,
   GroupingState,
@@ -294,6 +295,21 @@ export interface RowPinningReturn {
   isPinned: (rowId: string) => 'top' | 'bottom' | false
   topRows: string[]
   bottomRows: string[]
+}
+
+// ─── Column Sizing ────────────────────────────────────
+
+export interface ColumnSizingOptions {
+  /** Initial committed widths in pixels, keyed by leaf column id. */
+  defaultSizing?: ColumnSizingState
+}
+
+export interface ColumnSizingReturn {
+  state: ColumnSizingState
+  setSize: (columnId: string, px: number) => void
+  resetSize: (columnId: string) => void
+  resetAll: () => void
+  getSize: (columnId: string) => number | undefined
 }
 
 // ─── Empty State ─────────────────────────────────────────────
