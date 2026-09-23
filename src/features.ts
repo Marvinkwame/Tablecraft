@@ -9,6 +9,7 @@ import {
   rowAggregationFeature,
   rowExpandingFeature,
   columnPinningFeature,
+  columnResizingFeature,
   columnVisibilityFeature,
   columnFacetingFeature,
   columnSizingFeature,
@@ -67,6 +68,7 @@ export const tablecraftFeatures = tableFeatures({
   columnVisibilityFeature,
   columnFacetingFeature,
   columnSizingFeature,
+  columnResizingFeature,
   columnOrderingFeature,
   rowPinningFeature,
 
