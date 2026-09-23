@@ -108,3 +108,4 @@ All rows across every loaded page are available in
 
 - Pair with [`useInfiniteScroll`](/docs/api/use-infinite-scroll) to trigger `loadMore` automatically instead of wiring a button.
 - For paginated (non-accumulating) server tables, use [`useQueryTable`](/docs/api/use-query-table) instead.
+- `useInfiniteTable` does not get `columnOrder`, `rowPinning` or `columnResizing` — its return type is standalone rather than extending `useTable`'s, so these three were left out of scope deliberately. If you need them, use [`useQueryTable`](/docs/api/use-query-table) or [`useTable`](/docs/api/use-table) instead, both of which support all three with the identical option shape.
