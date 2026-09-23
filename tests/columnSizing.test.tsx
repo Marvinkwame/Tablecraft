@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useColumnSizingState } from '../src/hooks/useColumnSizingState'
+import { useTable } from '../src/hooks/useTable'
+import { createColumns } from '../src/helpers/createColumns'
 
 describe('useColumnSizingState', () => {
   it('starts with no overrides', () => {
@@ -65,5 +67,37 @@ describe('useColumnSizingState', () => {
     const { result } = renderHook(() => useColumnSizingState({ defaultSizing }))
     act(() => result.current.setSize('name', 999))
     expect(defaultSizing).toEqual({ name: 200 })
+  })
+})
+
+type IntRow = { id: number; name: string }
+const intColumns = createColumns<IntRow>([{ accessorKey: 'name', header: 'Name', size: 100 }])
+const intData: IntRow[] = [{ id: 1, name: 'Alice' }]
+
+describe('useTable — columnResizing option', () => {
+  it('applies a default width to the column', () => {
+    const { result } = renderHook(() =>
+      useTable({
+        data: intData,
+        columns: intColumns,
+        columnResizing: { defaultSizing: { name: 275 } },
+      })
+    )
+    expect(result.current.table.getColumn('name')!.getSize()).toBe(275)
+  })
+
+  it('setSize changes the rendered width', () => {
+    const { result } = renderHook(() =>
+      useTable({ data: intData, columns: intColumns, columnResizing: true })
+    )
+    act(() => result.current.columnResizing.setSize('name', 320))
+    expect(result.current.table.getColumn('name')!.getSize()).toBe(320)
+  })
+
+  it('falls back to the columnDef size when not enabled', () => {
+    const { result } = renderHook(() =>
+      useTable({ data: intData, columns: intColumns })
+    )
+    expect(result.current.table.getColumn('name')!.getSize()).toBe(100)
   })
 })
