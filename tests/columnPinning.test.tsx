@@ -73,6 +73,14 @@ describe('useColumnPinningState', () => {
     expect(result.current.endColumns).toHaveLength(0)
   })
 
+  it('does not mutate the object passed as defaultPinning', () => {
+    const defaultPinning = { start: ['id'], end: ['email'] }
+    const { result } = renderHook(() => useColumnPinningState({ defaultPinning }))
+    act(() => result.current.pinStart('name'))
+    act(() => result.current.unpin('email'))
+    expect(defaultPinning).toEqual({ start: ['id'], end: ['email'] })
+  })
+
   it('isPinned returns correct position', () => {
     const { result } = renderHook(() =>
       useColumnPinningState({ defaultPinning: { start: ['id'], end: ['email'] } })
