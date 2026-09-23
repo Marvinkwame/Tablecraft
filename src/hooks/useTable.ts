@@ -341,7 +341,7 @@ export function useTable<TData extends RowData>(
     // Column resizing
     ...(columnResizingEnabled && {
       onColumnSizingChange: columnSizingState.setState,
-      // 'onEnd' is tablecraft's default, not TanStack's. Committing a width on
+      // 'onEnd' preserves TanStack's own default. Committing a width on
       // every mousemove re-renders the table; on a large one that is visibly
       // janky, and this library ships virtualization for exactly that audience.
       columnResizeMode: columnResizingConfig.mode ?? 'onEnd',
