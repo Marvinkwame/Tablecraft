@@ -412,6 +412,10 @@ export interface TableKitDefaults {
   columnPinning?: ColumnPinningOptions | boolean
   /** Enable column resizing by default */
   columnResizing?: ColumnResizingOptions | boolean
+  /** Enable column ordering by default */
+  columnOrder?: ColumnOrderOptions | boolean
+  /** Enable row pinning by default */
+  rowPinning?: RowPinningOptions | boolean
 }
 
 // ─── useTable Options ─────────────────────────────────────────
@@ -455,6 +459,12 @@ export interface UseTableOptions<TData extends RowData> {
   // Column resizing (opt-in)
   columnResizing?: ColumnResizingOptions | boolean
 
+  // Column order (opt-in)
+  columnOrder?: ColumnOrderOptions | boolean
+
+  // Row pinning (opt-in)
+  rowPinning?: RowPinningOptions | boolean
+
   // v1.x — Fuzzy search
   /**
    * `true` loads `match-sorter` via `require()` — works in CJS/Node environments only.
@@ -486,6 +496,8 @@ export interface UseTableReturn<TData extends RowData> {
   grouping: GroupingReturn
   columnPinning: ColumnPinningReturn
   columnResizing: ColumnSizingReturn
+  columnOrder: ColumnOrderReturn
+  rowPinning: RowPinningReturn
   emptyState: EmptyStateReturn
 }
 
