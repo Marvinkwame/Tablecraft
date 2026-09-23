@@ -463,4 +463,22 @@ describe('useQueryTable', () => {
     expect(result.current.query).toHaveProperty('status')
     expect(result.current.query).toHaveProperty('fetchStatus')
   })
+
+  it('declares itself server-backed through meta, not only manualPagination', async () => {
+    // useFacetedFilters reads meta.tablecraftServerBacked in preference to
+    // manualPagination, because useTable also sets manualPagination for a
+    // purely local `pagination: false` table. This hook happens to set both,
+    // so deleting the meta write leaves every other test green while the
+    // contract silently rests on the fallback. Pin the flag itself.
+    const queryFn = createMockQueryFn()
+
+    const { result } = renderHook(
+      () => useQueryTable({ queryKey: ['users-meta'], queryFn, columns }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => expect(result.current.query.isLoading).toBe(false))
+
+    expect(result.current.table.options.meta?.tablecraftServerBacked).toBe(true)
+  })
 })
