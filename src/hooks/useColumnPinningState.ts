@@ -13,8 +13,12 @@ export type { ColumnPinningOptions as UseColumnPinningOptions } from '../types'
  * Consumers get `inset-inline-start`-shaped semantics for free.
  */
 export function useColumnPinningState(options: ColumnPinningOptions = {}) {
-  const [state, setState] = useState<ColumnPinningState>(
-    options.defaultPinning ?? { start: [], end: [] }
+  const [state, setState] = useState<ColumnPinningState>(() =>
+    // Copy, so a caller's object cannot be mutated through our setters.
+    // Mirrors useRowPinningState's pattern.
+    options.defaultPinning
+      ? { start: [...(options.defaultPinning.start ?? [])], end: [...(options.defaultPinning.end ?? [])] }
+      : { start: [], end: [] }
   )
 
   const pinStart = useCallback((id: string) =>

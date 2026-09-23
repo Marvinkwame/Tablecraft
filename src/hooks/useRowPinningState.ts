@@ -15,8 +15,7 @@ export type { RowPinningOptions as UseRowPinningOptions } from '../types'
 export function useRowPinningState(options: RowPinningOptions = {}) {
   const [state, setState] = useState<RowPinningState>(() =>
     // Copy, so a caller's object cannot be mutated through our setters.
-    // useColumnPinningState aliases its defaultPinning; that is a latent bug
-    // there, not a pattern to copy.
+    // useColumnPinningState mirrors this pattern.
     options.defaultPinning
       ? { top: [...(options.defaultPinning.top ?? [])], bottom: [...(options.defaultPinning.bottom ?? [])] }
       : { top: [], bottom: [] }
