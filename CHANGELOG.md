@@ -4,19 +4,30 @@ All notable changes to tablecraft are documented here.
 
 ---
 
-## [4.0.1] — 2026-09-22
+## [4.1.0] — 2026-09-23
 
-### Fixed
+### Added
 
-- **`useFacetedFilters`: a range column no longer reports its bounds as selected values.** `columnFilters` holds one value per column, so a `[min, max]` range written by `getRangeFacet` arrived in `getFacet` looking exactly like two selected values. On a column declaring `filterFn: 'inNumberRange'`, `getFacet(...).selected` returned `[10, 50]`, `isSelected(10)` returned `true`, and a checkbox UI rendered two bogus checked boxes — toggling either one overwrote the range.
+- **`useColumnOrderState`, `useRowPinningState`, `useColumnSizingState`** — three features TanStack ships and v4 already bound, but tablecraft never wrapped. Consumers carried their code and could reach them only through the raw table instance.
 
-  `getFacet` now withholds the selection for a column declared with the built-in range filter, mirroring the guard `getRangeFacet` already had in the other direction. Options and counts are unaffected.
+- **`useColumnResizing(table)`** — drag-to-resize handle props. This required binding `columnResizingFeature`, which v4 did not: v9 splits sizing into committed widths (`columnSizingFeature`, bound) and the transient drag interaction (`columnResizingFeature`, previously unbound), so `header.getResizeHandler()` did not exist at all.
 
-  The guard keys off the *declared* built-in range fn, deliberately narrower than the predicate `getRangeFacet` uses. That one counts any custom function as a range, which is safe there but would blank selections for anyone using a bespoke value-list `filterFn`.
+- **`useTable` options `columnOrder`, `rowPinning` and `columnResizing`**, with matching return slices. All default to `false`, like every other feature option — upgrading from 4.0.1 changes nothing until you opt in.
 
-### Internal
+### Changed
 
-- Pinned `meta.tablecraftServerBacked` directly in the `useQueryTable` and `useInfiniteTable` suites. Both hooks also set `manualPagination: true`, so the meta write that `useFacetedFilters` actually prefers could be deleted with the whole suite still green.
+- **Bundle:** the root entry (`dist/src/index.mjs`) grew from 26,788 to **27,832 bytes** (+1,044 bytes), and the shared chunk it imports from grew from roughly 16.88 KB to **20,333 bytes** (`dist/chunk-CF6MLCW4.mjs`, verified to contain `columnResizingFeature`, `columnSizingFeature`, `rowPinningFeature`, and the three new granular hooks). The whole `dist/` directory (excluding source maps) is **402,132 bytes**.
+
+  **Measured properly this time — Task 1 found the obvious measurement misleading, and this entry does not repeat that mistake.** Unlike Task 1's single-feature change, this release's root entry *did* grow, because the four new granular hooks (`useColumnOrderState`, `useRowPinningState`, `useColumnSizingState`, `useColumnResizing`) are plain named exports off the root, so their own source lands directly in `dist/src/index.mjs`. The `useTable` wiring and the three feature registrations, by contrast, live in `tablecraftFeatures`/`useTable.ts`, which `tsup` code-splits into a shared chunk (`dist/chunk-CF6MLCW4.mjs`) re-exported by every entry point — that chunk is where most of the growth actually landed, not the root file.
+
+  What this does and doesn't prove: these are unminified, unbundled byte counts of tablecraft's own emitted code — real, measured, not estimated — and they show tablecraft's wrapper code grew by roughly 4.4 KB total (root + chunk). They say nothing about `@tanstack/react-table` itself, because it is `external` in `tsup.config.ts` and never appears in tablecraft's own output. The consumer-side cost is that a consumer's bundler now pulls `columnResizingFeature` out of `@tanstack/react-table` wherever it wasn't already doing so — `columnOrderingFeature` and `rowPinningFeature` were already bound as of 4.0.0, so `columnResizingFeature` is the only new consumer-side cost this release adds — a cost tablecraft's own byte count cannot show, same as the 4.0.0 entry noted for the original feature set.
+
+### Notes
+
+- `columnResizeMode` preserves TanStack's own default of **`'onEnd'`**. Committing a width on every mousemove re-renders the whole table, which is visibly janky on the large tables this library ships virtualization for. Pass `columnResizing: { mode: 'onChange' }` for live resizing.
+- Column order state is empty by default, which TanStack reads as natural order. Seed `defaultOrder` for `moveColumn` to have anything to move.
+- No drag-and-drop reorder UI is included, and none is planned — dnd-kit does it better without a heavy new peer.
+- These slices are **not** persistable. `persist` already omits `columnVisibility`, `columnPinning` and `grouping`; closing that gap coherently is its own release.
 
 ---
 
@@ -66,7 +77,7 @@ The unreleased root entry (`dist/src/index.mjs`) measures **26,788 bytes**, up f
 
 The real cost of binding one fixed feature set is downstream, not in tablecraft's own file size: a consumer's bundler can no longer tree-shake unused v9 features out of `@tanstack/react-table`, because tablecraft's import graph always touches the full set. That is the same position v8 shipped in — v8 also bundled every feature unconditionally — so this is bundle parity with v8, not a regression, and it is a different claim than the headline byte count above, which speaks to tablecraft's own output rather than to `@tanstack/react-table`'s.
 
-The feature set is bound because v9 resolves a table's methods conditionally on which features are registered, so a wrapper cannot stay generic over features and still promise `pagination` in its return type; binding one concrete set is what keeps `useTable().pagination` typed. Preset-bound entries with a smaller feature set (e.g. a `/core` import) are a **planned** escape hatch, deferred to 4.1 — they do not exist yet, so there is no smaller entry to reach for today.
+The feature set is bound because v9 resolves a table's methods conditionally on which features are registered, so a wrapper cannot stay generic over features and still promise `pagination` in its return type; binding one concrete set is what keeps `useTable().pagination` typed. Preset-bound entries with a smaller feature set (e.g. a `/core` import) are a **planned** escape hatch, deferred to a future minor — they do not exist yet, so there is no smaller entry to reach for today.
 
 ---
 

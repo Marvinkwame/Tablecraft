@@ -1,0 +1,143 @@
+---
+title: useColumnResizing
+description: Drag-to-resize handle props for table headers, pairing with useTable's columnResizing option.
+---
+
+Drag-to-resize handle props for table headers. Spread the returned props onto
+a resize handle element and the column commits a new width as the user drags.
+
+Split from `useTable` on purpose: the committed widths are table state and
+belong in `useTable`'s return, but building the drag handle needs the table
+instance itself. That is the same seam [`useTableA11y`](/docs/api/use-table-a11y)
+and [`useVirtualRows`](/docs/api/use-virtual-rows) sit on.
+
+## Signature
+
+```ts
+function useColumnResizing<TData extends RowData>(
+  table: TablecraftTable<TData>
+): ColumnResizingReturn
+```
+
+## Pairs with `useTable({ columnResizing: true })`
+
+`useColumnResizing` only builds handle props from the table instance — it does
+not itself register where a committed width gets written. TanStack's
+`columnSizing` slice ships its own internal state updater regardless, so
+without `columnResizing` enabled on `useTable` (or
+`useQueryTable`/`useServerTable`) the slice is merely **uncontrolled** rather
+than absent: dragging a handle still visibly resizes the column, but the
+width never reaches `useTable().columnResizing.state` (it stays `{}`), and
+`columnResizing.setSize(...)` updates that hook's own state without changing
+the rendered width. Both halves silently disagree with each other — which is
+exactly why you want the option on.
+
+```tsx
+import { useTable, useColumnResizing } from '@marvinackerman/tablecraft'
+
+const { table, columnResizing } = useTable({
+  data,
+  columns,
+  columnResizing: true,
+})
+
+const { getResizeHandleProps } = useColumnResizing(table)
+```
+
+`columnResizing` on `useTable`'s return is the committed-width slice
+(`ColumnSizingReturn`) — `state`, `setSize`, `resetSize`, `resetAll`,
+`getSize`. See [`useTable`](/docs/api/use-table#columnresizing) and
+[`useColumnSizingState`](/docs/api/state-hooks#usecolumnsizingstate) for that
+half.
+
+## Return
+
+| Property | Type | Description |
+|---|---|---|
+| `getResizeHandleProps` | `(headerId: string) => ResizeHandleProps` | Prop-getter for a header's resize handle |
+| `isResizing` | `(columnId: string) => boolean` | Whether that column is currently being dragged |
+| `resizingColumnId` | `string \| null` | The column currently being resized, if any |
+
+### `ResizeHandleProps`
+
+| Property | Type | Description |
+|---|---|---|
+| `onMouseDown` | `(event) => void` | Only present when the column can resize |
+| `onTouchStart` | `(event) => void` | Only present when the column can resize |
+| `style` | `{ cursor, touchAction: 'none', userSelect: 'none' }` | `cursor` is `'col-resize'` when resizable, `'default'` otherwise |
+| `data-can-resize` | `boolean` | Styling hook — see below |
+| `data-resizing` | `boolean` | Styling hook — see below |
+
+## Usage
+
+```tsx
+{table.getFlatHeaders().map((header) => (
+  <th key={header.id} style={{ width: header.getSize() }}>
+    {flexRender(header.column.columnDef.header, header.getContext())}
+    <div
+      {...getResizeHandleProps(header.id)}
+      className="resize-handle"
+    />
+  </th>
+))}
+```
+
+## `data-can-resize` and `data-resizing` as styling hooks
+
+Both are plain `data-*` attributes on the returned props, meant for CSS rather
+than for branching in your component:
+
+```css
+.resize-handle[data-can-resize='false'] {
+  display: none;
+}
+.resize-handle[data-resizing='true'] {
+  background: var(--accent);
+}
+```
+
+For an unknown header id or a column that opted out of resizing,
+`getResizeHandleProps` still returns a valid object — `data-can-resize: false`,
+no `onMouseDown`/`onTouchStart` — rather than throwing. A stale header id in a
+consumer's render can't crash the table.
+
+TanStack's table-level `enableColumnResizing: false` is not reachable through
+tablecraft — `useTable` builds an explicit options object rather than
+spreading unknown options through, and `ColumnResizingOptions` does not
+expose it. The supported opt-out is per-column: set `enableResizing: false`
+on that column's definition, as below.
+
+## `enableResizing: false` yields inert props
+
+Setting `enableResizing: false` on a column def makes `header.column.getCanResize()`
+return `false` for that column, which is exactly the "unknown header" case
+above: `getResizeHandleProps` returns inert props with `data-can-resize: false`
+and no event handlers. No separate check is needed on the consumer side — the
+same props object works whether or not the column can resize.
+
+## The `'onEnd'` default
+
+`columnResizing: { mode }` on `useTable` — see
+[`ColumnResizingOptions`](/docs/api/use-table#columnresizing) — defaults to
+**`'onEnd'`**, preserving TanStack's own default rather than diverging from
+it.
+
+`'onChange'` commits a new width to `columnSizing` state on every `mousemove`
+during the drag, which re-renders the whole table on every pixel of movement.
+tablecraft ships virtualization for large tables specifically because
+full-table re-renders are expensive; committing that often during a resize is
+visibly janky on exactly the tables where it matters most. `'onEnd'` commits
+once, when the drag ends: `header.getSize()` reads from the committed
+`columnSizing` map either way, so with `'onEnd'` the column's own width does
+not change mid-drag — only the cursor moves — and the new width appears in one
+step on mouseup/touchend, rather than growing pixel-by-pixel.
+
+To opt into TanStack's live-committing behavior:
+
+```tsx
+useTable({
+  data,
+  columns,
+  columnResizing: { mode: 'onChange' },
+})
+```

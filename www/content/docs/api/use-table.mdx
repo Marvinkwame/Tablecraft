@@ -46,6 +46,9 @@ function useTable<TData extends RowData>(
 | `rowExpansion` | `RowExpansionOptions \| boolean` | `true`, or `{ defaultExpanded?, allowMultiple?, paginateExpandedRows?, getSubRows? }` |
 | `grouping` | `GroupingOptions \| boolean` | `true`, or `{ defaultGrouping?, manualGrouping?, groupedColumnMode? }` |
 | `columnPinning` | `ColumnPinningOptions \| boolean` | `true`, or `{ defaultPinning? }` |
+| `columnOrder` | `ColumnOrderOptions \| boolean` | `true`, or `{ defaultOrder? }` |
+| `rowPinning` | `RowPinningOptions \| boolean` | `true`, or `{ defaultPinning? }` |
+| `columnResizing` | `ColumnResizingOptions \| boolean` | `true`, or `{ defaultSizing?, mode?, direction? }` — `mode` defaults to `'onEnd'` |
 | `fuzzy` | `boolean \| FilterFn<TablecraftFeatures, TData>` | `true` loads `match-sorter` via `require()` — CJS/Node only. In ESM-only bundlers (Vite, browsers), pass a `FilterFn` directly instead. |
 | `persist` | `'localStorage' \| 'sessionStorage' \| false` | Persist state across reloads — see [Persistence & URL sync](/docs/api/persistence-url) |
 | `persistKey` | `string` | Storage key — required when `persist` is set |
@@ -68,6 +71,9 @@ const {
   rowExpansion,
   grouping,
   columnPinning,
+  columnOrder,
+  rowPinning,
+  columnResizing,
   emptyState,
 } = useTable({
   data,
@@ -80,6 +86,9 @@ const {
   columnVisibility: { defaultVisibility: { email: false } },
   rowExpansion: { getSubRows: (row) => row.children },
   grouping: { defaultGrouping: ['role'] },
+  columnOrder: true,
+  rowPinning: true,
+  columnResizing: true,
   fuzzy: true,
   persist: 'localStorage',
   persistKey: 'my-table',
@@ -188,6 +197,60 @@ const {
 | `startColumns` | `string[]` | Currently start-pinned column IDs |
 | `endColumns` | `string[]` | Currently end-pinned column IDs |
 
+### `columnOrder`
+
+| Property | Type | Description |
+|---|---|---|
+| `state` | `ColumnOrderState` | Current column order, as leaf column ids |
+| `setOrder` | `(columnIds: string[]) => void` | Replace the order wholesale |
+| `moveColumn` | `(columnId: string, toIndex: number) => void` | Move one column to a new index |
+| `resetOrder` | `() => void` | Clear back to `[]` (TanStack's natural order) |
+| `order` | `string[]` | Alias of `state` |
+
+An empty order (the default) is TanStack's sentinel for natural order, so
+`moveColumn` is a no-op until you seed `columnOrder: { defaultOrder: [...] }`
+— e.g. `table.getAllLeafColumns().map(c => c.id)`. No drag-and-drop UI is
+provided; wire `moveColumn` to a drag library like
+[dnd-kit](https://dndkit.com) or to plain buttons — see
+[`useColumnOrderState`](/docs/api/state-hooks#usecolumnorderstate) for the
+reasoning.
+
+### `rowPinning`
+
+| Property | Type | Description |
+|---|---|---|
+| `state` | `RowPinningState` | Raw TanStack row pinning state |
+| `pinTop` | `(rowId: string) => void` | Pin a row to the top |
+| `pinBottom` | `(rowId: string) => void` | Pin a row to the bottom |
+| `unpin` | `(rowId: string) => void` | Remove pin from a row |
+| `clearPinning` | `() => void` | Unpin all rows |
+| `isPinned` | `(rowId: string) => 'top' \| 'bottom' \| false` | Query pin status |
+| `topRows` | `string[]` | Currently top-pinned row IDs |
+| `bottomRows` | `string[]` | Currently bottom-pinned row IDs |
+
+Rows pin to `top`/`bottom`, unlike `columnPinning`'s `start`/`end` — see
+[`useRowPinningState`](/docs/api/state-hooks#userowpinningstate) for why.
+
+### `columnResizing`
+
+| Property | Type | Description |
+|---|---|---|
+| `state` | `ColumnSizingState` | Committed widths, keyed by leaf column id |
+| `setSize` | `(columnId: string, px: number) => void` | Set a column's width directly |
+| `resetSize` | `(columnId: string) => void` | Remove a column's override, falling back to its columnDef `size` |
+| `resetAll` | `() => void` | Clear all overrides |
+| `getSize` | `(columnId: string) => number \| undefined` | Committed width, or `undefined` if unset |
+
+This slice is the **committed widths only** — the state half of resizing. Its
+type is `ColumnSizingReturn`, not `ColumnResizingReturn` — the two names are
+easy to conflate. `ColumnResizingReturn` is the return type of the separate
+hook, [`useColumnResizing(table)`](/docs/api/use-column-resizing), which
+builds the drag handles that write into this slice; it needs the table
+instance rather than options and so isn't returned from `useTable` itself. If
+you hit a `TS2322` between these two near-identical names, `useTable().columnResizing`
+is `ColumnSizingReturn` and `useColumnResizing(table)`'s return is
+`ColumnResizingReturn`.
+
 ### `emptyState`
 
 | Property | Type | Description |
@@ -199,4 +262,5 @@ const {
 
 - `position: sticky` for pinned columns is plain CSS — tablecraft only provides state and the pixel offsets (`column.getStart('start')`, `column.getAfter('end')`). No UI lock-in.
 - `columnPinning` is also available on [`useQueryTable`](/docs/api/use-query-table) and [`useInfiniteTable`](/docs/api/use-infinite-table) with the identical option shape.
+- `columnOrder`, `rowPinning` and `columnResizing` are available on [`useServerTable`](/docs/api/use-server-table) (it delegates straight to `useTable`) and on [`useQueryTable`](/docs/api/use-query-table) (its return type extends `useTable`'s) with the identical option shape. **`useInfiniteTable` does not get any of the three** — its return type is standalone rather than extending `useTable`'s, so nothing forced these three onto it, and they were left out of scope deliberately rather than by oversight.
 - See [Persistence & URL sync](/docs/api/persistence-url) for `persist*` / `syncUrl` details, and [State hooks](/docs/api/state-hooks) if you're composing `useReactTable` yourself instead of using `useTable`.

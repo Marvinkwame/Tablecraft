@@ -3,6 +3,8 @@ import type {
   ColumnDef,
   ColumnFiltersState,
   ColumnPinningState,
+  ColumnOrderState,
+  ColumnSizingState,
   ExpandedState,
   FilterFn,
   GroupingState,
@@ -10,6 +12,7 @@ import type {
   PaginationState,
   Row,
   RowData,
+  RowPinningState,
   RowSelectionState,
   SortingState,
   TableFeatures,
@@ -258,6 +261,86 @@ export interface ColumnPinningReturn {
   endColumns: string[]
 }
 
+// ─── Column Order ────────────────────────────────────────
+
+export interface ColumnOrderOptions {
+  /**
+   * Initial column order, as leaf column ids. An empty array means TanStack's
+   * natural order. `moveColumn` operates on this array, so seed it — e.g.
+   * `table.getAllLeafColumns().map(c => c.id)` — for ordering to be meaningful.
+   */
+  defaultOrder?: ColumnOrderState
+}
+
+export interface ColumnOrderReturn {
+  state: ColumnOrderState
+  setOrder: (columnIds: string[]) => void
+  moveColumn: (columnId: string, toIndex: number) => void
+  resetOrder: () => void
+  order: string[]
+}
+
+// ─── Row Pinning ────────────────────────────────────────
+
+export interface RowPinningOptions {
+  defaultPinning?: RowPinningState   // { top?: string[], bottom?: string[] }
+}
+
+export interface RowPinningReturn {
+  state: RowPinningState
+  pinTop: (rowId: string) => void
+  pinBottom: (rowId: string) => void
+  unpin: (rowId: string) => void
+  clearPinning: () => void
+  isPinned: (rowId: string) => 'top' | 'bottom' | false
+  topRows: string[]
+  bottomRows: string[]
+}
+
+// ─── Column Sizing ────────────────────────────────────
+
+export interface ColumnSizingOptions {
+  /** Initial committed widths in pixels, keyed by leaf column id. */
+  defaultSizing?: ColumnSizingState
+}
+
+export interface ColumnSizingReturn {
+  state: ColumnSizingState
+  setSize: (columnId: string, px: number) => void
+  resetSize: (columnId: string) => void
+  resetAll: () => void
+  getSize: (columnId: string) => number | undefined
+}
+
+// ─── Column Resizing ──────────────────────────────────
+
+export interface ResizeHandleProps {
+  onMouseDown?: (event: React.MouseEvent<HTMLElement>) => void
+  onTouchStart?: (event: React.TouchEvent<HTMLElement>) => void
+  style: { cursor: string; touchAction: 'none'; userSelect: 'none' }
+  'data-can-resize': boolean
+  'data-resizing': boolean
+}
+
+export interface ColumnResizingReturn {
+  getResizeHandleProps: (headerId: string) => ResizeHandleProps
+  isResizing: (columnId: string) => boolean
+  resizingColumnId: string | null
+}
+
+export interface ColumnResizingOptions {
+  /** Initial committed widths in pixels, keyed by leaf column id. */
+  defaultSizing?: ColumnSizingState
+  /**
+   * When committed widths update. Defaults to `'onEnd'`, preserving
+   * TanStack's own default, because committing on every mousemove
+   * re-renders the whole table and is visibly janky on large ones.
+   */
+  mode?: 'onChange' | 'onEnd'
+  /** Drag offset direction. Defaults to `'ltr'`. */
+  direction?: 'ltr' | 'rtl'
+}
+
 // ─── Empty State ─────────────────────────────────────────────
 
 export interface EmptyStateReturn {
@@ -327,6 +410,12 @@ export interface TableKitDefaults {
   grouping?: GroupingOptions | boolean
   /** Enable column pinning by default */
   columnPinning?: ColumnPinningOptions | boolean
+  /** Enable column resizing by default */
+  columnResizing?: ColumnResizingOptions | boolean
+  /** Enable column ordering by default */
+  columnOrder?: ColumnOrderOptions | boolean
+  /** Enable row pinning by default */
+  rowPinning?: RowPinningOptions | boolean
 }
 
 // ─── useTable Options ─────────────────────────────────────────
@@ -367,6 +456,15 @@ export interface UseTableOptions<TData extends RowData> {
   // Column pinning (opt-in)
   columnPinning?: ColumnPinningOptions | boolean
 
+  // Column resizing (opt-in)
+  columnResizing?: ColumnResizingOptions | boolean
+
+  // Column order (opt-in)
+  columnOrder?: ColumnOrderOptions | boolean
+
+  // Row pinning (opt-in)
+  rowPinning?: RowPinningOptions | boolean
+
   // v1.x — Fuzzy search
   /**
    * `true` loads `match-sorter` via `require()` — works in CJS/Node environments only.
@@ -397,6 +495,9 @@ export interface UseTableReturn<TData extends RowData> {
   rowExpansion: RowExpansionReturn
   grouping: GroupingReturn
   columnPinning: ColumnPinningReturn
+  columnResizing: ColumnSizingReturn
+  columnOrder: ColumnOrderReturn
+  rowPinning: RowPinningReturn
   emptyState: EmptyStateReturn
 }
 

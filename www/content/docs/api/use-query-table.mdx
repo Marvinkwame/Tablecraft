@@ -36,6 +36,9 @@ function useQueryTable<TData extends RowData>(
 | `rowExpansion` | `RowExpansionOptions \| boolean` | — | Opt-in row expansion |
 | `grouping` | `GroupingOptions \| boolean` | — | Opt-in row grouping |
 | `columnPinning` | `ColumnPinningOptions \| boolean` | — | Opt-in column pinning |
+| `columnOrder` | `ColumnOrderOptions \| boolean` | — | Opt-in column ordering |
+| `rowPinning` | `RowPinningOptions \| boolean` | — | Opt-in row pinning |
+| `columnResizing` | `ColumnResizingOptions \| boolean` | — | Opt-in column resizing — `mode` defaults to `'onEnd'` |
 | `fuzzy` | `boolean \| FilterFn<TablecraftFeatures, TData>` | — | Same caveat as `useTable` — `true` requires CJS/Node |
 | `persist` | `PersistStorage \| false` | — | Same as `useTable` |
 | `persistKey` | `string` | — | Storage key |

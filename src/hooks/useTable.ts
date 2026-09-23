@@ -23,6 +23,9 @@ import type {
   RowExpansionReturn,
   GroupingReturn,
   ColumnPinningReturn,
+  ColumnSizingReturn,
+  ColumnOrderReturn,
+  RowPinningReturn,
   EmptyStateReturn,
 } from '../types'
 import { usePaginationState } from './usePaginationState'
@@ -34,6 +37,9 @@ import { useColumnVisibilityState } from './useColumnVisibilityState'
 import { useRowExpansionState } from './useRowExpansionState'
 import { useGroupingState } from './useGroupingState'
 import { useColumnPinningState } from './useColumnPinningState'
+import { useColumnSizingState } from './useColumnSizingState'
+import { useColumnOrderState } from './useColumnOrderState'
+import { useRowPinningState } from './useRowPinningState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
@@ -51,6 +57,9 @@ export function useTable<TData extends RowData>(
     rowExpansion: providerDefaults.rowExpansion,
     grouping: providerDefaults.grouping,
     columnPinning: providerDefaults.columnPinning,
+    columnResizing: providerDefaults.columnResizing,
+    columnOrder: providerDefaults.columnOrder,
+    rowPinning: providerDefaults.rowPinning,
     globalFilter: providerDefaults.globalFilter,
     columnFilters: providerDefaults.columnFilters,
     persist: providerDefaults.persist,
@@ -85,6 +94,9 @@ export function useTable<TData extends RowData>(
     rowExpansion: rowExpansionOpts = false,
     grouping: groupingOpts = false,
     columnPinning: columnPinningOpts = false,
+    columnResizing: columnResizingOpts = false,
+    columnOrder: columnOrderOpts = false,
+    rowPinning: rowPinningOpts = false,
     fuzzy = false,
     persist = false,
     persistKey,
@@ -184,6 +196,26 @@ export function useTable<TData extends RowData>(
     typeof columnPinningOpts === 'object' ? columnPinningOpts : {}
   const columnPinningState = useColumnPinningState(columnPinningConfig)
 
+  // ─── Column resizing ─────────────────────────────────────
+  const columnResizingEnabled = !!columnResizingOpts
+  const columnResizingConfig =
+    typeof columnResizingOpts === 'object' ? columnResizingOpts : {}
+  const columnSizingState = useColumnSizingState({
+    defaultSizing: columnResizingConfig.defaultSizing,
+  })
+
+  // ─── Column order ────────────────────────────────────────
+  const columnOrderEnabled = !!columnOrderOpts
+  const columnOrderConfig =
+    typeof columnOrderOpts === 'object' ? columnOrderOpts : {}
+  const columnOrderState = useColumnOrderState(columnOrderConfig)
+
+  // ─── Row pinning ─────────────────────────────────────────
+  const rowPinningEnabled = !!rowPinningOpts
+  const rowPinningConfig =
+    typeof rowPinningOpts === 'object' ? rowPinningOpts : {}
+  const rowPinningState = useRowPinningState(rowPinningConfig)
+
   // ─── Fuzzy filter ────────────────────────────────────────
   const fuzzyFilterFn = useMemo<FilterFn<TablecraftFeatures, TData> | undefined>(() => {
     if (!fuzzy) return undefined
@@ -232,6 +264,9 @@ export function useTable<TData extends RowData>(
       ...(rowExpansionEnabled && { expanded: rowExpansionState.state }),
       ...(groupingEnabled && { grouping: groupingState.state }),
       ...(columnPinningEnabled && { columnPinning: columnPinningState.state }),
+      ...(columnResizingEnabled && { columnSizing: columnSizingState.state }),
+      ...(columnOrderEnabled && { columnOrder: columnOrderState.state }),
+      ...(rowPinningEnabled && { rowPinning: rowPinningState.state }),
     },
 
     // Pagination
@@ -301,6 +336,26 @@ export function useTable<TData extends RowData>(
     // Column pinning
     ...(columnPinningEnabled && {
       onColumnPinningChange: columnPinningState.setState,
+    }),
+
+    // Column resizing
+    ...(columnResizingEnabled && {
+      onColumnSizingChange: columnSizingState.setState,
+      // 'onEnd' preserves TanStack's own default. Committing a width on
+      // every mousemove re-renders the table; on a large one that is visibly
+      // janky, and this library ships virtualization for exactly that audience.
+      columnResizeMode: columnResizingConfig.mode ?? 'onEnd',
+      columnResizeDirection: columnResizingConfig.direction ?? 'ltr',
+    }),
+
+    // Column order
+    ...(columnOrderEnabled && {
+      onColumnOrderChange: columnOrderState.setState,
+    }),
+
+    // Row pinning
+    ...(rowPinningEnabled && {
+      onRowPinningChange: rowPinningState.setState,
     }),
   })
 
@@ -463,6 +518,45 @@ export function useTable<TData extends RowData>(
     [columnPinningState]
   )
 
+  // ─── Build column resizing return ────────────────────────
+  const columnResizing: ColumnSizingReturn = useMemo(
+    () => ({
+      state: columnSizingState.state,
+      setSize: columnSizingState.setSize,
+      resetSize: columnSizingState.resetSize,
+      resetAll: columnSizingState.resetAll,
+      getSize: columnSizingState.getSize,
+    }),
+    [columnSizingState]
+  )
+
+  // ─── Build column order return ───────────────────────────
+  const columnOrder: ColumnOrderReturn = useMemo(
+    () => ({
+      state: columnOrderState.state,
+      setOrder: columnOrderState.setOrder,
+      moveColumn: columnOrderState.moveColumn,
+      resetOrder: columnOrderState.resetOrder,
+      order: columnOrderState.order,
+    }),
+    [columnOrderState]
+  )
+
+  // ─── Build row pinning return ────────────────────────────
+  const rowPinning: RowPinningReturn = useMemo(
+    () => ({
+      state: rowPinningState.state,
+      pinTop: rowPinningState.pinTop,
+      pinBottom: rowPinningState.pinBottom,
+      unpin: rowPinningState.unpin,
+      clearPinning: rowPinningState.clearPinning,
+      isPinned: rowPinningState.isPinned,
+      topRows: rowPinningState.topRows,
+      bottomRows: rowPinningState.bottomRows,
+    }),
+    [rowPinningState]
+  )
+
   // ─── Build empty state return ────────────────────────────
   const emptyState: EmptyStateReturn = useMemo(
     () => ({
@@ -484,6 +578,9 @@ export function useTable<TData extends RowData>(
     rowExpansion,
     grouping,
     columnPinning,
+    columnResizing,
+    columnOrder,
+    rowPinning,
     emptyState,
   }
 }

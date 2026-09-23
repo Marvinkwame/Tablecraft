@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import * as tablecraft from '../src/index'
 import { tablecraftFeatures } from '../src/features'
-import { filterFns, sortFns, aggregationFns } from '@tanstack/react-table'
+import { filterFns, sortFns, aggregationFns, columnResizingFeature } from '@tanstack/react-table'
 import { useTable } from '../src/hooks/useTable'
 import { useTableA11y } from '../src/hooks/useTableA11y'
 import { createColumns } from '../src/helpers/createColumns'
@@ -59,6 +59,11 @@ describe('tablecraftFeatures', () => {
     expect(tablecraftFeatures.filterFns).toBe(filterFns)
     expect(tablecraftFeatures.sortFns).toBe(sortFns)
     expect(tablecraftFeatures.aggregationFns).toBe(aggregationFns)
+  })
+
+  it('registers columnResizingFeature so drag-to-resize is available', () => {
+    // Identity, not membership: a key could exist holding the wrong feature.
+    expect(tablecraftFeatures.columnResizingFeature).toBe(columnResizingFeature)
   })
 })
 
