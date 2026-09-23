@@ -82,7 +82,7 @@ const intColumns = createColumns<IntRow>([
 const intData: IntRow[] = [{ id: 1, name: 'Alice' }]
 
 describe('useTable — columnOrder', () => {
-  it('is absent from the return when not enabled', () => {
+  it('leaves order empty when not enabled', () => {
     const { result } = renderHook(() => useTable({ data: intData, columns: intColumns }))
     expect(result.current.columnOrder.order).toEqual([])
   })
