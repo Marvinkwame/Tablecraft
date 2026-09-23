@@ -332,8 +332,8 @@ export interface ColumnResizingOptions {
   /** Initial committed widths in pixels, keyed by leaf column id. */
   defaultSizing?: ColumnSizingState
   /**
-   * When committed widths update. Defaults to `'onEnd'` — tablecraft diverges
-   * from TanStack's `'onChange'` here, because committing on every mousemove
+   * When committed widths update. Defaults to `'onEnd'`, preserving
+   * TanStack's own default, because committing on every mousemove
    * re-renders the whole table and is visibly janky on large ones.
    */
   mode?: 'onChange' | 'onEnd'
