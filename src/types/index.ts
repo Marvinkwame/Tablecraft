@@ -11,6 +11,7 @@ import type {
   PaginationState,
   Row,
   RowData,
+  RowPinningState,
   RowSelectionState,
   SortingState,
   TableFeatures,
@@ -276,6 +277,23 @@ export interface ColumnOrderReturn {
   moveColumn: (columnId: string, toIndex: number) => void
   resetOrder: () => void
   order: string[]
+}
+
+// ─── Row Pinning ────────────────────────────────────────
+
+export interface RowPinningOptions {
+  defaultPinning?: RowPinningState   // { top?: string[], bottom?: string[] }
+}
+
+export interface RowPinningReturn {
+  state: RowPinningState
+  pinTop: (rowId: string) => void
+  pinBottom: (rowId: string) => void
+  unpin: (rowId: string) => void
+  clearPinning: () => void
+  isPinned: (rowId: string) => 'top' | 'bottom' | false
+  topRows: string[]
+  bottomRows: string[]
 }
 
 // ─── Empty State ─────────────────────────────────────────────
