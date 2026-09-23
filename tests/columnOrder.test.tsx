@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useColumnOrderState } from '../src/hooks/useColumnOrderState'
+import { useTable } from '../src/hooks/useTable'
+import { createColumns } from '../src/helpers/createColumns'
 
 describe('useColumnOrderState', () => {
   it('starts empty, meaning natural column order', () => {
@@ -69,5 +71,42 @@ describe('useColumnOrderState', () => {
     const { result } = renderHook(() => useColumnOrderState({ defaultOrder }))
     act(() => result.current.moveColumn('a', 2))
     expect(defaultOrder).toEqual(['a', 'b', 'c'])
+  })
+})
+
+type IntRow = { id: number; name: string }
+const intColumns = createColumns<IntRow>([
+  { accessorKey: 'id', header: 'ID' },
+  { accessorKey: 'name', header: 'Name' },
+])
+const intData: IntRow[] = [{ id: 1, name: 'Alice' }]
+
+describe('useTable — columnOrder', () => {
+  it('is absent from the return when not enabled', () => {
+    const { result } = renderHook(() => useTable({ data: intData, columns: intColumns }))
+    expect(result.current.columnOrder.order).toEqual([])
+  })
+
+  it('reorders the visible leaf columns when enabled', () => {
+    const { result } = renderHook(() =>
+      useTable({
+        data: intData,
+        columns: intColumns,
+        columnOrder: { defaultOrder: ['name', 'id'] },
+      })
+    )
+    expect(result.current.table.getVisibleLeafColumns().map(c => c.id)).toEqual(['name', 'id'])
+  })
+
+  it('moveColumn changes the rendered column order', () => {
+    const { result } = renderHook(() =>
+      useTable({
+        data: intData,
+        columns: intColumns,
+        columnOrder: { defaultOrder: ['id', 'name'] },
+      })
+    )
+    act(() => result.current.columnOrder.moveColumn('id', 1))
+    expect(result.current.table.getVisibleLeafColumns().map(c => c.id)).toEqual(['name', 'id'])
   })
 })

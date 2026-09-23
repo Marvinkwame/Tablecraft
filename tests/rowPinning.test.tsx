@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useRowPinningState } from '../src/hooks/useRowPinningState'
+import { useTable } from '../src/hooks/useTable'
+import { createColumns } from '../src/helpers/createColumns'
 
 describe('useRowPinningState', () => {
   it('starts with nothing pinned', () => {
@@ -76,5 +78,30 @@ describe('useRowPinningState', () => {
     act(() => result.current.pinTop('3'))
     act(() => result.current.unpin('2'))
     expect(defaultPinning).toEqual({ top: ['1'], bottom: ['2'] })
+  })
+})
+
+type IntRow = { id: number; name: string }
+const intColumns = createColumns<IntRow>([{ accessorKey: 'name', header: 'Name' }])
+const intData: IntRow[] = [
+  { id: 1, name: 'Alice' },
+  { id: 2, name: 'Bob' },
+]
+
+describe('useTable — rowPinning', () => {
+  it('pinTop moves the row into the top pinned rows', () => {
+    const { result } = renderHook(() =>
+      useTable({ data: intData, columns: intColumns, rowPinning: true })
+    )
+    act(() => result.current.rowPinning.pinTop('1'))
+
+    expect(result.current.table.getTopRows().map(r => r.id)).toEqual(['1'])
+  })
+
+  it('leaves pinning empty when not enabled', () => {
+    const { result } = renderHook(() =>
+      useTable({ data: intData, columns: intColumns })
+    )
+    expect(result.current.rowPinning.topRows).toEqual([])
   })
 })
