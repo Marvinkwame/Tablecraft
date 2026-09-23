@@ -12,6 +12,7 @@ export { useColumnOrderState } from './hooks/useColumnOrderState'
 export { useRowPinningState } from './hooks/useRowPinningState'
 export { useColumnSizingState } from './hooks/useColumnSizingState'
 export type { UseColumnSizingOptions } from './hooks/useColumnSizingState'
+export { useColumnResizing } from './hooks/useColumnResizing'
 export { useRowExpansionState } from './hooks/useRowExpansionState'
 export { useGroupingState } from './hooks/useGroupingState'
 export { useTableA11y } from './hooks/useTableA11y'
@@ -89,6 +90,7 @@ export type { UseColumnPinningOptions } from './hooks/useColumnPinningState'
 export type { UseColumnOrderOptions } from './hooks/useColumnOrderState'
 export type { UseRowPinningOptions } from './hooks/useRowPinningState'
 export type { ColumnPinningOptions, ColumnPinningReturn, ColumnOrderOptions, ColumnOrderReturn, RowPinningOptions, RowPinningReturn, ColumnSizingOptions, ColumnSizingReturn } from './types'
+export type { ColumnResizingReturn, ResizeHandleProps, ColumnResizingOptions } from './types'
 
 // A11y utilities
 export {

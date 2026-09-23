@@ -312,6 +312,35 @@ export interface ColumnSizingReturn {
   getSize: (columnId: string) => number | undefined
 }
 
+// ─── Column Resizing ──────────────────────────────────
+
+export interface ResizeHandleProps {
+  onMouseDown?: (event: React.MouseEvent<HTMLElement>) => void
+  onTouchStart?: (event: React.TouchEvent<HTMLElement>) => void
+  style: { cursor: string; touchAction: 'none'; userSelect: 'none' }
+  'data-can-resize': boolean
+  'data-resizing': boolean
+}
+
+export interface ColumnResizingReturn {
+  getResizeHandleProps: (headerId: string) => ResizeHandleProps
+  isResizing: (columnId: string) => boolean
+  resizingColumnId: string | null
+}
+
+export interface ColumnResizingOptions {
+  /** Initial committed widths in pixels, keyed by leaf column id. */
+  defaultSizing?: ColumnSizingState
+  /**
+   * When committed widths update. Defaults to `'onEnd'` — tablecraft diverges
+   * from TanStack's `'onChange'` here, because committing on every mousemove
+   * re-renders the whole table and is visibly janky on large ones.
+   */
+  mode?: 'onChange' | 'onEnd'
+  /** Drag offset direction. Defaults to `'ltr'`. */
+  direction?: 'ltr' | 'rtl'
+}
+
 // ─── Empty State ─────────────────────────────────────────────
 
 export interface EmptyStateReturn {
@@ -381,6 +410,8 @@ export interface TableKitDefaults {
   grouping?: GroupingOptions | boolean
   /** Enable column pinning by default */
   columnPinning?: ColumnPinningOptions | boolean
+  /** Enable column resizing by default */
+  columnResizing?: ColumnResizingOptions | boolean
 }
 
 // ─── useTable Options ─────────────────────────────────────────
@@ -421,6 +452,9 @@ export interface UseTableOptions<TData extends RowData> {
   // Column pinning (opt-in)
   columnPinning?: ColumnPinningOptions | boolean
 
+  // Column resizing (opt-in)
+  columnResizing?: ColumnResizingOptions | boolean
+
   // v1.x — Fuzzy search
   /**
    * `true` loads `match-sorter` via `require()` — works in CJS/Node environments only.
@@ -451,6 +485,7 @@ export interface UseTableReturn<TData extends RowData> {
   rowExpansion: RowExpansionReturn
   grouping: GroupingReturn
   columnPinning: ColumnPinningReturn
+  columnResizing: ColumnSizingReturn
   emptyState: EmptyStateReturn
 }
 
