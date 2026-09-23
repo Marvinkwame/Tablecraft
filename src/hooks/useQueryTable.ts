@@ -22,6 +22,7 @@ import type {
   RowExpansionReturn,
   GroupingReturn,
   ColumnPinningReturn,
+  ColumnSizingReturn,
   EmptyStateReturn,
 } from '../types'
 import type {
@@ -37,6 +38,7 @@ import { useColumnVisibilityState } from './useColumnVisibilityState'
 import { useRowExpansionState } from './useRowExpansionState'
 import { useGroupingState } from './useGroupingState'
 import { useColumnPinningState } from './useColumnPinningState'
+import { useColumnSizingState } from './useColumnSizingState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
@@ -56,6 +58,7 @@ export function useQueryTable<TData extends RowData>(
     rowExpansion: providerDefaults.rowExpansion,
     grouping: providerDefaults.grouping,
     columnPinning: providerDefaults.columnPinning,
+    columnResizing: providerDefaults.columnResizing,
     globalFilter: providerDefaults.globalFilter,
     columnFilters: providerDefaults.columnFilters,
     persist: providerDefaults.persist,
@@ -95,6 +98,7 @@ export function useQueryTable<TData extends RowData>(
     rowExpansion: rowExpansionOpts = false,
     grouping: groupingOpts = false,
     columnPinning: columnPinningOpts = false,
+    columnResizing: columnResizingOpts = false,
     fuzzy = false,
     persist = false,
     persistKey,
@@ -190,6 +194,14 @@ export function useQueryTable<TData extends RowData>(
   const columnPinningConfig =
     typeof columnPinningOpts === 'object' ? columnPinningOpts : {}
   const columnPinningState = useColumnPinningState(columnPinningConfig)
+
+  // ─── Column resizing ─────────────────────────────────────
+  const columnResizingEnabled = !!columnResizingOpts
+  const columnResizingConfig =
+    typeof columnResizingOpts === 'object' ? columnResizingOpts : {}
+  const columnSizingState = useColumnSizingState({
+    defaultSizing: columnResizingConfig.defaultSizing,
+  })
 
   // ─── Reset page on sort/filter change ────────────────────
   const isFirstRender = useRef(true)
@@ -303,6 +315,7 @@ export function useQueryTable<TData extends RowData>(
       ...(rowExpansionEnabled && { expanded: rowExpansionState.state }),
       ...(groupingEnabled && { grouping: groupingState.state }),
       ...(columnPinningEnabled && { columnPinning: columnPinningState.state }),
+      ...(columnResizingEnabled && { columnSizing: columnSizingState.state }),
     },
 
     // Server-side: manual pagination and sorting
@@ -361,6 +374,14 @@ export function useQueryTable<TData extends RowData>(
     // Column pinning
     ...(columnPinningEnabled && {
       onColumnPinningChange: columnPinningState.setState,
+    }),
+    ...(columnResizingEnabled && {
+      onColumnSizingChange: columnSizingState.setState,
+      // 'onEnd' is tablecraft's default, not TanStack's. Committing a width on
+      // every mousemove re-renders the table; on a large one that is visibly
+      // janky, and this library ships virtualization for exactly that audience.
+      columnResizeMode: columnResizingConfig.mode ?? 'onEnd',
+      columnResizeDirection: columnResizingConfig.direction ?? 'ltr',
     }),
   })
 
@@ -523,6 +544,18 @@ export function useQueryTable<TData extends RowData>(
     [columnPinningState]
   )
 
+  // ─── Build column resizing return ────────────────────────
+  const columnResizing: ColumnSizingReturn = useMemo(
+    () => ({
+      state: columnSizingState.state,
+      setSize: columnSizingState.setSize,
+      resetSize: columnSizingState.resetSize,
+      resetAll: columnSizingState.resetAll,
+      getSize: columnSizingState.getSize,
+    }),
+    [columnSizingState]
+  )
+
   // ─── Build empty state return ────────────────────────────
   const emptyState: EmptyStateReturn = useMemo(
     () => ({
@@ -546,6 +579,7 @@ export function useQueryTable<TData extends RowData>(
     grouping,
     rowExpansion,
     columnPinning,
+    columnResizing,
     emptyState,
     query: {
       data: query.data,
