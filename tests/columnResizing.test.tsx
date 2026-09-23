@@ -87,14 +87,19 @@ describe('useColumnResizing', () => {
       fireEvent.mouseMove(document, { clientX: 40 })
     })
 
-    // onEnd is tablecraft's default, diverging from TanStack's onChange:
-    // committing on every mousemove re-renders the whole table.
+    // onEnd preserves TanStack's own default: committing on every mousemove
+    // re-renders the whole table.
     expect(result.current.table.store.state.columnSizing.name).toBeUndefined()
 
     act(() => {
       fireEvent.mouseUp(document, { clientX: 40 })
     })
     expect(result.current.table.store.state.columnSizing.name).toBeGreaterThan(150)
+
+    // Assert tablecraft actually wired the option, not just that TanStack's
+    // own default happens to match — deleting the columnResizeMode line from
+    // useTable.ts would leave the assertions above passing.
+    expect(result.current.table.options.columnResizeMode).toBe('onEnd')
   })
 
   it('mode onChange commits mid-drag', () => {
