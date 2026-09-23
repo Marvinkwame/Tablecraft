@@ -3,6 +3,7 @@ import type {
   ColumnDef,
   ColumnFiltersState,
   ColumnPinningState,
+  ColumnOrderState,
   ExpandedState,
   FilterFn,
   GroupingState,
@@ -256,6 +257,25 @@ export interface ColumnPinningReturn {
   isPinned: (columnId: string) => 'start' | 'end' | false
   startColumns: string[]
   endColumns: string[]
+}
+
+// ─── Column Order ────────────────────────────────────────
+
+export interface ColumnOrderOptions {
+  /**
+   * Initial column order, as leaf column ids. An empty array means TanStack's
+   * natural order. `moveColumn` operates on this array, so seed it — e.g.
+   * `table.getAllLeafColumns().map(c => c.id)` — for ordering to be meaningful.
+   */
+  defaultOrder?: ColumnOrderState
+}
+
+export interface ColumnOrderReturn {
+  state: ColumnOrderState
+  setOrder: (columnIds: string[]) => void
+  moveColumn: (columnId: string, toIndex: number) => void
+  resetOrder: () => void
+  order: string[]
 }
 
 // ─── Empty State ─────────────────────────────────────────────
