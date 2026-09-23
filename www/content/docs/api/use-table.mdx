@@ -241,11 +241,15 @@ Rows pin to `top`/`bottom`, unlike `columnPinning`'s `start`/`end` — see
 | `resetAll` | `() => void` | Clear all overrides |
 | `getSize` | `(columnId: string) => number \| undefined` | Committed width, or `undefined` if unset |
 
-This slice is the **committed widths only** — the state half of resizing. The
-drag handles that write into it come from a separate hook,
-[`useColumnResizing(table)`](/docs/api/use-column-resizing), which needs the
-table instance rather than options and so isn't returned from `useTable`
-itself.
+This slice is the **committed widths only** — the state half of resizing. Its
+type is `ColumnSizingReturn`, not `ColumnResizingReturn` — the two names are
+easy to conflate. `ColumnResizingReturn` is the return type of the separate
+hook, [`useColumnResizing(table)`](/docs/api/use-column-resizing), which
+builds the drag handles that write into this slice; it needs the table
+instance rather than options and so isn't returned from `useTable` itself. If
+you hit a `TS2322` between these two near-identical names, `useTable().columnResizing`
+is `ColumnSizingReturn` and `useColumnResizing(table)`'s return is
+`ColumnResizingReturn`.
 
 ### `emptyState`
 
