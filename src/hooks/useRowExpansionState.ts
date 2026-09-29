@@ -12,7 +12,12 @@ export interface UseRowExpansionOptions {
 export function useRowExpansionState(options: UseRowExpansionOptions = {}) {
   const { defaultExpanded = {}, allowMultiple = true } = options
 
-  const [expanded, setExpanded] = useState<ExpandedState>(defaultExpanded)
+  // Seed from a copy: state must never be the caller's own object.
+  // ExpandedState is `true | Record<string, boolean>`, so only the record
+  // form can be spread — `true` must pass through untouched.
+  const [expanded, setExpanded] = useState<ExpandedState>(() =>
+    typeof defaultExpanded === 'object' ? { ...defaultExpanded } : defaultExpanded
+  )
 
   const toggleRow = useCallback((rowId: string) => {
     setExpanded((prev) => {

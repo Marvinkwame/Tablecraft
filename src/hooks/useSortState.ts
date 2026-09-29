@@ -7,7 +7,8 @@ import type { SortingOptions } from '../types'
 export function useSortState(options: SortingOptions = {}) {
   const { defaultSort = [] } = options
 
-  const [sorting, setSorting] = useState<SortingState>(defaultSort)
+  // Seed from a copy: state must never be the caller's own object.
+  const [sorting, setSorting] = useState<SortingState>(() => [...defaultSort])
 
   const clearSorting = useCallback(() => {
     setSorting([])

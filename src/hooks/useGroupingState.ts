@@ -12,7 +12,8 @@ export interface UseGroupingOptions {
 export function useGroupingState(options: UseGroupingOptions = {}) {
   const { defaultGrouping = [] } = options
 
-  const [grouping, setGrouping] = useState<GroupingState>(defaultGrouping)
+  // Seed from a copy: state must never be the caller's own object.
+  const [grouping, setGrouping] = useState<GroupingState>(() => [...defaultGrouping])
 
   const toggleGrouping = useCallback((columnId: string) => {
     setGrouping((prev) =>

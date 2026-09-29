@@ -11,7 +11,8 @@ export interface UseRowSelectionOptions {
 export function useRowSelectionState(options: UseRowSelectionOptions = {}) {
   const { defaultSelection = {}, enableMultiRowSelection = true } = options
 
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>(defaultSelection)
+  // Seed from a copy: state must never be the caller's own object.
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>(() => ({ ...defaultSelection }))
 
   const toggleRow = useCallback(
     (rowId: string) => {

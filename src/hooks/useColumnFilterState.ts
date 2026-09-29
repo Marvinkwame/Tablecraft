@@ -4,7 +4,8 @@ import { useState, useCallback } from 'react'
 import type { ColumnFiltersState } from '@tanstack/react-table'
 
 export function useColumnFilterState(defaultState: ColumnFiltersState = []) {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(defaultState)
+  // Seed from a copy: state must never be the caller's own object.
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() => [...defaultState])
 
   const setFilter = useCallback((columnId: string, value: unknown) => {
     setColumnFilters((prev) => {
