@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 declare const require: (id: string) => any
 
-import { useMemo, useEffect, useRef } from 'react'
+import { useMemo, useEffect, useRef, useState } from 'react'
 // v9's hook is also named `useTable`, which collides with tablecraft's own
 // export elsewhere. Aliasing keeps the call site below unchanged.
 import { useTable as useReactTable } from '@tanstack/react-table'
@@ -46,6 +46,7 @@ import { useRowPinningState } from './useRowPinningState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
+import { useIsHydrating } from '../utils/useIsHydrating'
 
 // ─── Hook ──────────────────────────────────────────────────
 
@@ -114,9 +115,13 @@ export function useQueryTable<TData extends RowData>(
     syncUrl = false,
   } = merged
 
+  // See the note in useTable: browser-only state must not be read while
+  // rendering on the server or hydrating.
+  const isHydrating = useIsHydrating()
+
   // ─── Persistence: load initial state ─────────────────────
   const persistedRef = useRef(
-    persist && persistKey
+    persist && persistKey && !isHydrating
       ? loadPersistedState(persist, persistKey, persistOptions)
       : {}
   )
@@ -129,9 +134,15 @@ export function useQueryTable<TData extends RowData>(
   const urlMode = urlConfig.mode ?? 'replace'
 
   const urlStateRef = useRef(
-    urlSyncEnabled ? parseURLState(urlKeys) : {}
+    urlSyncEnabled && !isHydrating ? parseURLState(urlKeys) : {}
   )
   const urlState = urlStateRef.current
+
+  // State, not a ref: the save effects must see it as false in the commit that
+  // applies the values. See the matching note in useTable.
+  const [restorePending, setRestorePending] = useState(
+    isHydrating && ((!!persist && !!persistKey) || urlSyncEnabled)
+  )
 
   // ─── Resolve pagination options ──────────────────────────
   // Copy, never alias — see the matching note in useTable.
@@ -418,9 +429,39 @@ export function useQueryTable<TData extends RowData>(
     }),
   })
 
+  // ─── Restore stored state once hydration is done ─────────
+  useEffect(() => {
+    if (!restorePending) return
+
+    const p = persist && persistKey
+      ? loadPersistedState(persist, persistKey, persistOptions)
+      : {}
+    const u = urlSyncEnabled ? parseURLState(urlKeys) : {}
+
+    const sorting = u.sorting ?? p.sorting
+    if (sorting) sortState.onSortingChange(sorting)
+
+    const globalFilter = u.globalFilter ?? p.globalFilter
+    if (globalFilter !== undefined) filterState.onGlobalFilterChange(globalFilter)
+
+    const columnFilters = u.columnFilters ?? p.columnFilters
+    if (columnFilters) columnFilterState.onColumnFiltersChange(columnFilters)
+
+    const pagination = u.pagination ?? p.pagination
+    if (pagination) {
+      if (pagination.pageIndex !== undefined) paginationState.setPageIndex(pagination.pageIndex)
+      if (pagination.pageSize !== undefined) paginationState.setPageSize(pagination.pageSize)
+    }
+
+    setRestorePending(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restorePending])
+
   // ─── Persistence: save state on change ───────────────────
   useEffect(() => {
     if (!persist || !persistKey) return
+    // Do not write defaults over stored state before it has been restored.
+    if (restorePending) return
 
     savePersistedState(persist, persistKey, {
       sorting: sortState.state,
@@ -441,6 +482,7 @@ export function useQueryTable<TData extends RowData>(
   // ─── URL sync: write state on change ─────────────────────
   useEffect(() => {
     if (!urlSyncEnabled) return
+    if (restorePending) return
 
     writeURLState({
       sorting: sortState.state,
