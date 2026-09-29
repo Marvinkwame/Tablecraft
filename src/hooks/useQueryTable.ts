@@ -134,9 +134,10 @@ export function useQueryTable<TData extends RowData>(
   const urlState = urlStateRef.current
 
   // ─── Resolve pagination options ──────────────────────────
+  // Copy, never alias — see the matching note in useTable.
   const paginationConfig =
     typeof paginationOpts === 'object'
-      ? paginationOpts
+      ? { ...paginationOpts }
       : paginationOpts
         ? {}
         : { pageSize: 9999 }
@@ -153,7 +154,7 @@ export function useQueryTable<TData extends RowData>(
 
   // ─── Resolve sorting options ─────────────────────────────
   const sortingConfig =
-    typeof sortingOpts === 'object' ? sortingOpts : {}
+    typeof sortingOpts === 'object' ? { ...sortingOpts } : {}
 
   if (persisted.sorting && !sortingConfig.defaultSort) {
     sortingConfig.defaultSort = persisted.sorting

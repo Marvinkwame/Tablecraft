@@ -143,8 +143,11 @@ export function useTable<TData extends RowData>(
   }
 
   // ─── Resolve sorting options ─────────────────────────────
+  // Copy, never alias: the persist/URL folding below writes defaultSort, and
+  // writing it into the caller's object mutates their state. Two tables given
+  // the same module-scope options constant would otherwise share a sort.
   const sortingConfig =
-    typeof sortingOpts === 'object' ? sortingOpts : {}
+    typeof sortingOpts === 'object' ? { ...sortingOpts } : {}
 
   // Apply persisted sorting if available
   if (persisted.sorting && !sortingConfig.defaultSort) {
