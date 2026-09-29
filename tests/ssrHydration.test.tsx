@@ -158,3 +158,43 @@ describe('SSR hydration — the full server-then-hydrate cycle', () => {
     expect(wroteEmptySort).toBe(false)
   })
 })
+
+describe('SSR hydration — useQueryTable', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    localStorage.setItem(
+      'tablecraft:ssr-query',
+      JSON.stringify({ sorting: [{ id: 'name', desc: true }] })
+    )
+  })
+
+  afterEach(() => {
+    localStorage.clear()
+  })
+
+  it('server render ignores persisted state', async () => {
+    const { useQueryTable } = await import('../src/hooks/useQueryTable')
+    const { QueryClient, QueryClientProvider } = await import('@tanstack/react-query')
+
+    function QueryTable() {
+      const { sorting } = useQueryTable({
+        queryKey: ['ssr'],
+        queryFn: async () => ({ data, rowCount: data.length }),
+        columns,
+        persist: 'localStorage',
+        persistKey: 'ssr-query',
+      })
+      return <span>{JSON.stringify(sorting.sortingState)}</span>
+    }
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const html = renderToString(
+      <QueryClientProvider client={client}>
+        <QueryTable />
+      </QueryClientProvider>
+    )
+
+    // Not the persisted descending sort — the server cannot know it.
+    expect(html).toContain('[]')
+  })
+})
