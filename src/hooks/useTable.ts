@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 declare const require: (id: string) => any
 
-import { useMemo, useEffect, useRef } from 'react'
+import { useMemo, useEffect, useRef, useState } from 'react'
 // v9's hook is also named `useTable`, which collides with tablecraft's own
 // export in this file. Aliasing keeps the call sites below unchanged.
 import { useTable as useReactTable } from '@tanstack/react-table'
@@ -43,6 +43,7 @@ import { useRowPinningState } from './useRowPinningState'
 import { useTableKitDefaults } from '../context/TableKitContext'
 import { loadPersistedState, savePersistedState } from '../utils/persist'
 import { parseURLState, writeURLState, resolveURLKeys } from '../utils/url'
+import { useIsHydrating } from '../utils/useIsHydrating'
 
 export function useTable<TData extends RowData>(
   options: UseTableOptions<TData>
@@ -104,9 +105,15 @@ export function useTable<TData extends RowData>(
     syncUrl = false,
   } = merged
 
+  // Browser-only state must not be read while rendering on the server or
+  // hydrating, or the first client render disagrees with the server HTML.
+  // In a client-only app this is false from the very first render, so the
+  // reads below stay synchronous and there is no flash of unsorted content.
+  const isHydrating = useIsHydrating()
+
   // ─── Persistence: load initial state ─────────────────────
   const persistedRef = useRef(
-    persist && persistKey
+    persist && persistKey && !isHydrating
       ? loadPersistedState(persist, persistKey, persistOptions)
       : {}
   )
@@ -119,9 +126,18 @@ export function useTable<TData extends RowData>(
   const urlMode = urlConfig.mode ?? 'replace'
 
   const urlStateRef = useRef(
-    urlSyncEnabled ? parseURLState(urlKeys) : {}
+    urlSyncEnabled && !isHydrating ? parseURLState(urlKeys) : {}
   )
   const urlState = urlStateRef.current
+
+  // When the initial read was skipped for hydration safety, the stored state
+  // is applied after hydration instead. This is state, not a ref, on purpose:
+  // the save effects below must see it as false in the commit that applies the
+  // values, or they would run with stale closures and write the defaults back
+  // over storage before the re-render lands.
+  const [restorePending, setRestorePending] = useState(
+    isHydrating && ((!!persist && !!persistKey) || urlSyncEnabled)
+  )
 
   // ─── Resolve pagination options ──────────────────────────
   // When disabled, the pagination row model is skipped entirely so every row
@@ -143,8 +159,11 @@ export function useTable<TData extends RowData>(
   }
 
   // ─── Resolve sorting options ─────────────────────────────
+  // Copy, never alias: the persist/URL folding below writes defaultSort, and
+  // writing it into the caller's object mutates their state. Two tables given
+  // the same module-scope options constant would otherwise share a sort.
   const sortingConfig =
-    typeof sortingOpts === 'object' ? sortingOpts : {}
+    typeof sortingOpts === 'object' ? { ...sortingOpts } : {}
 
   // Apply persisted sorting if available
   if (persisted.sorting && !sortingConfig.defaultSort) {
@@ -359,9 +378,41 @@ export function useTable<TData extends RowData>(
     }),
   })
 
+  // ─── Restore stored state once hydration is done ─────────
+  useEffect(() => {
+    if (!restorePending) return
+
+    const p = persist && persistKey
+      ? loadPersistedState(persist, persistKey, persistOptions)
+      : {}
+    const u = urlSyncEnabled ? parseURLState(urlKeys) : {}
+
+    // URL wins over persistence, matching the synchronous path above.
+    const sorting = u.sorting ?? p.sorting
+    if (sorting) sortState.onSortingChange(sorting)
+
+    const globalFilter = u.globalFilter ?? p.globalFilter
+    if (globalFilter !== undefined) filterState.onGlobalFilterChange(globalFilter)
+
+    const columnFilters = u.columnFilters ?? p.columnFilters
+    if (columnFilters) columnFilterState.onColumnFiltersChange(columnFilters)
+
+    const pagination = u.pagination ?? p.pagination
+    if (pagination) {
+      if (pagination.pageIndex !== undefined) paginationState.setPageIndex(pagination.pageIndex)
+      if (pagination.pageSize !== undefined) paginationState.setPageSize(pagination.pageSize)
+    }
+
+    setRestorePending(false)
+    // Runs once, on the commit after hydration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restorePending])
+
   // ─── Persistence: save state on change ───────────────────
   useEffect(() => {
     if (!persist || !persistKey) return
+    // Do not write defaults over stored state before it has been restored.
+    if (restorePending) return
 
     savePersistedState(persist, persistKey, {
       sorting: sortState.state,
@@ -382,6 +433,7 @@ export function useTable<TData extends RowData>(
   // ─── URL sync: write state on change ─────────────────────
   useEffect(() => {
     if (!urlSyncEnabled) return
+    if (restorePending) return
 
     writeURLState({
       sorting: sortState.state,

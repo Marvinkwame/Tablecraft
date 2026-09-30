@@ -4,6 +4,23 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [4.1.1] — 2026-09-29
+
+Both fixes in this release came from an external review of the published
+package. No API changed.
+
+### Fixed
+
+- **Hooks no longer mutate the options object you pass them.** `useTable` and `useQueryTable` fold persisted and URL state into their resolved pagination and sorting config. Where that config was the caller's own object rather than a copy, the fold wrote into it — so a `sorting: {}` passed in came back holding `{ defaultSort: [...] }`, and two tables sharing one module-scope options constant leaked a sort between them.
+
+  Three sites were live: `useTable`'s sorting config, and `useQueryTable`'s pagination **and** sorting configs. Six granular state hooks — `useSortState`, `useRowSelectionState`, `useColumnVisibilityState`, `useRowExpansionState`, `useGroupingState`, `useColumnFilterState` — also seeded state directly from the caller's array or object. Those never mutated in practice, because every setter builds a new value, but `state === yourObject` on the first render was observable and one careless setter away from live. All nine now copy, matching `useColumnPinningState` (fixed in 4.1.0) and the three hooks 4.1.0 added.
+
+- **No more hydration mismatch with `persist` or `syncUrl` under SSR.** Both hooks read `localStorage` and `window.location` during render, so the first client render disagreed with the server HTML whenever stored state existed. `'use client'` does not stop a component rendering on the server, so this hit every Next.js consumer using either option — server markup in data order, client markup in the saved order.
+
+  Stored state is now skipped during server and hydration renders and applied immediately afterwards. **Client-only apps are unaffected:** the reads stay synchronous from the first render, so there is no flash of unsorted content. The two cases are told apart with `useSyncExternalStore`, whose `getServerSnapshot` React calls only on the server and while hydrating.
+
+---
+
 ## [4.1.0] — 2026-09-23
 
 ### Added

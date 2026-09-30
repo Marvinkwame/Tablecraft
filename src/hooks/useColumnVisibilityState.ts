@@ -10,7 +10,8 @@ export interface UseColumnVisibilityOptions {
 export function useColumnVisibilityState(options: UseColumnVisibilityOptions = {}) {
   const { defaultVisibility = {} } = options
 
-  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>(defaultVisibility)
+  // Seed from a copy: state must never be the caller's own object.
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>(() => ({ ...defaultVisibility }))
 
   const toggleColumn = useCallback((columnId: string) => {
     setColumnVisibility((prev) => ({
