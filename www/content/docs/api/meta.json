@@ -13,6 +13,7 @@
     "use-table-export",
     "use-column-resizing",
     "use-faceted-filters",
+    "date-range",
     "columns",
     "provider",
     "persistence-url",
