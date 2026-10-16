@@ -341,6 +341,14 @@ export interface ColumnResizingOptions {
   direction?: 'ltr' | 'rtl'
 }
 
+// ─── Date range filtering ────────────────────────────────────
+
+/** What `toDateRange` accepts for either bound, and what `inDateRange` reads from a cell. */
+export type DateInput = Date | string | number
+
+/** The stored filter value: epoch milliseconds, `null` for an open end. */
+export type DateRange = [number | null, number | null]
+
 // ─── Empty State ─────────────────────────────────────────────
 
 export interface EmptyStateReturn {
