@@ -39,4 +39,19 @@ describe('inDateRange across a DST transition', () => {
     expect(match(new Date(2026, 2, 7, 23, 59))).toBe(false)
     expect(match(new Date(2026, 2, 9, 0, 1))).toBe(false)
   })
+
+  it('normalises bounds set directly, not only those from toDateRange', async () => {
+    const { inDateRange } = await import('../src/utils/dates')
+    const row = (value: unknown) => ({ getValue: () => value }) as any
+
+    // The docs bless writing the array yourself. Only the cell value went
+    // through toEpoch; a date-only bound stayed UTC midnight — the bug fixed
+    // inside toEpoch, surviving one layer out. It shows only at a negative
+    // offset: in UTC+14 the error pushes the other way and disappears, which
+    // is why every other test missed it.
+    const direct = ['2026-03-15', '2026-03-31'] as unknown as [number | null, number | null]
+
+    expect(inDateRange(row(new Date(2026, 2, 31, 14, 0)), 'created', direct, () => {})).toBe(true)
+    expect(inDateRange(row(new Date(2026, 2, 14, 10, 0)), 'created', direct, () => {})).toBe(false)
+  })
 })

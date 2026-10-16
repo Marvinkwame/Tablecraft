@@ -15,6 +15,8 @@ process.env.TZ = 'Pacific/Kiritimati'
 
 import { describe, it, expect } from 'vitest'
 
+const row = (value: unknown) => ({ getValue: () => value }) as any
+
 describe('inDateRange under UTC+14', () => {
   it('has the TZ override actually in effect', () => {
     // The guard. If vitest's worker already resolved a different zone, every
@@ -24,8 +26,6 @@ describe('inDateRange under UTC+14', () => {
 
   it('reads a date range as local days, not UTC days', async () => {
     const { inDateRange, toDateRange } = await import('../src/utils/dates')
-
-    const row = (value: unknown) => ({ getValue: () => value }) as any
     const oneDay = toDateRange('2026-03-15', '2026-03-15')
 
     // Local midnight on 15 March here is 14 March 10:00Z. A getUTC*
