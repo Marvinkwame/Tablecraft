@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import { useTable } from '../src/hooks/useTable'
+import { createColumns } from '../src/helpers/createColumns'
 import { inDateRange, toDateRange } from '../src/utils/dates'
 
 // Local construction throughout. An ISO string with Z would encode UTC into
@@ -29,6 +32,15 @@ describe('toDateRange', () => {
   it('returns null rather than NaN for an unparseable bound', () => {
     // NaN survives neither JSON nor comparison, so it must never reach state.
     expect(toDateRange('not a date', null)).toEqual([null, null])
+  })
+
+  it('reads a date-only string as local midnight, not UTC', () => {
+    // `new Date('2026-03-08')` is UTC midnight, which in any negative-offset
+    // zone is the previous local day — so a range built from date-only strings
+    // would filter to the wrong day. Caught by the America/New_York test.
+    const [from] = toDateRange('2026-03-08', null)
+
+    expect(from).toBe(new Date(2026, 2, 8).getTime())
   })
 
   it('returns a fresh array', () => {
@@ -106,5 +118,54 @@ describe('inDateRange', () => {
       expect(() => match(bad, march)).not.toThrow()
       expect(match(bad, march)).toBe(false)
     }
+  })
+})
+
+describe('date range — round trip', () => {
+  beforeEach(() => localStorage.clear())
+  afterEach(() => localStorage.clear())
+
+  type Product = { id: number; created: number }
+  const products: Product[] = [
+    { id: 1, created: new Date(2026, 2, 10).getTime() },
+    { id: 2, created: new Date(2026, 2, 20).getTime() },
+    { id: 3, created: new Date(2026, 3, 5).getTime() },
+  ]
+  const productColumns = createColumns<Product>([
+    { accessorKey: 'created', header: 'Created', filterFn: inDateRange },
+  ])
+
+  const mount = () =>
+    renderHook(() =>
+      useTable({
+        data: products,
+        columns: productColumns,
+        columnFilters: true,
+        pagination: false,
+        persist: 'localStorage',
+        persistKey: 'date-round-trip',
+      })
+    )
+
+  it('survives persistence and still filters the same rows', () => {
+    const first = mount()
+
+    act(() =>
+      first.result.current.columnFilters.setFilter(
+        'created',
+        toDateRange('2026-03-01', '2026-03-31')
+      )
+    )
+
+    expect(first.result.current.table.getRowModel().rows.map((r) => r.original.id)).toEqual([1, 2])
+
+    // What D2 bought: plain numbers, not Dates or ISO strings. This is the
+    // assertion that fails if the stored shape ever changes.
+    const stored = JSON.parse(localStorage.getItem('tablecraft:date-round-trip')!)
+    const value = stored.columnFilters.find((f: { id: string }) => f.id === 'created').value
+    expect(value.every((v: unknown) => typeof v === 'number')).toBe(true)
+
+    const second = mount()
+    expect(second.result.current.table.getRowModel().rows.map((r) => r.original.id)).toEqual([1, 2])
   })
 })
