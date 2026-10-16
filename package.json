@@ -44,6 +44,11 @@
       "types": "./dist/virtual/index.d.ts",
       "import": "./dist/virtual/index.mjs",
       "require": "./dist/virtual/index.js"
+    },
+    "./fuzzy": {
+      "types": "./dist/fuzzy/index.d.ts",
+      "import": "./dist/fuzzy/index.mjs",
+      "require": "./dist/fuzzy/index.js"
     }
   },
   "files": [

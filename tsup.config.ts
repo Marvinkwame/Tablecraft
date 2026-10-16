@@ -8,6 +8,7 @@ export default defineConfig({
     'zod/index.ts',
     'query/index.ts',
     'virtual/index.ts',
+    'fuzzy/index.ts',
   ],
   format: ['esm', 'cjs'],
   dts: true,
