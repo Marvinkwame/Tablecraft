@@ -4,6 +4,45 @@ All notable changes to tablecraft are documented here.
 
 ---
 
+## [4.2.0] — 2026-10-16
+
+### Added
+
+- **`@marvinackerman/tablecraft/fuzzy`** — a new entry point exporting `fuzzyFilterFn`, typo-tolerant search that works in every bundler.
+
+  `fuzzy: true` reaches `match-sorter` through `require()`, which throws in ESM-only bundlers — Vite above all, the most common way to start a React app today. The `fuzzy` option already accepted a `FilterFn`, so this ships one that imports `match-sorter` statically. Consumers who never use fuzzy search no longer carry the code at all.
+
+  ```ts
+  import { fuzzyFilterFn } from '@marvinackerman/tablecraft/fuzzy'
+  useTable({ data, columns, globalFilter: true, fuzzy: fuzzyFilterFn })
+  ```
+
+  **`fuzzy: true` is unchanged**, warning and all. It remains the zero-import shortcut where `require()` works.
+
+- **`inDateRange` and `toDateRange`** — filter a date column to a range. `'inNumberRange'` covered numbers; this is the equivalent for dates, and it is what a "created between these dates" control needs. Two plain functions, no hook, no new dependency.
+
+  ```ts
+  const columns = createColumns<Order>([
+    { accessorKey: 'created', header: 'Created', filterFn: inDateRange },
+  ])
+  columnFilters.setFilter('created', toDateRange(from, to))
+  ```
+
+  Both bounds are inclusive and each widens to its whole **local calendar day**, so picking *15 March to 31 March* includes a row created at 31 March 14:00 — the off-by-one every date filter is first reported for. `null` on either side means open-ended. `Date`, ISO strings and epoch numbers are all accepted, for bounds and cell values alike; a date-only string such as `'2026-03-08'` means local midnight. The stored value is plain epoch numbers, so a range survives URL sync and persistence.
+
+  **Timezones:** comparison is local, so a shared URL can mean slightly different instants to viewers in different timezones. A library cannot resolve that without knowing which calendar you mean — pass your own `filterFn` if you need UTC days, a fixed business timezone, or exact instants. See [Date range filtering](https://tablecraft.dev/docs/api/date-range).
+
+### Fixed
+
+- **`getFacet` no longer reports a date range as selected values.** `isDeclaredRangeFilterFn` was a string equality against `'inNumberRange'`, so a column using the new `inDateRange` fell through to the selection branch and `getFacet` offered the two epoch bounds as checked boxes — the bug 4.0.1 fixed, returning through a door that fix had not closed. It is now a set, because the hardcoded string was the defect: any future range filter would have walked past an equality check the same way.
+
+### Notes
+
+- Nothing existing changed shape. Both additions are opt-in, and no public signature was altered.
+- `getRangeFacet` is not the way to drive a date range: it reports a closed range correctly but returns `undefined` once either end is open, and its `setRange` cannot express an open bound. Use `columnFilters.setFilter`.
+
+---
+
 ## [4.1.1] — 2026-09-29
 
 Both fixes in this release came from an external review of the published
