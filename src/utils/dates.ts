@@ -93,12 +93,18 @@ export function inDateRange<TData extends RowData>(
   const cell = toEpoch(row.getValue(columnId))
   if (cell === null) return false
 
-  const [rawFrom, rawTo] = Array.isArray(filterValue)
-    ? (filterValue as DateRange)
-    : [null, null]
+  const [rawFrom, rawTo] = Array.isArray(filterValue) ? filterValue : [null, null]
 
-  if (rawFrom !== null && cell < startOfLocalDay(rawFrom)) return false
-  if (rawTo !== null && cell > endOfLocalDay(rawTo)) return false
+  // Normalise the bounds too, not just the cell. The array may have been
+  // written by hand rather than by toDateRange — the docs say that is fine —
+  // in which case a date-only string would otherwise stay UTC midnight and
+  // land on the previous local day in any negative-offset zone. toEpoch also
+  // turns undefined and unparseable bounds into null rather than NaN.
+  const from = toEpoch(rawFrom)
+  const to = toEpoch(rawTo)
+
+  if (from !== null && cell < startOfLocalDay(from)) return false
+  if (to !== null && cell > endOfLocalDay(to)) return false
   return true
 }
 
