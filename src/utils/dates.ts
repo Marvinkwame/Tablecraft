@@ -10,9 +10,28 @@ import type { DateInput, DateRange } from '../types'
  * trip nor a comparison, so letting it into stored filter state would produce
  * a filter that silently matches nothing and cannot be restored.
  */
+/** `2026-03-08` — a calendar date with no time and no zone. */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
+
 function toEpoch(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null
-  const ms = value instanceof Date ? value.getTime() : new Date(value as string | number).getTime()
+
+  if (value instanceof Date) {
+    const ms = value.getTime()
+    return Number.isNaN(ms) ? null : ms
+  }
+
+  // A date-only string is a calendar date, so it means local midnight. The
+  // spec reads it as UTC midnight, which in any negative-offset zone lands on
+  // the previous local day — so `toDateRange('2026-03-08', ...)` would filter
+  // to 7 March in New York. That contradicts the local-calendar-day rule the
+  // whole comparison is built on.
+  if (typeof value === 'string' && DATE_ONLY.test(value)) {
+    const [y, m, d] = value.split('-').map(Number)
+    return new Date(y, m - 1, d).getTime()
+  }
+
+  const ms = new Date(value as string | number).getTime()
   return Number.isNaN(ms) ? null : ms
 }
 
