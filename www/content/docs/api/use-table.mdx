@@ -49,11 +49,26 @@ function useTable<TData extends RowData>(
 | `columnOrder` | `ColumnOrderOptions \| boolean` | `true`, or `{ defaultOrder? }` |
 | `rowPinning` | `RowPinningOptions \| boolean` | `true`, or `{ defaultPinning? }` |
 | `columnResizing` | `ColumnResizingOptions \| boolean` | `true`, or `{ defaultSizing?, mode?, direction? }` — `mode` defaults to `'onEnd'` |
-| `fuzzy` | `boolean \| FilterFn<TablecraftFeatures, TData>` | `true` loads `match-sorter` via `require()` — CJS/Node only. In ESM-only bundlers (Vite, browsers), pass a `FilterFn` directly instead. |
+| `fuzzy` | `boolean \| FilterFn<TablecraftFeatures, TData>` | `true` loads `match-sorter` via `require()` — CJS/Node only. In ESM-only bundlers (Vite, browsers) import `fuzzyFilterFn` from `@marvinackerman/tablecraft/fuzzy` and pass that — see below. |
 | `persist` | `'localStorage' \| 'sessionStorage' \| false` | Persist state across reloads — see [Persistence & URL sync](/docs/api/persistence-url) |
 | `persistKey` | `string` | Storage key — required when `persist` is set |
 | `persistOptions` | `PersistOptions` | Which state slices to persist |
 | `syncUrl` | `boolean \| URLSyncOptions` | Sync state to the URL — see [Persistence & URL sync](/docs/api/persistence-url) |
+
+### Typo-tolerant search in Vite and other ESM bundlers
+
+`fuzzy: true` reaches `match-sorter` through `require()`, which throws in
+ESM-only bundlers. The `/fuzzy` entry imports it the normal way, so it works
+everywhere — and consumers who never use fuzzy search do not carry the code:
+
+```ts
+import { useTable } from '@marvinackerman/tablecraft'
+import { fuzzyFilterFn } from '@marvinackerman/tablecraft/fuzzy'
+
+useTable({ data, columns, globalFilter: true, fuzzy: fuzzyFilterFn })
+```
+
+`match-sorter` is an optional peer: install it only if you use this.
 
 ## Usage
 
