@@ -41,6 +41,7 @@ export { inferColumns } from './helpers/inferColumns'
 export { loadPersistedState, savePersistedState, clearPersistedState } from './utils/persist'
 export { parseURLState, writeURLState, resolveURLKeys } from './utils/url'
 export { facetedFilterFn } from './utils/facets'
+export { inDateRange, toDateRange } from './utils/dates'
 export { tablecraftFeatures } from './features'
 
 // Types
@@ -81,6 +82,7 @@ export type {
 } from './types'
 
 export type { TablecraftFeatures, TablecraftTable } from './features'
+export type { DateInput, DateRange } from './types'
 export type { InferColumnsOptions } from './helpers/inferColumns'
 export type { UseRowSelectionOptions } from './hooks/useRowSelectionState'
 export type { UseColumnVisibilityOptions } from './hooks/useColumnVisibilityState'

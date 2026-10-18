@@ -1,0 +1,118 @@
+---
+title: Date range filtering
+description: inDateRange and toDateRange — filter a date column between two dates, comparing local calendar days.
+---
+
+Filters a column to a date range. `'inNumberRange'` covers numbers; this is the
+equivalent for dates, and it is the filter a "created between these dates"
+control needs.
+
+Two plain functions, no hook, no dependency.
+
+## Signature
+
+```ts
+function toDateRange(
+  from: DateInput | null,
+  to: DateInput | null
+): [number | null, number | null]
+
+const inDateRange: FilterFn   // pass by reference as a column's filterFn
+```
+
+`DateInput` is `Date | string | number`. Both accept all three, for the bounds
+and for the cell value.
+
+## Usage
+
+Declare the column's `filterFn`, then write a range with the column filter
+setter you already have:
+
+```tsx
+import { useTable, createColumns, inDateRange, toDateRange } from '@marvinackerman/tablecraft'
+
+const columns = createColumns<Order>([
+  { accessorKey: 'created', header: 'Created', filterFn: inDateRange },
+])
+
+const { table, columnFilters } = useTable({ data, columns, columnFilters: true })
+
+// from and to are whatever your date picker gives you
+columnFilters.setFilter('created', toDateRange(from, to))
+```
+
+Clear it the way you clear any column filter:
+
+```ts
+columnFilters.clearFilter('created')
+```
+
+`toDateRange` normalises to epoch milliseconds. You can skip it and write
+`[from, to]` yourself — `inDateRange` accepts the same three forms either way —
+but the stored value is then whatever you passed, which makes URLs noisier.
+
+## Open-ended ranges
+
+`null` on either side means unbounded:
+
+```ts
+toDateRange('2026-03-01', null)   // everything since 1 March
+toDateRange(null, '2026-03-31')   // everything until 31 March
+toDateRange(null, null)           // matches every row
+```
+
+## Ranges cover whole calendar days
+
+Both bounds are inclusive, and each widens to its whole local day: the lower
+bound to that day's start, the upper to its end.
+
+This is the behaviour you want and the reason the comparison is not simply
+"between these two instants". Picking *15 March to 31 March* and then not
+seeing a row created at 31 March 14:00 is the off-by-one every date filter
+is first reported for. Here, it matches.
+
+A single day works as you would expect:
+
+```ts
+toDateRange('2026-03-15', '2026-03-15')   // the whole of the 15th
+```
+
+## Timezones
+
+Comparison uses **local** calendar days, and a date-only string like
+`'2026-03-08'` means local midnight.
+
+Local rather than UTC because a date picker hands you local midnight. In
+UTC+2, "15 March" is 14 March 22:00Z — so reading its UTC day would start the
+range a day early and bring the off-by-one straight back.
+
+The consequence worth knowing: the stored bounds are epoch instants relative to
+whoever set them, so a **shared URL can mean slightly different instants to
+viewers in different timezones**. A library cannot resolve this without knowing
+which calendar you mean. If you need different semantics — UTC days, a fixed
+business timezone, or exact instants — pass your own `filterFn` instead:
+
+```ts
+{ accessorKey: 'created', header: 'Created', filterFn: myOwnDateFilter }
+```
+
+## Cell values
+
+| Cell value | Treated as |
+|---|---|
+| `Date` | itself |
+| ISO string with a time (`'2026-03-31T14:00:00Z'`) | that instant |
+| Date-only string (`'2026-03-31'`) | local midnight |
+| `number` | **epoch milliseconds** — so `2026` is an instant in 1970, not the year |
+| `null`, `undefined`, `''`, unparseable | no match, never throws |
+
+## Faceted filters on the same column
+
+`getFacet` recognises `inDateRange` as a range filter and reports nothing
+selected while a range is applied, rather than offering the two bounds as
+checked boxes.
+
+`getRangeFacet` is **not** the way to drive a date range. It reports a closed
+range correctly but returns `undefined` once either end is open, and its
+`setRange` cannot express an open bound at all. Use
+`columnFilters.setFilter` — the path shown above.

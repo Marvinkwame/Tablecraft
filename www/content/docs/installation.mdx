@@ -37,7 +37,7 @@ reach for that feature, not up front:
 | `zod` `>=3.23.0` | The `@marvinackerman/tablecraft/zod` entry (`columnsFromZod`, `zodValidator`) — derive columns and row-edit validation from a single Zod schema. Works with Zod 3 and 4. |
 | `@tanstack/react-query` | The `@marvinackerman/tablecraft/query` entry (`useQueryTable`, `useInfiniteTable`) — server-driven and infinite-scroll tables backed by TanStack Query. |
 | `@tanstack/react-virtual` `>=3` | The `@marvinackerman/tablecraft/virtual` entry (`useVirtualRows`) — windowed rendering for large row counts. |
-| `match-sorter` | Fuzzy search (`fuzzy: true` on `useTable`). Loaded via `require()`, so this only applies in CJS/Node bundlers — in ESM-only bundlers (e.g. Vite), pass your own filter function instead and skip this dependency entirely. |
+| `match-sorter` | Fuzzy search. The `@marvinackerman/tablecraft/fuzzy` entry (`fuzzyFilterFn`) works in every bundler; `fuzzy: true` on `useTable` reaches it through `require()` and so works in CJS/Node only. |
 
 ## Entry points
 
@@ -49,6 +49,7 @@ you actually use:
 | `@marvinackerman/tablecraft` | The core hooks — `useTable`, `createColumns`, `useInfiniteScroll`, and friends. Importable with only the required peers above. |
 | `@marvinackerman/tablecraft/query` | `useQueryTable`, `useInfiniteTable` — requires the optional `@tanstack/react-query` peer. |
 | `@marvinackerman/tablecraft/virtual` | `useVirtualRows` — requires the optional `@tanstack/react-virtual` peer. |
+| `@marvinackerman/tablecraft/fuzzy` | `fuzzyFilterFn` — typo-tolerant search that works in ESM bundlers. Requires the optional `match-sorter` peer. |
 | `@marvinackerman/tablecraft/zod` | `columnsFromZod`, `zodValidator` — requires the optional `zod` peer. |
 | `@marvinackerman/tablecraft/devtools` | `TablecraftDevtools` — inspect table state during development. |
 | `@marvinackerman/tablecraft/testing` | Test helpers, built against `@testing-library/react`. |

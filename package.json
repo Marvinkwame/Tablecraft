@@ -1,6 +1,6 @@
 {
   "name": "@marvinackerman/tablecraft",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "description": "Batteries-included TanStack Table wrapper for React — TypeScript-first, headless, zero UI lock-in",
   "keywords": [
     "react",
@@ -44,6 +44,11 @@
       "types": "./dist/virtual/index.d.ts",
       "import": "./dist/virtual/index.mjs",
       "require": "./dist/virtual/index.js"
+    },
+    "./fuzzy": {
+      "types": "./dist/fuzzy/index.d.ts",
+      "import": "./dist/fuzzy/index.mjs",
+      "require": "./dist/fuzzy/index.js"
     }
   },
   "files": [
@@ -100,7 +105,7 @@
   },
   "scripts": {
     "build": "tsup && node scripts/check-dts.mjs && node scripts/check-entry-deps.mjs",
-    "test": "vitest run",
+    "test": "vitest run && vitest run --config vitest.tz.config.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "tsc --noEmit",

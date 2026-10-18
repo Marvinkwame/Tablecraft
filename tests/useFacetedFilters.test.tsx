@@ -8,6 +8,7 @@ import { useQueryTable } from '../src/hooks/useQueryTable'
 import { useFacetedFilters } from '../src/hooks/useFacetedFilters'
 import { createColumns } from '../src/helpers/createColumns'
 import { facetedFilterFn } from '../src/utils/facets'
+import { inDateRange } from '../src/utils/dates'
 import type { FilterFn } from '@tanstack/react-table'
 import type { TablecraftFeatures } from '../src/features'
 
@@ -389,6 +390,29 @@ describe('useFacetedFilters — range facets', () => {
     act(() => result.current.facets.getFacet('price').toggle(60))
 
     expect(result.current.facets.getRangeFacet('price').value).toBeUndefined()
+  })
+
+  it('does not report an applied date range as selected values', () => {
+    // 4.2 adds a second range filter. isDeclaredRangeFilterFn was a string
+    // equality against 'inNumberRange', so a date column fell through to the
+    // selection branch and getFacet reported the two epoch bounds as checked
+    // boxes — 4.0.1's bug, through a door that fix did not close.
+    const dateColumns = createColumns<Product>([
+      { accessorKey: 'name', header: 'Name' },
+      { accessorKey: 'price', header: 'Price', filterFn: inDateRange },
+    ])
+    const { result } = renderHook(() => {
+      const tableReturn = useTable({ data: products, columns: dateColumns, pagination: false })
+      return { ...tableReturn, facets: useFacetedFilters(tableReturn.table) }
+    })
+
+    act(() => result.current.columnFilters.setFilter('price', [10, 50]))
+
+    const facet = result.current.facets.getFacet('price')
+
+    expect(facet.selected).toEqual([])
+    expect(facet.isSelected(10)).toBe(false)
+    expect(facet.options.filter((o) => o.selected)).toEqual([])
   })
 
   it('does not report an applied range as selected values', () => {

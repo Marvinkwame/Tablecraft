@@ -168,6 +168,19 @@ selections will be reported as an applied range. Declare
 `filterFn: facetedFilterFn` for value lists and `'inNumberRange'` for ranges
 and neither case arises.
 
+**Which range filters are recognised.** `getFacet` withholds the selection for
+columns declaring a range filter that tablecraft ships — `'inNumberRange'` and
+[`inDateRange`](/docs/api/date-range) — so an applied range is never reported
+as two checked boxes. The ambiguity described above applies only to a *bespoke*
+function of your own: tablecraft cannot tell a custom value-list filter from a
+custom range one.
+
+**`getRangeFacet` on a date column is only half usable.** It reports a closed
+range correctly, but `value` is `undefined` as soon as either end is open, and
+`setRange` is typed `[number, number]` so it cannot express an open bound at
+all. Drive date ranges through `columnFilters.setFilter` instead — see
+[Date range filtering](/docs/api/date-range).
+
 **`useTable({ columnFilters: false })` makes facets inert.** With column
 filters disabled, `getFilteredRowModel` is not available, so `toggle` writes
 filter state that never actually filters any rows — silently, with no warning.

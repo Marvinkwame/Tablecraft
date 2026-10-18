@@ -22,7 +22,7 @@ npm i @marvinackerman/tablecraft
 | `@tanstack/react-query` | `tablecraft/query` — `useQueryTable`, `useInfiniteTable` |
 | `@tanstack/react-virtual` (`>=3`) | `tablecraft/virtual` — `useVirtualRows` |
 | `zod` (`>=3.23.0`) | `tablecraft/zod` — `columnsFromZod`, `zodValidator` |
-| `match-sorter` | Fuzzy search (`fuzzy: true`) |
+| `match-sorter` | `tablecraft/fuzzy` — `fuzzyFilterFn`. Also powers `fuzzy: true`, which is CJS/Node only. |
 
 See the [installation guide](https://tablecraft-g1vu.vercel.app/docs/installation) for version ranges and details.
 

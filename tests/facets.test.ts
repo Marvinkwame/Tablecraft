@@ -10,6 +10,7 @@ import {
   isDeclaredRangeFilterFn,
   facetedFilterFn,
 } from '../src/utils/facets'
+import { inDateRange } from '../src/utils/dates'
 
 describe('buildFacetOptions', () => {
   it('sorts by count descending', () => {
@@ -207,6 +208,17 @@ describe('isDeclaredRangeFilterFn', () => {
 
   it('is false for arrIncludesSome', () => {
     expect(isDeclaredRangeFilterFn('arrIncludesSome')).toBe(false)
+  })
+
+  it('is true for inDateRange', () => {
+    // A second range filter exists as of 4.2. A string equality against
+    // 'inNumberRange' would let it through to the selection branch, which is
+    // the bug 4.0.1 fixed.
+    expect(isDeclaredRangeFilterFn(inDateRange)).toBe(true)
+  })
+
+  it('is still false for an unrelated custom function', () => {
+    expect(isDeclaredRangeFilterFn(() => true)).toBe(false)
   })
 })
 

@@ -23,6 +23,13 @@ import { dirname, resolve } from 'node:path'
 const RULES = [
   {
     entries: ['dist/src/index.mjs', 'dist/src/index.js'],
+    // NOT 'match-sorter'. IMPORT_RE below matches require(...) as well as
+    // static imports, and useTable's `fuzzy: true` reaches match-sorter through
+    // a dynamic require() on this very entry. Listing it forbidden would fail
+    // here, and the only way to satisfy it would be deleting `fuzzy: true` — a
+    // breaking change. A "static imports only" rule cannot be expressed either:
+    // in the CJS build a require and a static import are textually identical.
+    // The /fuzzy entry below is the ESM-safe path; this one keeps its require.
     forbidden: ['@tanstack/react-query', '@tanstack/react-virtual'],
     required: [],
   },
@@ -38,6 +45,11 @@ const RULES = [
     forbidden: [],
     required: ['@tanstack/react-virtual'],
   },
+  {
+    entries: ['dist/fuzzy/index.mjs', 'dist/fuzzy/index.js'],
+    forbidden: [],
+    required: ['match-sorter'],
+  },
 ]
 
 /** Every entry the package publishes, for the manifest-wide declaration check. */
@@ -45,6 +57,7 @@ const ALL_ENTRIES = [
   'dist/src/index',
   'dist/query/index',
   'dist/virtual/index',
+  'dist/fuzzy/index',
   'dist/zod/index',
   'dist/devtools/index',
   'dist/testing/index',

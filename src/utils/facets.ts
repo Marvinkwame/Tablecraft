@@ -1,5 +1,7 @@
 import type { FilterFn } from '@tanstack/react-table'
 import type { FacetOption } from '../types'
+// One-way: dates.ts must never import from this file, or the cycle closes.
+import { inDateRange } from './dates'
 import type { TablecraftFeatures } from '../features'
 
 /**
@@ -106,10 +108,19 @@ export function isRangeFilterFn(filterFn: unknown): boolean {
  * `getFacet` defaults the other way — an unrecognised filter value is read as a
  * selection list, which is exactly right for a caller's bespoke value-list
  * `filterFn`. Using the broad predicate there would blank those callers'
- * selections outright, so this guard matches only the built-in range fn.
+ * selections outright, so this guard matches only range filters tablecraft
+ * itself ships.
+ *
+ * A set rather than an equality check because the hardcoded string WAS the
+ * defect: when 4.2 added `inDateRange`, a date column walked straight past
+ * `filterFn === 'inNumberRange'` and `getFacet` reported its two epoch bounds
+ * as checked boxes — the bug 4.0.1 fixed, returning through a door that fix
+ * did not close. Every future range filter must be added here.
  */
+const DECLARED_RANGE_FILTER_FNS = new Set<unknown>(['inNumberRange', inDateRange])
+
 export function isDeclaredRangeFilterFn(filterFn: unknown): boolean {
-  return filterFn === 'inNumberRange'
+  return DECLARED_RANGE_FILTER_FNS.has(filterFn)
 }
 
 /**

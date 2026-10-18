@@ -9,6 +9,10 @@ export default defineConfig({
     // deps and their own `npm test`/build. Keep them out of the library's test
     // run (their imports resolve only inside their own node_modules, which the
     // library CI never installs).
-    exclude: [...configDefaults.exclude, 'demo/**', 'www/**'],
+    // *.tz.test.ts run under vitest.tz.config.ts instead. Setting
+    // process.env.TZ only takes effect in a forked process — under the default
+    // threads pool Node's zone is already resolved and the assignment is
+    // silently ignored, which would make those tests pass vacuously.
+    exclude: [...configDefaults.exclude, 'demo/**', 'www/**', '**/*.tz.test.ts'],
   },
 })
