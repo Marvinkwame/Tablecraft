@@ -11,7 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@marvinackerman/tablecraft": "4.0.0",
+    "@marvinackerman/tablecraft": "4.1.1",
     "@tanstack/react-table": "^9.2.4",
     "@tanstack/react-virtual": "^3.13.25",
     "prism-react-renderer": "^2.4.0",
