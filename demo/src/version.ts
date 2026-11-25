@@ -1,12 +1,12 @@
-import pkg from '../package.json'
-
 /**
- * The tablecraft version this demo actually installs, read from the demo's own
- * package.json rather than typed in by hand.
+ * The tablecraft version this demo actually runs.
  *
- * The badge was hardcoded and sat at v2.5.0 across three releases while the
- * dependency moved on without it. Deriving it means the displayed version and
- * the installed one cannot disagree: bumping the dependency is now the only
- * thing needed to update the page.
+ * Injected by vite.config.ts from the *installed* package, not from the
+ * demo's dependency range. The range is now `^4.2.0` — a floor, not a
+ * version — and before that an exact pin that drifted four times because
+ * nobody remembered to bump it. Reading what is installed means the badge
+ * and the code can no longer disagree.
  */
-export const TABLECRAFT_VERSION = pkg.dependencies['@marvinackerman/tablecraft']
+declare const __TABLECRAFT_VERSION__: string
+
+export const TABLECRAFT_VERSION = __TABLECRAFT_VERSION__
